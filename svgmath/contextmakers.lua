@@ -1,12 +1,12 @@
 -- Methods to set up the context for a MathML tree node.
-
-The module contains two kinds of methods to set up context:
-   - context creators process the context of the current node;
-   - child context setters alter the context of a child.
+-- 
+-- The module contains two kinds of methods to set up context:
+--    - context creators process the context of the current node;
+--    - child context setters alter the context of a child.
 
 default_context = function(node)
   -- Default context creator for a MathML tree node.
-  if pylua.op_is_not(node.parent, nil) then
+  if PYLUA.op_is_not(node.parent, nil) then
     node.mathsize = node.parent.mathsize
     node.fontSize = node.parent.fontSize
     node.metriclist = node.parent.metriclist
@@ -28,8 +28,9 @@ default_context = function(node)
     node.displaystyle = node.defaults['displaystyle']=='true'
     node.color = node.defaults['mathcolor']
     defaultVariant = node.config.variants.get(node.defaults['mathvariant'])
-    if pylua.op_is(defaultVariant, nil) then
-sax.SAXException('Default mathvariant not defined in configuration file: configuration is unusable')    end
+    if PYLUA.op_is(defaultVariant, nil) then
+      error(sax.SAXException('Default mathvariant not defined in configuration file: configuration is unusable'))
+    end
     node.fontweight, node.fontstyle, node.fontfamilies = defaultVariant
   end
   processFontAttributes(node)
@@ -58,7 +59,7 @@ end
 context_math = function(node)
   default_context(node)
   attr = node.attributes.get('display')
-  if pylua.op_is_not(attr, nil) then
+  if PYLUA.op_is_not(attr, nil) then
     node.displaystyle = attr=='block'
   else
     attr = node.attributes.get('mode')
@@ -68,7 +69,7 @@ end
 
 context_mstyle = function(node)
   default_context(node)
-  if node.attributes and pylua.op_in('mathsize', node.attributes.keys()) then
+  if node.attributes and PYLUA.op_in('mathsize', node.attributes.keys()) then
 node.attributes['mathsize']  end
   if node.attributes then
     node.defaults = node.defaults.copy()
@@ -96,15 +97,15 @@ context_mo = function(node)
     end
   end
   form = 'infix'
-  if pylua.op_is(node.parent, nil) then
-  elseif pylua.op_in(node.parent.elementName, {'mrow', 'mstyle', 'msqrt', 'merror', 'mpadded', 'mphantom', 'menclose', 'mtd', 'math'}) then
+  if PYLUA.op_is(node.parent, nil) then
+  elseif PYLUA.op_in(node.parent.elementName, {'mrow', 'mstyle', 'msqrt', 'merror', 'mpadded', 'mphantom', 'menclose', 'mtd', 'math'}) then
 
     isNonSpaceNode = function(x)
       return x.elementName~='mspace'
     end
-    prevSiblings = pylua.slice(node.parent.children, nil, node.nodeIndex)
+    prevSiblings = PYLUA.slice(node.parent.children, nil, node.nodeIndex)
     prevSiblings = filter(isNonSpaceNode, prevSiblings)
-    nextSiblings = pylua.slice(node.parent.children, node.nodeIndex+1, nil)
+    nextSiblings = PYLUA.slice(node.parent.children, node.nodeIndex+1, nil)
     nextSiblings = filter(isNonSpaceNode, nextSiblings)
     if len(prevSiblings)==0 and len(nextSiblings)>0 then
       form = 'prefix'
@@ -140,16 +141,16 @@ end
 
 processFontAttributes = function(node)
   attr = node.attributes.get('displaystyle')
-  if pylua.op_is_not(attr, nil) then
+  if PYLUA.op_is_not(attr, nil) then
     node.displaystyle = attr=='true'
   end
   scriptlevelattr = node.attributes.get('scriptlevel')
-  if pylua.op_is_not(scriptlevelattr, nil) then
+  if PYLUA.op_is_not(scriptlevelattr, nil) then
     scriptlevelattr = scriptlevelattr.strip()
     if scriptlevelattr.startswith('+') then
-      node.scriptlevel = node.scriptlevel+node.parseInt(pylua.slice(scriptlevelattr, 1, nil))
+      node.scriptlevel = node.scriptlevel+node.parseInt(PYLUA.slice(scriptlevelattr, 1, nil))
     elseif scriptlevelattr.startswith('-') then
-      node.scriptlevel = node.scriptlevel-node.parseInt(pylua.slice(scriptlevelattr, 1, nil))
+      node.scriptlevel = node.scriptlevel-node.parseInt(PYLUA.slice(scriptlevelattr, 1, nil))
     else
       node.scriptlevel = node.parseInt(scriptlevelattr)
     end
@@ -157,9 +158,9 @@ processFontAttributes = function(node)
   end
   node.color = node.attributes.get('mathcolor', node.attributes.get('color', node.color))
   mathvariantattr = node.attributes.get('mathvariant')
-  if pylua.op_is_not(mathvariantattr, nil) then
+  if PYLUA.op_is_not(mathvariantattr, nil) then
     mathvariant = node.config.variants.get(mathvariantattr)
-    if pylua.op_is(mathvariant, nil) then
+    if PYLUA.op_is(mathvariant, nil) then
       node.error('Ignored mathvariant attribute: value \''+str(mathvariantattr)+'\' not defined in the font configuration file')
     else
       node.fontweight, node.fontstyle, node.fontfamilies = mathvariant
@@ -168,12 +169,12 @@ processFontAttributes = function(node)
     node.fontweight = node.attributes.get('fontweight', node.fontweight)
     node.fontstyle = node.attributes.get('fontstyle', node.fontstyle)
     familyattr = node.attributes.get('fontfamily')
-    if pylua.op_is_not(familyattr, nil) then
-      node.fontfamilies = pylua.COMPREHENSION()
+    if PYLUA.op_is_not(familyattr, nil) then
+      node.fontfamilies = PYLUA.COMPREHENSION()
     end
   end
   mathsizeattr = node.attributes.get('mathsize')
-  if pylua.op_is_not(mathsizeattr, nil) then
+  if PYLUA.op_is_not(mathsizeattr, nil) then
     if mathsizeattr=='normal' then
       node.mathsize = node.parseLength(node.defaults['mathsize'])
     elseif mathsizeattr=='big' then
@@ -199,7 +200,7 @@ processFontAttributes = function(node)
     node.fontSize = node.fontSize*math.pow(scriptsizemultiplier, node.scriptlevel)
   end
   fontsizeattr = node.attributes.get('fontsize')
-  if pylua.op_is_not(fontsizeattr, nil) and pylua.op_is(mathsizeattr, nil) then
+  if PYLUA.op_is_not(fontsizeattr, nil) and PYLUA.op_is(mathsizeattr, nil) then
     fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
     if fontSizeOverride>0 then
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize
@@ -282,13 +283,13 @@ makeLimitContext = function(node, child, accentProperty)
   child.displaystyle = false
   child.tightspaces = true
   accentValue = node.getProperty(accentProperty)
-  if pylua.op_is(accentValue, nil) then
+  if PYLUA.op_is(accentValue, nil) then
     embellishments = {'msub', 'msup', 'msubsup', 'munder', 'mover', 'munderover', 'mmultiscripts'}
 
     getAccentValue = function(ch)
       if ch.elementName=='mo' then
         return ch.opdefaults.get('accent')
-      elseif pylua.op_in(ch.elementName, embellishments) and len(ch.children)>0 then
+      elseif PYLUA.op_in(ch.elementName, embellishments) and len(ch.children)>0 then
         return getAccentValue(ch.children[1])
       else
         return 'false'

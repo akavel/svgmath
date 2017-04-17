@@ -27,12 +27,12 @@ measure_maction = function(node)
   selection = node.parseInt(selectionattr)
   node.base = nil
   if selection<=0 then
-    node.error(pylua.mod('Invalid value \'%s\' for \'selection\' attribute - not a positive integer', selectionattr))
+    node.error(PYLUA.mod('Invalid value \'%s\' for \'selection\' attribute - not a positive integer', selectionattr))
   elseif len(node.children)==0 then
-    node.error(pylua.mod('No valid subexpression inside maction element - element ignored', selectionattr))
+    node.error(PYLUA.mod('No valid subexpression inside maction element - element ignored', selectionattr))
   else
     if selection>len(node.children) then
-      node.error(pylua.mod('Invalid value \'%d\' for \'selection\' attribute - there are only %d expression descendants in the element', selection, len(node.children)))
+      node.error(PYLUA.mod('Invalid value \'%d\' for \'selection\' attribute - there are only %d expression descendants in the element', selection, len(node.children)))
       selection = 1
     end
     setNodeBase(node, node.children[selection-1])
@@ -50,18 +50,18 @@ measure_mpadded = function(node)
   parseDimension = function(attr, startvalue, canUseSpaces)
     if attr.endswith(' height') then
       basevalue = node.base.height
-      attr = pylua.slice(attr, nil, -7)
+      attr = PYLUA.slice(attr, nil, -7)
     elseif attr.endswith(' depth') then
       basevalue = node.base.depth
-      attr = pylua.slice(attr, nil, -6)
+      attr = PYLUA.slice(attr, nil, -6)
     elseif attr.endswith(' width') then
       basevalue = node.base.width
-      attr = pylua.slice(attr, nil, -6)
+      attr = PYLUA.slice(attr, nil, -6)
     else
       basevalue = startvalue
     end
     if attr.endswith('%') then
-      attr = pylua.slice(attr, nil, -1)
+      attr = PYLUA.slice(attr, nil, -1)
       basevalue = basevalue/100.0
     end
     if canUseSpaces then
@@ -73,14 +73,14 @@ measure_mpadded = function(node)
 
   getDimension = function(attname, startvalue, canUseSpaces)
     attr = node.attributes.get(attname)
-    if pylua.op_is(attr, nil) then
+    if PYLUA.op_is(attr, nil) then
       return startvalue
     end
-    attr = pylua.str_maybe(' ').join(attr.split())
+    attr = PYLUA.str_maybe(' ').join(attr.split())
     if attr.startswith('+') then
-      return startvalue+parseDimension(pylua.slice(attr, 1, nil), startvalue, canUseSpaces)
+      return startvalue+parseDimension(PYLUA.slice(attr, 1, nil), startvalue, canUseSpaces)
     elseif attr.startswith('+') then
-      return startvalue-parseDimension(pylua.slice(attr, 1, nil), startvalue, canUseSpaces)
+      return startvalue-parseDimension(PYLUA.slice(attr, 1, nil), startvalue, canUseSpaces)
     else
       return parseDimension(attr, startvalue, canUseSpaces)
     end
@@ -102,18 +102,18 @@ measure_mfenced = function(node)
   old_children = node.children
   node.children = {}
   openingFence = node.getProperty('open')
-  openingFence = pylua.str_maybe(' ').join(openingFence.split())
+  openingFence = PYLUA.str_maybe(' ').join(openingFence.split())
   if len(openingFence)>0 then
-    opening = mathnode.MathNode('mo', { ['fence']='true', ['form']='prefix', }, nil, node.config, node)
+    opening = mathnode.MathNode('mo', { fence='true', form='prefix', }, nil, node.config, node)
     opening.text = openingFence
     opening.measure()
   end
-  separators = pylua.str_maybe('').join(node.getProperty('separators').split())
+  separators = PYLUA.str_maybe('').join(node.getProperty('separators').split())
   sepindex = 0
   lastsep = len(separators)-1
   for ch in ipairs(old_children) do
     if len(node.children)>1 and lastsep>=0 then
-      sep = mathnode.MathNode('mo', { ['separator']='true', ['form']='infix', }, nil, node.config, node)
+      sep = mathnode.MathNode('mo', { separator='true', form='infix', }, nil, node.config, node)
       sep.text = separators[sepindex]
       sep.measure()
       sepindex = min(sepindex+1, lastsep)
@@ -121,9 +121,9 @@ measure_mfenced = function(node)
     node.children.append(ch)
   end
   closingFence = node.getProperty('close')
-  closingFence = pylua.str_maybe(' ').join(closingFence.split())
+  closingFence = PYLUA.str_maybe(' ').join(closingFence.split())
   if len(closingFence)>0 then
-    closing = mathnode.MathNode('mo', { ['fence']='true', ['form']='postfix', }, nil, node.config, node)
+    closing = mathnode.MathNode('mo', { fence='true', form='postfix', }, nil, node.config, node)
     closing.text = closingFence
     closing.measure()
   end
@@ -137,7 +137,7 @@ measure_mo = function(node)
   if node.hasGlyph(8242) then
     node.text = node.text.replace('\'', '\xe2\x80\xb2')
   end
-  if pylua.op_in(node.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
+  if PYLUA.op_in(node.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
     node.isSpace = true
   else
     node.measureText()
@@ -216,11 +216,11 @@ measure_mrow = function(node)
     if ch.core.elementName~='mo' then
       goto continue
     end
-    if pylua.op_in(ch.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
+    if PYLUA.op_in(ch.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
       ch.text = ''
 
       longtext = function(n)
-        if pylua.op_is(n, nil) then
+        if PYLUA.op_is(n, nil) then
           return false
         end
         if n.isSpace then
@@ -229,7 +229,7 @@ measure_mrow = function(node)
         if n.core.elementName=='ms' then
           return true
         end
-        if pylua.op_in(n.core.elementName, {'mo', 'mi', 'mtext'}) then
+        if PYLUA.op_in(n.core.elementName, {'mo', 'mi', 'mtext'}) then
           return len(n.core.text)>1
         end
         return false
@@ -258,7 +258,7 @@ measure_mrow = function(node)
       end
       desiredHeight = desiredHeight-ch.core.ascender-ch.core.height
       desiredDepth = desiredDepth-ch.core.descender-ch.core.depth
-      stretch(pylua.keywords{toHeight=desiredHeight, toDepth=desiredDepth, symmetric=node.alignToAxis}, ch)
+      stretch(PYLUA.keywords{toHeight=desiredHeight, toDepth=desiredDepth, symmetric=node.alignToAxis}, ch)
     end
   end
   node.height, node.depth, node.ascender, node.descender = getRowVerticalExtent(node.children, node.alignToAxis, node.axis())
@@ -278,9 +278,9 @@ measure_mfrac = function(node)
       return 
     end
   end
-  node.enumerator, node.denominator = pylua.slice(node.children, nil, 2)
+  node.enumerator, node.denominator = PYLUA.slice(node.children, nil, 2)
   node.alignToAxis = true
-  ruleWidthKeywords = { ['medium']='1', ['thin']='0.5', ['thick']='2', }
+  ruleWidthKeywords = { medium='1', thin='0.5', thick='2', }
   widthAttr = node.getProperty('linethickness')
   widthAttr = ruleWidthKeywords.get(widthAttr, widthAttr)
   unitWidth = node.nominalLineWidth()
@@ -417,7 +417,7 @@ measure_mmultiscripts = function(node)
   presuperscripts = {}
   isPre = false
   isSub = true
-  for ch in ipairs(pylua.slice(node.children, 1, nil)) do
+  for ch in ipairs(PYLUA.slice(node.children, 1, nil)) do
     if ch.elementName=='mprescripts' then
       if isPre then
         node.error('Repeated \'mprescripts\' element inside \'mmultiscripts\n')
@@ -445,7 +445,7 @@ end
 measure_menclose = function(node)
 
   pushEnclosure = function()
-    if pylua.op_is(node.decoration, nil) then
+    if PYLUA.op_is(node.decoration, nil) then
       return 
     end
     wrapChildren(node, 'menclose')
@@ -470,7 +470,7 @@ measure_menclose = function(node)
   node.borderWidth = node.nominalLineWidth()
   node.hdelta = node.nominalLineGap()+node.borderWidth
   node.vdelta = node.nominalLineGap()+node.borderWidth
-  if pylua.op_in('radical', signs) then
+  if PYLUA.op_in('radical', signs) then
     wrapChildren(node, 'msqrt')
     setNodeBase(node.children[1], node.base)
     setNodeBase(node, node.children[1])
@@ -480,31 +480,31 @@ measure_menclose = function(node)
     node.height = node.base.height
     node.depth = node.base.depth
   end
-  strikes = {pylua.op_in('horizontalstrike', signs), pylua.op_in('verticalstrike', signs), pylua.op_in('updiagonalstrike', signs), pylua.op_in('downdiagonalstrike', signs)}
-  if pylua.op_in(true, strikes) then
+  strikes = {PYLUA.op_in('horizontalstrike', signs), PYLUA.op_in('verticalstrike', signs), PYLUA.op_in('updiagonalstrike', signs), PYLUA.op_in('downdiagonalstrike', signs)}
+  if PYLUA.op_in(true, strikes) then
     pushEnclosure()
     node.decoration = 'strikes'
     node.decorationData = strikes
   end
-  if pylua.op_in('roundedbox', signs) then
+  if PYLUA.op_in('roundedbox', signs) then
     pushEnclosure()
     node.decoration = 'roundedbox'
     enclosures.addBoxEnclosure(node)
   end
-  if pylua.op_in('box', signs) then
+  if PYLUA.op_in('box', signs) then
     pushEnclosure()
     node.decoration = 'box'
     enclosures.addBoxEnclosure(node)
   end
-  if pylua.op_in('circle', signs) then
+  if PYLUA.op_in('circle', signs) then
     pushEnclosure()
     node.decoration = 'circle'
     enclosures.addCircleEnclosure(node)
   end
-  borders = {pylua.op_in('left', signs), pylua.op_in('right', signs), pylua.op_in('top', signs), pylua.op_in('bottom', signs)}
-  if pylua.op_in(true, borders) then
+  borders = {PYLUA.op_in('left', signs), PYLUA.op_in('right', signs), PYLUA.op_in('top', signs), PYLUA.op_in('bottom', signs)}
+  if PYLUA.op_in(true, borders) then
     pushEnclosure()
-    if pylua.op_in(false, borders) then
+    if PYLUA.op_in(false, borders) then
       node.decoration = 'borders'
       enclosures.addBorderEnclosure(node, borders)
     else
@@ -512,12 +512,12 @@ measure_menclose = function(node)
       enclosures.addBoxEnclosure(node)
     end
   end
-  if pylua.op_in('longdiv', signs) then
+  if PYLUA.op_in('longdiv', signs) then
     pushEnclosure()
     node.decoration = 'borders'
     enclosures.addBorderEnclosure(node, {true, false, true, false})
   end
-  if pylua.op_in('actuarial', signs) then
+  if PYLUA.op_in('actuarial', signs) then
     pushEnclosure()
     node.decoration = 'borders'
     enclosures.addBorderEnclosure(node, {false, true, true, false})
@@ -532,7 +532,7 @@ measure_mtable = function(node)
   for r in ipairs(node.rows) do
     for i in ipairs(range(len(r.cells))) do
       c = r.cells[i]
-      if pylua.op_is(c, nil) or pylua.op_is(c.content, nil) then
+      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
         goto continue
       end
       content = c.content
@@ -547,12 +547,12 @@ measure_mtable = function(node)
       end
       if content.core.stretchy then
         if c.colspan==1 then
-          stretch(pylua.keywords{toWidth=node.columns[i].width}, content)
+          stretch(PYLUA.keywords{toWidth=node.columns[i].width}, content)
         else
-          spannedColumns = pylua.slice(node.columns, i, i+c.colspan)
-          cellSize = sum(pylua.COMPREHENSION())
-          cellSize = cellSize+sum(pylua.COMPREHENSION())
-          stretch(pylua.keywords{toWidth=cellSize}, content)
+          spannedColumns = PYLUA.slice(node.columns, i, i+c.colspan)
+          cellSize = sum(PYLUA.COMPREHENSION())
+          cellSize = cellSize+sum(PYLUA.COMPREHENSION())
+          stretch(PYLUA.keywords{toWidth=cellSize}, content)
         end
       end
     end
@@ -561,7 +561,7 @@ measure_mtable = function(node)
   for i in ipairs(range(len(node.rows))) do
     r = node.rows[i]
     for c in ipairs(r.cells) do
-      if pylua.op_is(c, nil) or pylua.op_is(c.content, nil) then
+      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
         goto continue
       end
       content = c.content
@@ -576,23 +576,23 @@ measure_mtable = function(node)
       end
       if content.core.stretchy then
         if c.rowspan==1 then
-          stretch(pylua.keywords{toHeight=r.height-c.vshift, toDepth=r.depth+c.vshift}, content)
+          stretch(PYLUA.keywords{toHeight=r.height-c.vshift, toDepth=r.depth+c.vshift}, content)
         else
-          spannedRows = pylua.slice(node.rows, i, i+c.rowspan)
-          cellSize = sum(pylua.COMPREHENSION())
-          cellSize = cellSize+sum(pylua.COMPREHENSION())
-          stretch(pylua.keywords{toHeight=cellSize/2, toDepth=cellSize/2}, content)
+          spannedRows = PYLUA.slice(node.rows, i, i+c.rowspan)
+          cellSize = sum(PYLUA.COMPREHENSION())
+          cellSize = cellSize+sum(PYLUA.COMPREHENSION())
+          stretch(PYLUA.keywords{toHeight=cellSize/2, toDepth=cellSize/2}, content)
         end
       end
     end
   end
   tables.calculateColumnWidths(node)
-  node.width = sum(pylua.COMPREHENSION())
+  node.width = sum(PYLUA.COMPREHENSION())
   node.width = node.width+2*node.framespacings[1]
-  vsize = sum(pylua.COMPREHENSION())
+  vsize = sum(PYLUA.COMPREHENSION())
   vsize = vsize+2*node.framespacings[2]
   alignType, alignRow = tables.getAlign(node)
-  if pylua.op_is(alignRow, nil) then
+  if PYLUA.op_is(alignRow, nil) then
     topLine = 0
     bottomLine = vsize
     axisLine = vsize/2
@@ -600,7 +600,7 @@ measure_mtable = function(node)
   else
     row = node.rows[alignRow-1]
     topLine = node.framespacings[2]
-    for r in ipairs(pylua.slice(node.rows, 0, alignRow)) do
+    for r in ipairs(PYLUA.slice(node.rows, 0, alignRow)) do
       topLine = topLine+r.height+r.depth+r.spaceAfter
     end
     bottomLine = topLine+row.height+row.depth
@@ -638,24 +638,24 @@ measure_mtable = function(node)
 end
 
 measure_mtr = function(node)
-  if pylua.op_is(node.parent, nil) or node.parent.elementName~='mtable' then
-    node.error(pylua.mod('Misplaced \'%s\' element: should be child of \'mtable\'', node.elementName))
+  if PYLUA.op_is(node.parent, nil) or node.parent.elementName~='mtable' then
+    node.error(PYLUA.mod('Misplaced \'%s\' element: should be child of \'mtable\'', node.elementName))
   end
 end
 
 measure_mlabeledtr = function(node)
   if len(node.children)==0 then
-    node.error(pylua.mod('Missing label in \'%s\' element', node.elementName))
+    node.error(PYLUA.mod('Missing label in \'%s\' element', node.elementName))
   else
-    node.warning(pylua.mod('MathML element \'%s\' is unsupported: label omitted', node.elementName))
-    node.children = pylua.slice(node.children, 1, nil)
+    node.warning(PYLUA.mod('MathML element \'%s\' is unsupported: label omitted', node.elementName))
+    node.children = PYLUA.slice(node.children, 1, nil)
   end
   measure_mtr(node)
 end
 
 measure_mtd = function(node)
-  if pylua.op_is(node.parent, nil) or pylua.op_not_in(node.parent.elementName, {'mtr', 'mlabeledtr', 'mtable'}) then
-    node.error(pylua.mod('Misplaced \'%s\' element: should be child of \'mtr\', \'mlabeledtr\', or \'mtable\'', node.elementName))
+  if PYLUA.op_is(node.parent, nil) or PYLUA.op_not_in(node.parent.elementName, {'mtr', 'mlabeledtr', 'mtable'}) then
+    node.error(PYLUA.mod('Misplaced \'%s\' element: should be child of \'mtr\', \'mlabeledtr\', or \'mtable\'', node.elementName))
   end
   measure_mrow(node)
 end
@@ -673,9 +673,9 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.descender = node.base.descender
   subs = node.subscripts+node.presubscripts
   supers = node.superscripts+node.presuperscripts
-  node.subscriptAxis = max({0}+pylua.COMPREHENSION())
-  node.superscriptAxis = max({0}+pylua.COMPREHENSION())
-  gap = max(pylua.COMPREHENSION())
+  node.subscriptAxis = max({0}+PYLUA.COMPREHENSION())
+  node.superscriptAxis = max({0}+PYLUA.COMPREHENSION())
+  gap = max(PYLUA.COMPREHENSION())
   protrusion = node.parseLength('0.25ex')
   scriptMedian = node.axis()
   subHeight, subDepth, subAscender, subDescender = getRowVerticalExtent(subs, false, node.subscriptAxis)
@@ -683,7 +683,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.subShift = 0
   if len(subs)>0 then
     shiftAttr = node.getProperty('subscriptshift')
-    if pylua.op_is(shiftAttr, nil) then
+    if PYLUA.op_is(shiftAttr, nil) then
       shiftAttr = '0.5ex'
     end
     node.subShift = node.parseLength(shiftAttr)
@@ -700,7 +700,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.superShift = 0
   if len(supers)>0 then
     shiftAttr = node.getProperty('superscriptshift')
-    if pylua.op_is(shiftAttr, nil) then
+    if PYLUA.op_is(shiftAttr, nil) then
       shiftAttr = '1ex'
     end
     node.superShift = node.parseLength(shiftAttr)
@@ -738,10 +738,10 @@ measureLimits = function(node, underscript, overscript)
   if node.children[1].core.moveLimits then
     subs = {}
     supers = {}
-    if pylua.op_is_not(underscript, nil) then
+    if PYLUA.op_is_not(underscript, nil) then
       subs = {underscript}
     end
-    if pylua.op_is_not(overscript, nil) then
+    if PYLUA.op_is_not(overscript, nil) then
       supers = {overscript}
     end
     measureScripts(node, subs, supers)
@@ -751,17 +751,17 @@ measureLimits = function(node, underscript, overscript)
   node.overscript = overscript
   setNodeBase(node, node.children[1])
   node.width = node.base.width
-  if pylua.op_is_not(overscript, nil) then
+  if PYLUA.op_is_not(overscript, nil) then
     node.width = max(node.width, overscript.width)
   end
-  if pylua.op_is_not(underscript, nil) then
+  if PYLUA.op_is_not(underscript, nil) then
     node.width = max(node.width, underscript.width)
   end
-  stretch(pylua.keywords{toWidth=node.width}, node.base)
-  stretch(pylua.keywords{toWidth=node.width}, overscript)
-  stretch(pylua.keywords{toWidth=node.width}, underscript)
+  stretch(PYLUA.keywords{toWidth=node.width}, node.base)
+  stretch(PYLUA.keywords{toWidth=node.width}, overscript)
+  stretch(PYLUA.keywords{toWidth=node.width}, underscript)
   gap = node.nominalLineGap()
-  if pylua.op_is_not(overscript, nil) then
+  if PYLUA.op_is_not(overscript, nil) then
     overscriptBaselineHeight = node.base.height+gap+overscript.depth
     node.height = overscriptBaselineHeight+overscript.height
     node.ascender = node.height
@@ -769,7 +769,7 @@ measureLimits = function(node, underscript, overscript)
     node.height = node.base.height
     node.ascender = node.base.ascender
   end
-  if pylua.op_is_not(underscript, nil) then
+  if PYLUA.op_is_not(underscript, nil) then
     underscriptBaselineDepth = node.base.depth+gap+underscript.height
     node.depth = underscriptBaselineDepth+underscript.depth
     node.descender = node.depth
@@ -780,14 +780,14 @@ measureLimits = function(node, underscript, overscript)
 end
 
 stretch = function(node, toWidth, toHeight, toDepth, symmetric)
-  if pylua.op_is(node, nil) then
+  if PYLUA.op_is(node, nil) then
     return 
   end
   if  not node.core.stretchy then
     return 
   end
-  if pylua.op_is_not(node, node.base) then
-    if pylua.op_is_not(toWidth, nil) then
+  if PYLUA.op_is_not(node, node.base) then
+    if PYLUA.op_is_not(toWidth, nil) then
       toWidth = toWidth-node.width-node.base.width
     end
     stretch(node.base, toWidth, toHeight, toDepth, symmetric)
@@ -806,7 +806,7 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
     minsizedefault = node.opdefaults.get('minsize')
     minsizeattr = node.getProperty('minsize', minsizedefault)
     minScale = node.parseSpaceOrPercent(minsizeattr, node.fontSize, node.fontSize)/node.fontSize
-    if pylua.op_is(toWidth, nil) then
+    if PYLUA.op_is(toWidth, nil) then
       stretchVertically(node, toHeight, toDepth, minScale, maxScale, symmetric)
     else
       stretchHorizontally(node, toWidth, minScale, maxScale)

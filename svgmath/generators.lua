@@ -3,7 +3,7 @@ SVGNS = 'http://www.w3.org/2000/svg'
 SVGMathNS = 'http://www.grigoriev.ru/svgmath'
 useNamespaces = true
 readable = false
-alignKeywords = { ['left']=0, ['center']=0.5, ['right']=1, }
+alignKeywords = { left=0, center=0.5, right=1, }
 
 startElement = function(output, localname, namespace, prefix, attrs)
   -- Wrapper to emit a start tag
@@ -51,7 +51,7 @@ drawImage = function(node, output)
   height = max(node.height, node.ascender)
   depth = max(node.depth, node.descender)
   vsize = height+depth
-  attrs = { ['width']=pylua.mod('%fpt', node.width), ['height']=pylua.mod('%fpt', vsize), ['viewBox']=pylua.mod('0 %f %f %f', -height+baseline, node.width, vsize), }
+  attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', -height+baseline, node.width, vsize), }
   if useNamespaces then
     output.startPrefixMapping('svg', SVGNS)
     output.startPrefixMapping('svgmath', SVGMathNS)
@@ -61,7 +61,7 @@ drawImage = function(node, output)
   end
   startSVGElement(output, 'svg', attrs)
   startSVGElement(output, 'metadata', { })
-  startElement(output, 'metrics', SVGMathNS, 'svgmath:', { ['baseline']=depth-baseline, ['axis']=depth-baseline+node.axis(), ['top']=depth+node.height, ['bottom']=depth-node.depth, })
+  startElement(output, 'metrics', SVGMathNS, 'svgmath:', { baseline=depth-baseline, axis=depth-baseline+node.axis(), top=depth+node.height, bottom=depth-node.depth, })
   endElement(output, 'metrics', SVGMathNS, 'svgmath:')
   endSVGElement(output, 'metadata')
   drawTranslatedNode(node, output, 0, -baseline)
@@ -103,7 +103,7 @@ draw_none = function(node, output)
 end
 
 draw_maction = function(node, output)
-  if pylua.op_is_not(node.base, nil) then
+  if PYLUA.op_is_not(node.base, nil) then
     node.base.draw(output)
   end
 end
@@ -130,7 +130,7 @@ draw_mpadded = function(node, output)
 end
 
 draw_menclose = function(node, output)
-  if pylua.op_is(node.decoration, nil) then
+  if PYLUA.op_is(node.decoration, nil) then
     node.base.draw(output)
   elseif node.decoration=='strikes' then
     drawStrikesEnclosure(node, output)
@@ -236,14 +236,14 @@ draw_msqrt = function(node, output)
   y3b = (y2b*slopeA-ytmp*slopeB+xtmp-x2b)/(slopeA-slopeB)
   x3b = xtmp+(y3b-ytmp)*slopeB
   y1 = y1+(x2-x1)*slopeA
-  attrs = { ['stroke']=node.color, ['fill']='none', ['stroke-width']=pylua.mod('%f', node.lineWidth), ['stroke-linecap']='butt', ['stroke-linejoin']='miter', ['stroke-miterlimit']='10', ['d']=pylua.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f', x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5), }
+  attrs = { stroke=node.color, fill='none', ['stroke-width']=PYLUA.mod('%f', node.lineWidth), ['stroke-linecap']='butt', ['stroke-linejoin']='miter', ['stroke-miterlimit']='10', d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f', x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5), }
   startSVGElement(output, 'path', attrs)
   endSVGElement(output, 'path')
 end
 
 draw_mroot = function(node, output)
   draw_msqrt(node, output)
-  if pylua.op_is_not(node.rootindex, nil) then
+  if PYLUA.op_is_not(node.rootindex, nil) then
     w = max(0, node.cornerWidth-node.rootindex.width)/2
     h = -node.rootindex.depth-node.rootHeight+node.cornerHeight
     drawTranslatedNode(node.rootindex, output, w, h)
@@ -332,10 +332,10 @@ drawLimits = function(node, output)
   end
   drawBox(node, output)
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
-  if pylua.op_is_not(node.underscript, nil) then
+  if PYLUA.op_is_not(node.underscript, nil) then
     drawTranslatedNode(node.underscript, output, (node.width-node.underscript.width)/2, node.depth-node.underscript.depth)
   end
-  if pylua.op_is_not(node.overscript, nil) then
+  if PYLUA.op_is_not(node.overscript, nil) then
     drawTranslatedNode(node.overscript, output, (node.width-node.overscript.width)/2, node.overscript.height-node.height)
   end
 end
@@ -360,17 +360,17 @@ draw_mtable = function(node, output)
     for c in ipairs(range(len(row.cells))) do
       column = node.columns[c]
       cell = row.cells[c]
-      if pylua.op_is_not(cell, nil) and pylua.op_is_not(cell.content, nil) then
+      if PYLUA.op_is_not(cell, nil) and PYLUA.op_is_not(cell.content, nil) then
         if cell.colspan>1 then
-          cellWidth = sum(pylua.COMPREHENSION())
-          cellWidth = cellWidth+sum(pylua.COMPREHENSION())
+          cellWidth = sum(PYLUA.COMPREHENSION())
+          cellWidth = cellWidth+sum(PYLUA.COMPREHENSION())
         else
           cellWidth = column.width
         end
         hadjust = (cellWidth-cell.content.width)*alignKeywords.get(cell.halign, 0.5)
         if cell.rowspan>1 then
-          cellHeight = sum(pylua.COMPREHENSION())
-          cellHeight = cellHeight+sum(pylua.COMPREHENSION())
+          cellHeight = sum(PYLUA.COMPREHENSION())
+          cellHeight = cellHeight+sum(PYLUA.COMPREHENSION())
         else
           cellHeight = row.height+row.depth
         end
@@ -378,7 +378,7 @@ draw_mtable = function(node, output)
           vadjust = cell.content.height-row.height
         elseif cell.valign=='bottom' then
           vadjust = cellHeight-row.height-cell.content.depth
-        elseif pylua.op_in(cell.valign, {'axis', 'baseline'}) and cell.rowspan==1 then
+        elseif PYLUA.op_in(cell.valign, {'axis', 'baseline'}) and cell.rowspan==1 then
           vadjust = -cell.vshift
         else
           vadjust = (cell.content.height-cell.content.depth+cellHeight)/2-row.height
@@ -391,7 +391,7 @@ draw_mtable = function(node, output)
   end
 
   drawBorder = function(x1, y1, x2, y2, linestyle)
-    if pylua.op_is(linestyle, nil) then
+    if PYLUA.op_is(linestyle, nil) then
       return 
     end
     if x1==x2 and y1==y2 then
@@ -399,8 +399,8 @@ draw_mtable = function(node, output)
     end
     if linestyle=='dashed' then
       linelength = math.sqrt(math.pow(x1-x2, 2)+math.pow(y1-y2, 2))
-      dashoffset = 5-pylua.mod(linelength/node.lineWidth+3, 10)/2
-      extrastyle = { ['stroke-dasharray']=pylua.mod('%f,%f', node.lineWidth*7, node.lineWidth*3), ['stroke-dashoffset']=pylua.mod('%f', node.lineWidth*dashoffset), }
+      dashoffset = 5-PYLUA.mod(linelength/node.lineWidth+3, 10)/2
+      extrastyle = { ['stroke-dasharray']=PYLUA.mod('%f,%f', node.lineWidth*7, node.lineWidth*3), ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset), }
     else
       extrastyle = nil
     end
@@ -435,19 +435,19 @@ draw_mtable = function(node, output)
   vspans = {0}*len(node.columns)
   for r in ipairs(range(len(node.rows)-1)) do
     row = node.rows[r]
-    if pylua.op_is(row.lineAfter, nil) then
+    if PYLUA.op_is(row.lineAfter, nil) then
       goto continue
     end
     for c in ipairs(range(len(row.cells))) do
       cell = row.cells[c]
-      if pylua.op_is(cell, nil) or pylua.op_is(cell.content, nil) then
+      if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
         goto continue
       end
       for j in ipairs(range(c, c+cell.colspan)) do
         vspans[j] = cell.rowspan
       end
     end
-    vspans = pylua.COMPREHENSION()
+    vspans = PYLUA.COMPREHENSION()
     lineY = voffsets[r]
     startX = x1
     endX = x1
@@ -463,7 +463,7 @@ draw_mtable = function(node, output)
   hspans = {0}*len(node.rows)
   for c in ipairs(range(len(node.columns)-1)) do
     column = node.columns[c]
-    if pylua.op_is(column.lineAfter, nil) then
+    if PYLUA.op_is(column.lineAfter, nil) then
       goto continue
     end
     for r in ipairs(range(len(node.rows))) do
@@ -472,14 +472,14 @@ draw_mtable = function(node, output)
         goto continue
       end
       cell = row.cells[c]
-      if pylua.op_is(cell, nil) or pylua.op_is(cell.content, nil) then
+      if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
         goto continue
       end
       for j in ipairs(range(r, r+cell.rowspan)) do
         hspans[j] = cell.colspan
       end
     end
-    hspans = pylua.COMPREHENSION()
+    hspans = PYLUA.COMPREHENSION()
     lineX = hoffsets[c]
     startY = y1
     endY = y1
@@ -497,20 +497,20 @@ end
 drawBox = function(node, output, borderWidth, borderColor, borderRadius)
   background = getBackground(node)
   if background=='none' then
-    if pylua.op_is(borderWidth, nil) or borderWidth==0 then
+    if PYLUA.op_is(borderWidth, nil) or borderWidth==0 then
       return 
     end
   end
-  if pylua.op_is(borderColor, nil) then
+  if PYLUA.op_is(borderColor, nil) then
     borderColor = node.color
   end
-  attrs = { ['fill']=background, ['stroke']='none', ['x']=pylua.mod('%f', borderWidth/2), ['y']=pylua.mod('%f', borderWidth/2-node.height), ['width']=pylua.mod('%f', node.width-borderWidth), ['height']=pylua.mod('%f', node.height+node.depth-borderWidth), }
-  if borderWidth~=0 and pylua.op_is_not(borderColor, nil) then
+  attrs = { fill=background, stroke='none', x=PYLUA.mod('%f', borderWidth/2), y=PYLUA.mod('%f', borderWidth/2-node.height), width=PYLUA.mod('%f', node.width-borderWidth), height=PYLUA.mod('%f', node.height+node.depth-borderWidth), }
+  if borderWidth~=0 and PYLUA.op_is_not(borderColor, nil) then
     attrs['stroke'] = borderColor
-    attrs['stroke-width'] = pylua.mod('%f', borderWidth)
+    attrs['stroke-width'] = PYLUA.mod('%f', borderWidth)
     if borderRadius~=0 then
-      attrs['rx'] = pylua.mod('%f', borderRadius)
-      attrs['ry'] = pylua.mod('%f', borderRadius)
+      attrs['rx'] = PYLUA.mod('%f', borderRadius)
+      attrs['ry'] = PYLUA.mod('%f', borderRadius)
     end
   end
   startSVGElement(output, 'rect', attrs)
@@ -518,8 +518,8 @@ drawBox = function(node, output, borderWidth, borderColor, borderRadius)
 end
 
 drawLine = function(output, color, width, x1, y1, x2, y2, strokeattrs)
-  attrs = { ['fill']='none', ['stroke']=color, ['stroke-width']=pylua.mod('%f', width), ['stroke-linecap']='square', ['stroke-dasharray']='none', ['x1']=pylua.mod('%f', x1), ['y1']=pylua.mod('%f', y1), ['x2']=pylua.mod('%f', x2), ['y2']=pylua.mod('%f', y2), }
-  if pylua.op_is_not(strokeattrs, nil) then
+  attrs = { fill='none', stroke=color, ['stroke-width']=PYLUA.mod('%f', width), ['stroke-linecap']='square', ['stroke-dasharray']='none', x1=PYLUA.mod('%f', x1), y1=PYLUA.mod('%f', y1), x2=PYLUA.mod('%f', x2), y2=PYLUA.mod('%f', y2), }
+  if PYLUA.op_is_not(strokeattrs, nil) then
     attrs.update(strokeattrs)
   end
   startSVGElement(output, 'line', attrs)
@@ -528,7 +528,7 @@ end
 
 drawTranslatedNode = function(node, output, dx, dy)
   if dx~=0 or dy~=0 then
-    startSVGElement(output, 'g', { ['transform']=pylua.mod('translate(%f, %f)', dx, dy), })
+    startSVGElement(output, 'g', { transform=PYLUA.mod('translate(%f, %f)', dx, dy), })
   end
   node.draw(output)
   if dx~=0 or dy~=0 then
@@ -538,11 +538,11 @@ end
 
 drawSVGText = function(node, output)
   drawBox(node, output)
-  fontfamilies = pylua.COMPREHENSION()
+  fontfamilies = PYLUA.COMPREHENSION()
   if len(fontfamilies)==0 then
     fontfamilies = node.fontfamilies
   end
-  attrs = { ['fill']=node.color, ['font-family']=pylua.str_maybe(', ').join(fontfamilies), ['font-size']=pylua.mod('%f', node.fontSize), ['text-anchor']='middle', ['x']=pylua.mod('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch), ['y']=pylua.mod('%f', -node.textShift), }
+  attrs = { fill=node.color, ['font-family']=PYLUA.str_maybe(', ').join(fontfamilies), ['font-size']=PYLUA.mod('%f', node.fontSize), ['text-anchor']='middle', x=PYLUA.mod('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch), y=PYLUA.mod('%f', -node.textShift), }
   if node.fontweight~='normal' then
     attrs['font-weight'] = node.fontweight
   end
@@ -550,7 +550,7 @@ drawSVGText = function(node, output)
     attrs['font-style'] = node.fontstyle
   end
   if node.textStretch~=1 then
-    attrs['transform'] = pylua.mod('scale(%f, 1)', node.textStretch)
+    attrs['transform'] = PYLUA.mod('scale(%f, 1)', node.textStretch)
   end
   for oldchar, newchar in ipairs(mathnode.specialChars.items()) do
     node.text = node.text.replace(oldchar, newchar)
@@ -562,7 +562,7 @@ end
 
 getAlign = function(node, attrName)
   attrValue = node.getProperty(attrName, 'center')
-  if pylua.op_not_in(attrValue, alignKeywords.keys()) then
+  if PYLUA.op_not_in(attrValue, alignKeywords.keys()) then
     node.error('Bad value %s for %s', attrValue, attrName)
   end
   return alignKeywords.get(attrValue, 0.5)
@@ -578,7 +578,7 @@ drawCircleEnclosure = function(node, output)
   r = (node.width-node.borderWidth)/2
   cx = node.width/2
   cy = (node.depth-node.height)/2
-  attrs = { ['fill']=background, ['stroke']=node.color, ['stroke-width']=pylua.mod('%f', node.borderWidth), ['cx']=pylua.mod('%f', cx), ['cy']=pylua.mod('%f', cy), ['r']=pylua.mod('%f', r), }
+  attrs = { fill=background, stroke=node.color, ['stroke-width']=PYLUA.mod('%f', node.borderWidth), cx=PYLUA.mod('%f', cx), cy=PYLUA.mod('%f', cy), r=PYLUA.mod('%f', r), }
   startSVGElement(output, 'circle', attrs)
   endSVGElement(output, 'circle')
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
@@ -645,7 +645,7 @@ end
 getBackground = function(node)
   for attr in ipairs({'mathbackground', 'background-color', 'background'}) do
     value = node.attributes.get(attr)
-    if pylua.op_is_not(value, nil) then
+    if PYLUA.op_is_not(value, nil) then
       if value=='transparent' then
         return 'none'
       else
