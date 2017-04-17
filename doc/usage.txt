@@ -1,0 +1,146 @@
+SVGMath User Guide
+
+CONTENTS
+
+1. What is SVGMath?
+2. Installing and configuring SVGMath
+3. Calling SVGMath from the command line
+4. Embedding MathML-to-SVG conversion into Python programs
+5. SVGMath images in XSL-FO
+6. Support
+
+1. What is SVGMath?
+
+SVGMath converts MathML (Mathematical Markup Language 2.0) expressions 
+to SVG (Scalable Vector Graphics 1.1) images. Both file formats are 
+W3C Recommendations: see http://www.w3.org/ for normative texts.  
+
+SVGMath is written in pure Python, with neither extension modules nor 
+external dependencies. It has been tested on CPython 2.4 and 2.5, 
+and JPython 2.2, and should run on any platform where a modern Python 
+environment is available. The software can be used either as 
+a command-line script for batch-mode file conversion, or as a component
+called from other Python applications to process MathML data without 
+serializing them to disk (via SAX interface).
+
+SVGMath is released under MIT open-source license; the full license text
+is contained in file LICENSE.txt.
+
+
+2. Installing and Configuring SVGMath
+
+Before you start using SVGMath, YOU MUST CONFIGURE THE FONTS. This process
+is described in details in a separate document, 'configuration.txt'. 
+Typically, this is done by modifying 'svgmath.xml' file in the root
+of the distribution.
+
+If you look for a command-line script to convert MathML sources to SVG 
+images, you don't need any special installation step. Once 'svgmath.xml' 
+matches your configuration, you can launch 'math2svg.py' script. Its
+call synopsis is described below. (On Unix/Linux machines, you may need
+to modify the first line of the script, inserting the actual path to the 
+Python executable on your computer).
+
+If you plan to use SVGMath as a module in your Python application,
+it makes sense to install it to your Python environment. This is done
+in a standard Pythonic way, by launching 'setup.py install'. The module
+public API is described below.
+
+
+3. Calling SVGMath from the command line
+
+The distribution includes a command-line script, 'math2svg.py'. Its call 
+synopsis is as follows:
+
+     python svgmath.py [options] FILE
+
+Argument is a name of the MathML file to convert to SVG. By default, 
+the result is written to the standard output.
+
+Options:
+    -h, --help              display this synopsis and exit
+    -s, --standalone        treat input as a standalone MathML image 
+    -c FILE, --config=FILE  read configuration from FILE
+    -o FILE, --output=FILE  write results to FILE
+    -e ENC, --encoding=ENC  produce output in ENC encoding
+
+If no -c or --config option is given, the script looks for configuration
+in the file named 'svgmath.xml' in the same directory as the script itself.
+
+By default, the script replaces all occurrences of elements in MathML
+namespace with their rendered SVG images, and passes all other elements
+to the output. To treat the input as a standalone MathML image, use
+the standalone option (-s or --standalone switch): in this mode, the 
+topmost element of the document is assumed to be MathML, and an error
+is signalled if it is not valid. Please note that no-namespace MathML
+images can only be processed in this mode.
+
+
+4. Embedding MathML-to-SVG conversion into Python programs
+
+If you need MathML-to-SVG conversion in your program, SVGMath can help.
+The principal conversion class is MathHandler in module 'svgmath.mathhandler'.
+Its constructor has the following form: 
+
+MathHandler(generator, config)
+
+Arguments have the following meaning:
+    - generator: implements sax.ContentHandler interface. Receives the
+                 resulting SVG through SAX calls. SVGMath can emit either
+                 namespace-aware (startElementNS/endElementNS, default) 
+                 or namespace-inaware (startElement/endElement) SAX calls;
+                 the choice is controlled by a static boolean flag, 
+                 svgmath.generators.useNamespaces. 
+                 
+    - config:    file object that represents a configuration file. It cannot 
+                 be None, and there is no default - your application is 
+                 responsible for providing the valid data in a file stream.
+       
+To read the input data, MathHandler implements the namespace-aware portion
+of sax.ContentHandler. After creation, it can be passed as a content handler
+to any SAX parser that produces MathML. Here a typical code snippet 
+illustrating the use of MathHandler:
+
+    from svgmath.mathhandler import MathHandler
+    from svgmath.tools.saxtools import XMLGenerator
+
+    # Open all files
+    source = open("test.mml", "r") 
+    output = open("test.svg", "w") 
+    config = open("svgmath.xml", "r")    
+
+    # Create the converter as a content handler. 
+    saxoutput = XMLGenerator(output, 'utf-8')
+    handler = MathHandler(saxoutput, config)
+    
+    # Parse input file with a namespace-aware SAX parser
+    parser = sax.make_parser()
+    parser.setFeature(sax.handler.feature_namespaces, 1)
+    parser.setContentHandler(handler)
+    parser.parse(source)
+
+You can also browse the code of math2svg.py script as a sample.
+
+NOTE: Be careful with the standard XMLGenerator from xml.sax.saxutils.
+As of Python 2.4.3 it crashes in namespace-aware mode, and messes up 
+output encodings not based on ASCII. The package includes a patched 
+version of the generator class, svgmath.tools.saxtools.XMLGenerator.
+                 
+
+5. SVGMath images in XSL-FO
+
+Starting from version 0.3, SVGMath package includes a stylesheet
+to adjust position of SVGMath-generated images inside XML-FO documents,
+fo/adjustbase.xsl. The stylesheet adds @alignment-adjust attribute
+to parent fo:instream-foreign-object, so that the alignment point
+on the image coincides with the alphabetic baseline of the MathML 
+expression. Apply it to the XSL-FO document _after_ it has been
+filtered through math2svg.py.
+
+
+6. Support
+
+Please send your comments, bug reports, and enhancement requests 
+to the author, Nikolai Grigoriev <svgmath@grigoriev.ru>. 
+
+

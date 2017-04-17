@@ -1,0 +1,37 @@
+MathML Support in SVGMath
+
+
+SVGMath supports most of Presentation MathML. It recognizes elements 
+either in MathML namespace (http://www.w3.org/1998/Math/MathML), or 
+in the anonymous namespace (i.e. unprefixed elements with no 'xmlns'
+specifier). Elements and attributes in other namespaces are ignored. 
+
+The following elements are supported:
+
+    Token elements:
+        <mi>, <mn>, <mo>, <mtext>, <ms>, <mspace>
+    General layout schemata:
+         <math>, <mrow>, <mstyle>, <mfrac>, <msqrt>, <mroot>, 
+         <mfenced>, <mphantom>, <mpadded>, <merror>, <menclose>
+    Scripts and limits schemata:
+         <msub>, <msup>, <msubsup>, 
+         <munder>, <mover>, <munderover>, <mmultiscripts>
+    Tables and matrices:
+         <mtable>, <mtr>, <mtd>
+
+The following elements and features are not supported:
+
+    - CSS styling
+    - percent values in most expressions
+    - <mglyph> element - ignored 
+    - <mlabeledtr> element: treated as <mtr>, first child ignored
+    - <malignmark> and <maligngroup> elements, 'groupalign' attribute
+    - <maction>: fallback implemented as described in the spec
+    - 'symmetric' attribute on <mo> element - ignored in most cases.
+      (Vertically stretchable fences are symmetric if their parent <mrow>
+      consists only of items aligned on the axis, and asymmetric if there 
+      is at least one child aligned on the alphabetic baseline).
+
+-----------------------------------------------------------------------
+Please send your comments, bug reports, and enhancement requests 
+to the author, Nikolai Grigoriev <svgmath@grigoriev.ru>
