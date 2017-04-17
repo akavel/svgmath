@@ -1,3 +1,3 @@
 __all__ = ["mathhandler", "mathconfig", "mathnode", "nodelocator", 
            "contextmakers", "measurers", "generators", "operators", 
-           "enclosures", "tables"]
+           "enclosures", "tables", "mathentityresolver"]

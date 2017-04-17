@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/python
 
 """Command-line tool to replace MathML with SVG throughout a document.
 
@@ -8,7 +8,7 @@ import getopt, sys, os.path
 from xml import sax
 # from xml.sax.saxutils import XMLGenerator
 from svgmath.tools.saxtools import XMLGenerator, ContentFilter
-from svgmath.mathhandler import MathHandler, MathNS
+from svgmath.mathhandler import MathHandler, MathNS, MathEntityResolver
 
 def open_or_die(fname, fmode, role):        
     try: return open(fname, fmode)
@@ -106,6 +106,7 @@ def main():
     try:
         parser = sax.make_parser()
         parser.setFeature(sax.handler.feature_namespaces, 1)
+	parser.setEntityResolver(MathEntityResolver())
         parser.setContentHandler(handler)
         parser.parse(source)
     except sax.SAXException, xcpt:

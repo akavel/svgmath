@@ -1,5 +1,6 @@
 """SAX filter for MathML-to-SVG conversion."""
 
+import os
 import sys
 from xml import sax
 from mathnode import MathNode
@@ -84,3 +85,11 @@ class MathHandler (sax.ContentHandler):
         if self.currentNode: 
             self.currentNode.text += content
 
+class MathEntityResolver(sax.handler.EntityResolver):
+    def __init__(self):
+        pass
+
+    def resolveEntity(self, publicId, systemId):
+        if systemId == "http://www.w3.org/TR/MathML2/dtd/mathml2.dtd":
+            return os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),  "mathml2.dtd"))
+        return systemId
