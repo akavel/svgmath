@@ -50,7 +50,7 @@ RowDescriptor = PYLUA.class() {
     self.spaceAfter = 0
     self.lineAfter = nil
     self.cells = {}
-    for c in ipairs(cells) do
+    for _, c in ipairs(cells) do
 len(busycells)>len(self.cells) and busycells[len(self.cells)]>0      self.cells.append(nil)
       halign = getByIndexOrLast(columnaligns, len(self.cells))
       valign = rowalign
@@ -64,7 +64,7 @@ len(busycells)>len(self.cells) and busycells[len(self.cells)]>0      self.cells.
       end
 len(self.cells)>=len(node.columns)      node.columns.append(ColumnDescriptor())
       self.cells.append(CellDescriptor(c, halign, valign, colspan, rowspan))
-      for i in ipairs(range(1, colspan)) do
+      for _, i in ipairs(range(1, colspan)) do
         self.cells.append(nil)
       end
 len(self.cells)>len(node.columns)      node.columns.append(ColumnDescriptor())
@@ -80,7 +80,7 @@ arrangeCells = function(node)
   busycells = {}
   table_rowaligns = node.getListProperty('rowalign')
   table_columnaligns = node.getListProperty('columnalign')
-  for ch in ipairs(node.children) do
+  for _, ch in ipairs(node.children) do
     rowalign = getByIndexOrLast(table_rowaligns, len(node.rows))
     row_columnaligns = table_columnaligns
     if ch.elementName=='mtr' or ch.elementName=='mlabeledtr' then
@@ -96,13 +96,13 @@ arrangeCells = function(node)
     node.rows.append(row)
     busycells = PYLUA.COMPREHENSION()
 len(busycells)<len(row.cells)    busycells.append(0)
-    for i in ipairs(range(len(row.cells))) do
+    for _, i in ipairs(range(len(row.cells))) do
       cell = row.cells[i]
       if PYLUA.op_is(cell, nil) then
         goto continue
       end
       if cell.rowspan>1 then
-        for j in ipairs(range(i, i+cell.colspan)) do
+        for _, j in ipairs(range(i, i+cell.colspan)) do
           busycells[j] = cell.rowspan-1
         end
       end
@@ -116,7 +116,7 @@ end
 arrangeLines = function(node)
   spacings = map(node.parseLength, node.getListProperty('rowspacing'))
   lines = node.getListProperty('rowlines')
-  for i in ipairs(range(len(node.rows)-1)) do
+  for _, i in ipairs(range(len(node.rows)-1)) do
     node.rows[i].spaceAfter = getByIndexOrLast(spacings, i)
     line = getByIndexOrLast(lines, i)
     if line~='none' then
@@ -126,7 +126,7 @@ arrangeLines = function(node)
   end
   spacings = map(node.parseSpace, node.getListProperty('columnspacing'))
   lines = node.getListProperty('columnlines')
-  for i in ipairs(range(len(node.columns)-1)) do
+  for _, i in ipairs(range(len(node.columns)-1)) do
     node.columns[i].spaceAfter = getByIndexOrLast(spacings, i)
     line = getByIndexOrLast(lines, i)
     if line~='none' then
@@ -138,7 +138,7 @@ arrangeLines = function(node)
   node.framelines = {nil, nil}
   spacings = map(node.parseSpace, node.getListProperty('framespacing'))
   lines = node.getListProperty('frame')
-  for i in ipairs(range(2)) do
+  for _, i in ipairs(range(2)) do
     line = getByIndexOrLast(lines, i)
     if line~='none' then
       node.framespacings[i] = getByIndexOrLast(spacings, i)
@@ -158,7 +158,7 @@ calculateColumnWidths = function(node)
     end
   end
   columnwidths = node.getListProperty('columnwidth')
-  for i in ipairs(range(len(node.columns))) do
+  for _, i in ipairs(range(len(node.columns))) do
     column = node.columns[i]
     attr = getByIndexOrLast(columnwidths, i)
     if PYLUA.op_in(attr, {'auto', 'fit'}) then
@@ -178,8 +178,8 @@ calculateColumnWidths = function(node)
       column.auto = false
     end
   end
-  for r in ipairs(node.rows) do
-    for i in ipairs(range(len(r.cells))) do
+  for _, r in ipairs(node.rows) do
+    for _, i in ipairs(range(len(r.cells))) do
       c = r.cells[i]
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.colspan>1 then
         goto continue
@@ -192,8 +192,8 @@ calculateColumnWidths = function(node)
   end
 true  adjustedColumns = {}
   adjustedWidth = 0
-  for r in ipairs(node.rows) do
-    for i in ipairs(range(len(r.cells))) do
+  for _, r in ipairs(node.rows) do
+    for _, i in ipairs(range(len(r.cells))) do
       c = r.cells[i]
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.colspan==1 then
         goto continue
@@ -233,12 +233,12 @@ true      oversizedColumns = PYLUA.COMPREHENSION()
   end
   if len(adjustedColumns)==0 then
   end
-  for col in ipairs(adjustedColumns) do
+  for _, col in ipairs(adjustedColumns) do
     col.width = adjustedWidth
   end
   if node.getProperty('equalcolumns')=='true' then
     globalWidth = max(PYLUA.COMPREHENSION())
-    for col in ipairs(node.columns) do
+    for _, col in ipairs(node.columns) do
       if col.auto then
         col.width = globalWidth
       end
@@ -258,7 +258,7 @@ true      oversizedColumns = PYLUA.COMPREHENSION()
         node.error('Overconstrained table layout: explicit table width specified, but no column has automatic width; table width attribute ignored')
       else
         delta = delta/len(sizableColumns)
-        for col in ipairs(sizableColumns) do
+        for _, col in ipairs(sizableColumns) do
           col.width = col.width+delta
         end
       end
@@ -268,10 +268,10 @@ end
 
 calculateRowHeights = function(node)
   commonAxis = node.axis()
-  for r in ipairs(node.rows) do
+  for _, r in ipairs(node.rows) do
     r.height = 0
     r.depth = 0
-    for c in ipairs(r.cells) do
+    for _, c in ipairs(r.cells) do
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.rowspan~=1 then
         goto continue
       end
@@ -300,9 +300,9 @@ calculateRowHeights = function(node)
   end
 true  adjustedRows = {}
   adjustedSize = 0
-  for i in ipairs(range(len(node.rows))) do
+  for _, i in ipairs(range(len(node.rows))) do
     r = node.rows[i]
-    for c in ipairs(r.cells) do
+    for _, c in ipairs(r.cells) do
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.rowspan==1 then
         goto continue
       end
@@ -333,14 +333,14 @@ true      oversizedRows = PYLUA.COMPREHENSION()
   end
   if len(adjustedRows)==0 then
   end
-  for r in ipairs(adjustedRows) do
+  for _, r in ipairs(adjustedRows) do
     delta = (adjustedSize-r.height-r.depth)/2
     r.height = r.height+delta
     r.depth = r.depth+delta
   end
   if node.getProperty('equalrows')=='true' then
     maxvsize = max(PYLUA.COMPREHENSION())
-    for r in ipairs(node.rows) do
+    for _, r in ipairs(node.rows) do
       delta = (maxvsize-r.height-r.depth)/2
       r.height = r.height+delta
       r.depth = r.depth+delta

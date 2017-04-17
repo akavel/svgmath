@@ -87,7 +87,7 @@ MathNode = PYLUA.class() {
 
   measure = function(self)
     self.makeContext()
-    for ch in ipairs(self.children) do
+    for _, ch in ipairs(self.children) do
       ch.measure()
     end
     self.measureNode()
@@ -258,7 +258,7 @@ MathNode = PYLUA.class() {
   getUCSText = function(self)
     codes = {}
     hisurr = nil
-    for ch in ipairs(self.text) do
+    for _, ch in ipairs(self.text) do
       chcode = ord(ch)
       if isLowSurrogate(ch) then
         if PYLUA.op_is(hisurr, nil) then
@@ -290,7 +290,7 @@ MathNode = PYLUA.class() {
 
       fillMetricList = function(familylist)
         metriclist = {}
-        for family in ipairs(familylist) do
+        for _, family in ipairs(familylist) do
           metric = self.config.findfont(self.fontweight, self.fontstyle, family)
           if PYLUA.op_is_not(metric, nil) then
             metriclist.append(FontMetricRecord(family, metric))
@@ -320,7 +320,7 @@ MathNode = PYLUA.class() {
   metric = function(self)
     if PYLUA.op_is(self.nominalMetric, nil) then
       self.nominalMetric = self.fontpool()[1].metric
-      for fd in ipairs(self.metriclist) do
+      for _, fd in ipairs(self.metriclist) do
         if fd.used then
           self.nominalMetric = fd.metric
         end
@@ -371,7 +371,7 @@ MathNode = PYLUA.class() {
   ;
 
   hasGlyph = function(self, ch)
-    for fdesc in ipairs(self.fontpool()) do
+    for _, fdesc in ipairs(self.fontpool()) do
       if PYLUA.op_is_not(fdesc.metric.chardata.get(ch), nil) then
         return true
       end
@@ -381,7 +381,7 @@ MathNode = PYLUA.class() {
   ;
 
   findChar = function(self, ch)
-    for fd in ipairs(self.fontpool()) do
+    for _, fd in ipairs(self.fontpool()) do
       cm = fd.metric.chardata.get(ch)
       if cm then
         return cm, fd
@@ -399,7 +399,7 @@ MathNode = PYLUA.class() {
     cm0 = nil
     cm1 = nil
     ucstext = self.getUCSText()
-    for chcode in ipairs(ucstext) do
+    for _, chcode in ipairs(ucstext) do
       chardesc = self.findChar(chcode)
       if PYLUA.op_is(chardesc, nil) then
         self.width = self.width+self.metric().missingGlyph.width

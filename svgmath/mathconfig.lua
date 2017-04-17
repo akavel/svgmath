@@ -107,8 +107,8 @@ styling['operator']        self.opstyles[opname] = styling
     weight = weight or 'normal'.strip()
     style = style or 'normal'.strip()
     family = PYLUA.str_maybe('').join(family or ''.lower().split())
-    for w in ipairs({weight, 'normal'}) do
-      for s in ipairs({style, 'normal'}) do
+    for _, w in ipairs({weight, 'normal'}) do
+      for _, s in ipairs({style, 'normal'}) do
         metric = self.fonts.get(w+' '+s+' '+family)
         if metric then
           return metric
@@ -129,19 +129,19 @@ main = function()
   end
   io.write('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
   io.write('Fonts:', '\n')
-  for font, metric in ipairs(config.fonts.items()) do
+  for _, font, metric in ipairs(config.fonts.items()) do
     io.write('    ', font, '-->', metric.fontname, '\n')
   end
   io.write('Math variants:', '\n')
-  for variant, value in ipairs(config.variants.items()) do
+  for _, variant, value in ipairs(config.variants.items()) do
     io.write('    ', variant, '-->', value, '\n')
   end
   io.write('Defaults:', '\n')
-  for attr, value in ipairs(config.defaults.items()) do
+  for _, attr, value in ipairs(config.defaults.items()) do
     io.write('    ', attr, '=', value, '\n')
   end
   io.write('Operator styling:', '\n')
-  for opname, value in ipairs(config.opstyles.items()) do
+  for _, opname, value in ipairs(config.opstyles.items()) do
     io.write('    ', repr(opname), ':', value, '\n')
   end
   io.write('Fallback font families:', config.fallbackFamilies, '\n')

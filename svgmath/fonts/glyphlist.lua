@@ -49,7 +49,7 @@ main = function()
   else
     glyphList = defaultGlyphList
   end
-  for entry, value in ipairs(glyphList.items()) do
+  for _, entry, value in ipairs(glyphList.items()) do
     io.write(entry, ' => ', value, '\n')
   end
 end

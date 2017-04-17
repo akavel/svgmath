@@ -95,7 +95,7 @@ end
 context_mo = function(node)
   extra_style = node.config.opstyles.get(node.text)
   if extra_style then
-    for prop, value in ipairs(extra_style.items()) do
+    for _, prop, value in ipairs(extra_style.items()) do
       node.attributes.setdefault(prop, value)
     end
   end

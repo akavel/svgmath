@@ -8,7 +8,7 @@ lookup = function(op, form)
   if PYLUA.op_is_not(res, nil) then
     return res
   end
-  for f in ipairs({'infix', 'postfix', 'prefix'}) do
+  for _, f in ipairs({'infix', 'postfix', 'prefix'}) do
     res = operatorDictionary.get(op+f)
     if PYLUA.op_is_not(res, nil) then
       return res

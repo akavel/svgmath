@@ -76,7 +76,7 @@ main = function()
   configfile = nil
   encoding = 'utf-8'
   standalone = false
-  for o, a in ipairs(opts) do
+  for _, o, a in ipairs(opts) do
     if PYLUA.op_in(o, '-h', '--help') then
       usage()
       sys.exit(0)

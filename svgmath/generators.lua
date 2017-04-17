@@ -17,7 +17,7 @@ startElement = function(output, localname, namespace, prefix, attrs)
   end
   if useNamespaces then
     nsAttrs = { }
-    for att, value in ipairs(attrs.items()) do
+    for _, att, value in ipairs(attrs.items()) do
       nsAttrs[nil, att] = value
     end
     qnames = attrs.keys()
@@ -90,7 +90,7 @@ draw_mrow = function(node, output)
     return 
   end
   offset = -node.children[1].leftspace
-  for ch in ipairs(node.children) do
+  for _, ch in ipairs(node.children) do
     offset = offset+ch.leftspace
     baseline = 0
     if ch.alignToAxis and  not node.alignToAxis then
@@ -288,7 +288,7 @@ drawScripts = function(node, output)
   end
   drawBox(node, output)
   offset = 0
-  for i in ipairs(range(len(node.prewidths))) do
+  for _, i in ipairs(range(len(node.prewidths))) do
     offset = offset+node.prewidths[i]
     if i<len(node.presubscripts) then
       presubscript = node.presubscripts[i]
@@ -301,7 +301,7 @@ drawScripts = function(node, output)
   end
   drawTranslatedNode(node.base, output, offset, 0)
   offset = offset+node.base.width
-  for i in ipairs(range(len(node.postwidths))) do
+  for _, i in ipairs(range(len(node.postwidths))) do
     if i<len(node.subscripts) then
       subscript = node.subscripts[i]
       drawTranslatedNode(subscript, output, offset, subY-adjustment(subscript))
@@ -358,11 +358,11 @@ end
 draw_mtable = function(node, output)
   drawBox(node, output)
   vshift = -node.height+node.framespacings[2]
-  for r in ipairs(range(len(node.rows))) do
+  for _, r in ipairs(range(len(node.rows))) do
     row = node.rows[r]
     vshift = vshift+row.height
     hshift = node.framespacings[1]
-    for c in ipairs(range(len(row.cells))) do
+    for _, c in ipairs(range(len(row.cells))) do
       column = node.columns[c]
       cell = row.cells[c]
       if PYLUA.op_is_not(cell, nil) and PYLUA.op_is_not(cell.content, nil) then
@@ -421,7 +421,7 @@ draw_mtable = function(node, output)
   drawBorder(x1, y2, x2, y2, node.framelines[2])
   hshift = node.framespacings[1]
   hoffsets = {}
-  for c in ipairs(range(len(node.columns))) do
+  for _, c in ipairs(range(len(node.columns))) do
     spacing = node.columns[c].spaceAfter
     hshift = hshift+node.columns[c].width
     hoffsets.append(hshift+spacing/2)
@@ -430,7 +430,7 @@ draw_mtable = function(node, output)
   hoffsets[0] = x2
   vshift = -node.height+node.framespacings[2]
   voffsets = {}
-  for r in ipairs(range(len(node.rows))) do
+  for _, r in ipairs(range(len(node.rows))) do
     spacing = node.rows[r].spaceAfter
     vshift = vshift+node.rows[r].height+node.rows[r].depth
     voffsets.append(vshift+spacing/2)
@@ -438,17 +438,17 @@ draw_mtable = function(node, output)
   end
   voffsets[0] = y2
   vspans = {0}*len(node.columns)
-  for r in ipairs(range(len(node.rows)-1)) do
+  for _, r in ipairs(range(len(node.rows)-1)) do
     row = node.rows[r]
     if PYLUA.op_is(row.lineAfter, nil) then
       goto continue
     end
-    for c in ipairs(range(len(row.cells))) do
+    for _, c in ipairs(range(len(row.cells))) do
       cell = row.cells[c]
       if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
         goto continue
       end
-      for j in ipairs(range(c, c+cell.colspan)) do
+      for _, j in ipairs(range(c, c+cell.colspan)) do
         vspans[j] = cell.rowspan
       end
     end
@@ -456,7 +456,7 @@ draw_mtable = function(node, output)
     lineY = voffsets[r]
     startX = x1
     endX = x1
-    for c in ipairs(range(len(node.columns))) do
+    for _, c in ipairs(range(len(node.columns))) do
       if vspans[c]>0 then
         drawBorder(startX, lineY, endX, lineY, row.lineAfter)
         startX = hoffsets[c]
@@ -466,12 +466,12 @@ draw_mtable = function(node, output)
     drawBorder(startX, lineY, endX, lineY, row.lineAfter)
   end
   hspans = {0}*len(node.rows)
-  for c in ipairs(range(len(node.columns)-1)) do
+  for _, c in ipairs(range(len(node.columns)-1)) do
     column = node.columns[c]
     if PYLUA.op_is(column.lineAfter, nil) then
       goto continue
     end
-    for r in ipairs(range(len(node.rows))) do
+    for _, r in ipairs(range(len(node.rows))) do
       row = node.rows[r]
       if len(row.cells)<=c then
         goto continue
@@ -480,7 +480,7 @@ draw_mtable = function(node, output)
       if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
         goto continue
       end
-      for j in ipairs(range(r, r+cell.rowspan)) do
+      for _, j in ipairs(range(r, r+cell.rowspan)) do
         hspans[j] = cell.colspan
       end
     end
@@ -488,7 +488,7 @@ draw_mtable = function(node, output)
     lineX = hoffsets[c]
     startY = y1
     endY = y1
-    for r in ipairs(range(len(node.rows))) do
+    for _, r in ipairs(range(len(node.rows))) do
       if hspans[r]>0 then
         drawBorder(lineX, startY, lineX, endY, column.lineAfter)
         startY = voffsets[r]
@@ -557,7 +557,7 @@ drawSVGText = function(node, output)
   if node.textStretch~=1 then
     attrs['transform'] = PYLUA.mod('scale(%f, 1)', node.textStretch)
   end
-  for oldchar, newchar in ipairs(mathnode.specialChars.items()) do
+  for _, oldchar, newchar in ipairs(mathnode.specialChars.items()) do
     node.text = node.text.replace(oldchar, newchar)
   end
   startSVGElement(output, 'text', attrs)
@@ -648,7 +648,7 @@ drawStrikesEnclosure = function(node, output)
 end
 
 getBackground = function(node)
-  for attr in ipairs({'mathbackground', 'background-color', 'background'}) do
+  for _, attr in ipairs({'mathbackground', 'background-color', 'background'}) do
     value = node.attributes.get(attr)
     if PYLUA.op_is_not(value, nil) then
       if value=='transparent' then

@@ -88,7 +88,7 @@ FontMetric = PYLUA.class() {
       end
     end
     if PYLUA.op_is(self.axisposition, nil) then
-      for ch in ipairs({ord('+'), 8722, ord('='), ord('<'), ord('>'), 183}) do
+      for _, ch in ipairs({ord('+'), 8722, ord('='), ord('<'), ord('>'), 183}) do
         cm = self.chardata.get(ch)
         if PYLUA.op_is_not(cm, nil) then
           self.axisposition = (cm.bbox[2]+cm.bbox[4])/2
@@ -98,7 +98,7 @@ FontMetric = PYLUA.class() {
     if PYLUA.op_is_not(self.underlinethickness, nil) then
       self.rulewidth = self.underlinethickness
     else
-      for ch in ipairs({8211, 8212, 8213, 8722, ord('-')}) do
+      for _, ch in ipairs({8211, 8212, 8213, 8722, ord('-')}) do
         cm = self.chardata.get(ch)
         if PYLUA.op_is_not(cm, nil) then
           self.rulewidth = cm.bbox[4]-cm.bbox[2]
@@ -137,7 +137,7 @@ FontMetric = PYLUA.class() {
     io.write('FontFamily: ', self.family, '\n')
     io.write('Weight: ', self.weight, '\n')
     io.write('FontBBox: ')
-    for x in ipairs(self.bbox) do
+    for _, x in ipairs(self.bbox) do
       io.write(x)
     end
     io.write('\n')
@@ -155,12 +155,12 @@ FontMetric = PYLUA.class() {
     io.write('Character data: ', '\n')
     chars = self.chardata.items()
     chars.sort(PYLUA.keywords{key=cc[1]})
-    for i, cm in ipairs(chars) do
+    for _, i, cm in ipairs(chars) do
       if PYLUA.op_is(cm, nil) then
         goto continue
       end
       io.write('    ', PYLUA.mod('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
-      for x in ipairs(cm.bbox) do
+      for _, x in ipairs(cm.bbox) do
         io.write(x)
       end
       io.write('\n')

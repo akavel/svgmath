@@ -53,7 +53,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       return 
     end
     properties = { }
-    for attName, value in ipairs(attributes.items()) do
+    for _, attName, value in ipairs(attributes.items()) do
       attNamespace, attLocalName = attName
       if attNamespace and attNamespace~=MathNS then
         if self.config.verbose then

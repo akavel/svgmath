@@ -117,7 +117,7 @@ measure_mfenced = function(node)
   separators = PYLUA.str_maybe('').join(node.getProperty('separators').split())
   sepindex = 0
   lastsep = len(separators)-1
-  for ch in ipairs(old_children) do
+  for _, ch in ipairs(old_children) do
     if len(node.children)>1 and lastsep>=0 then
       sep = mathnode.MathNode('mo', { separator='true', form='infix', }, nil, node.config, node)
       sep.text = separators[sepindex]
@@ -211,13 +211,13 @@ measure_mrow = function(node)
   end
   node.alignToAxis = true
   node.isSpace = true
-  for ch in ipairs(node.children) do
+  for _, ch in ipairs(node.children) do
     if  not ch.isSpace then
       node.alignToAxis = node.alignToAxis and ch.alignToAxis
       node.isSpace = false
     end
   end
-  for i in ipairs(range(len(node.children))) do
+  for _, i in ipairs(range(len(node.children))) do
     ch = node.children[i]
     if ch.core.elementName~='mo' then
       goto continue
@@ -254,7 +254,7 @@ measure_mrow = function(node)
     end
   end
   node.ascender, node.descender = getVerticalStretchExtent(node.children, node.alignToAxis, node.axis())
-  for ch in ipairs(node.children) do
+  for _, ch in ipairs(node.children) do
     if ch.core.stretchy then
       desiredHeight = node.ascender
       desiredDepth = node.descender
@@ -268,7 +268,7 @@ measure_mrow = function(node)
     end
   end
   node.height, node.depth, node.ascender, node.descender = getRowVerticalExtent(node.children, node.alignToAxis, node.axis())
-  for ch in ipairs(node.children) do
+  for _, ch in ipairs(node.children) do
     node.width = node.width+ch.width+ch.leftspace+ch.rightspace
   end
   node.leftspace = node.children[1].leftspace
@@ -423,7 +423,7 @@ measure_mmultiscripts = function(node)
   presuperscripts = {}
   isPre = false
   isSub = true
-  for ch in ipairs(PYLUA.slice(node.children, 1, nil)) do
+  for _, ch in ipairs(PYLUA.slice(node.children, 1, nil)) do
     if ch.elementName=='mprescripts' then
       if isPre then
         node.error('Repeated \'mprescripts\' element inside \'mmultiscripts\n')
@@ -535,8 +535,8 @@ measure_mtable = function(node)
   tables.arrangeCells(node)
   tables.arrangeLines(node)
   tables.calculateColumnWidths(node)
-  for r in ipairs(node.rows) do
-    for i in ipairs(range(len(r.cells))) do
+  for _, r in ipairs(node.rows) do
+    for _, i in ipairs(range(len(r.cells))) do
       c = r.cells[i]
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
         goto continue
@@ -564,9 +564,9 @@ measure_mtable = function(node)
     end
   end
   tables.calculateRowHeights(node)
-  for i in ipairs(range(len(node.rows))) do
+  for _, i in ipairs(range(len(node.rows))) do
     r = node.rows[i]
-    for c in ipairs(r.cells) do
+    for _, c in ipairs(r.cells) do
       if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
         goto continue
       end
@@ -606,7 +606,7 @@ measure_mtable = function(node)
   else
     row = node.rows[alignRow-1]
     topLine = node.framespacings[2]
-    for r in ipairs(PYLUA.slice(node.rows, 0, alignRow)) do
+    for _, r in ipairs(PYLUA.slice(node.rows, 0, alignRow)) do
       topLine = topLine+r.height+r.depth+r.spaceAfter
     end
     bottomLine = topLine+row.height+row.depth
@@ -723,7 +723,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
 
   parallelWidths = function(nodes1, nodes2)
     widths = {}
-    for i in ipairs(range(max(len(nodes1), len(nodes2)))) do
+    for _, i in ipairs(range(max(len(nodes1), len(nodes2)))) do
       w = 0
       if i<len(nodes1) then
         w = max(w, nodes1[i].width)
@@ -903,7 +903,7 @@ end
 getVerticalStretchExtent = function(descendants, rowAlignToAxis, axis)
   ascender = 0
   descender = 0
-  for ch in ipairs(descendants) do
+  for _, ch in ipairs(descendants) do
     if ch.core.stretchy then
       asc = ch.core.ascender
       desc = ch.core.descender
@@ -930,7 +930,7 @@ getRowVerticalExtent = function(descendants, rowAlignToAxis, axis)
   depth = 0
   ascender = 0
   descender = 0
-  for ch in ipairs(descendants) do
+  for _, ch in ipairs(descendants) do
     h = ch.height
     d = ch.depth
     asc = ch.ascender

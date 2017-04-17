@@ -107,7 +107,7 @@ self._ns_contexts[0]  end
   startElement = function(self, name, attrs)
     self._flush_starttag()
     self._write(PYLUA.mod('<%s', unicode(name)))
-    for name, value in ipairs(attrs.items()) do
+    for _, name, value in ipairs(attrs.items()) do
       self._write(PYLUA.mod(' %s=%s', unicode(name), quoteattr(value)))
     end
     self._starttag_pending = true
@@ -126,10 +126,10 @@ self._ns_contexts[0]  end
 
   startElementNS = function(self, name, qname, attrs)
     qattrs = { }
-    for attname, attvalue in ipairs(attrs.items()) do
+    for _, attname, attvalue in ipairs(attrs.items()) do
       qattrs[self._qname(attname)] = attvalue
     end
-    for prefix, uri in ipairs(self._undeclared_ns_maps) do
+    for _, prefix, uri in ipairs(self._undeclared_ns_maps) do
       if prefix then
         qattrs[PYLUA.mod('xmlns:%s', unicode(prefix))] = uri
       else

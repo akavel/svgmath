@@ -103,7 +103,7 @@ true    line = afmfile.readline()
     glyphname = nil
     width = nil
     bbox = nil
-    for token in ipairs(line.split(';')) do
+    for _, token in ipairs(line.split(';')) do
       d = token.split()
       if len(d)<2 then
         goto continue
@@ -136,7 +136,7 @@ true    line = afmfile.readline()
     codes = self.glyphList.lookup(glyphname)
     if PYLUA.op_is_not(codes, nil) then
       cm = CharMetric(glyphname, codes, width, bbox)
-      for c in ipairs(codes) do
+      for _, c in ipairs(codes) do
         self.chardata[c] = cm
       end
     elseif glyphname.startswith('uni') then
