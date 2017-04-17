@@ -136,16 +136,20 @@ MathNode = PYLUA.class() {
   ;
 
   parseInt = function(self, x)
-    return int(x, 10)
-TypeError    self.error(PYLUA.mod('Cannot parse string \'%s\' as an integer', str(x)))
-    return 0
+    -- PYLUA.FIXME: TRY:
+      return int(x, 10)
+    -- PYLUA.FIXME: EXCEPT TypeError:
+      self.error(PYLUA.mod('Cannot parse string \'%s\' as an integer', str(x)))
+      return 0
   end
   ;
 
   parseFloat = function(self, x)
-    value = float(x)
-ValueError    self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))
-    return 0.0
+    -- PYLUA.FIXME: TRY:
+      value = float(x)
+    -- PYLUA.FIXME: EXCEPT ValueError:
+      self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))
+      return 0.0
     text = str(value).lower()
     if text.find('nan')>=0 or text.find('inf')>=0 then
       self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))

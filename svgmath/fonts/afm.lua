@@ -137,18 +137,22 @@ true    line = afmfile.readline()
     elseif glyphname.startswith('uni') then
       if len(glyphname)~=7 then
       end
-      c = int(PYLUA.slice(glyphname, 3, nil), 16)
-      if c>=0 and c<65536 then
-        self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
-      end
-TypeError    elseif glyphname.startswith('u') then
+      -- PYLUA.FIXME: TRY:
+        c = int(PYLUA.slice(glyphname, 3, nil), 16)
+        if c>=0 and c<65536 then
+          self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
+        end
+      -- PYLUA.FIXME: EXCEPT TypeError:
+    elseif glyphname.startswith('u') then
       if PYLUA.op_not_in(len(glyphname), {5, 6, 7}) then
       end
-      c = int(PYLUA.slice(glyphname, 1, nil), 16)
-      if c>=0 and c<65536 then
-        self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
-      end
-TypeError    end
+      -- PYLUA.FIXME: TRY:
+        c = int(PYLUA.slice(glyphname, 1, nil), 16)
+        if c>=0 and c<65536 then
+          self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
+        end
+      -- PYLUA.FIXME: EXCEPT TypeError:
+    end
   end
   ;
 

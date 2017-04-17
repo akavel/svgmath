@@ -3,9 +3,11 @@
 -- Replaces all instances of MathML throughout the document
 
 open_or_die = function(fname, fmode, role)
-  return open(fname, fmode)
-IOErrorxcpt  io.write(PYLUA.mod('Cannot open %s file \'%s\': %s', role, fname, str(xcpt)), '\n')
-  sys.exit(1)
+  -- PYLUA.FIXME: TRY:
+    return open(fname, fmode)
+  -- PYLUA.FIXME: EXCEPT IOError xcpt:
+    io.write(PYLUA.mod('Cannot open %s file \'%s\': %s', role, fname, str(xcpt)), '\n')
+    sys.exit(1)
 end
 
 usage = function()
@@ -56,9 +58,11 @@ MathFilter = PYLUA.class(ContentFilter) {
 
 
 main = function()
-  opts, args = getopt.getopt(PYLUA.slice(sys.argv, 1, nil), 'c:e:ho:s', {'config=', 'encoding=', 'help', 'output=', 'standalone'})
-getopt.GetoptError  usage()
-  sys.exit(2)
+  -- PYLUA.FIXME: TRY:
+    opts, args = getopt.getopt(PYLUA.slice(sys.argv, 1, nil), 'c:e:ho:s', {'config=', 'encoding=', 'help', 'output=', 'standalone'})
+  -- PYLUA.FIXME: EXCEPT getopt.GetoptError:
+    usage()
+    sys.exit(2)
   outputfile = nil
   configfile = nil
   encoding = 'utf-8'
@@ -104,13 +108,15 @@ getopt.GetoptError  usage()
     handler = MathFilter(saxoutput, handler)
   end
   exitcode = 0
-  parser = sax.make_parser()
-  parser.setFeature(sax.handler.feature_namespaces, 1)
-  parser.setEntityResolver(MathEntityResolver())
-  parser.setContentHandler(handler)
-  parser.parse(source)
-sax.SAXExceptionxcpt  io.write(PYLUA.mod('Error parsing input file %s: %s', args[1], xcpt.getMessage()), '\n')
-  exitcode = 1
+  -- PYLUA.FIXME: TRY:
+    parser = sax.make_parser()
+    parser.setFeature(sax.handler.feature_namespaces, 1)
+    parser.setEntityResolver(MathEntityResolver())
+    parser.setContentHandler(handler)
+    parser.parse(source)
+  -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
+    io.write(PYLUA.mod('Error parsing input file %s: %s', args[1], xcpt.getMessage()), '\n')
+    exitcode = 1
   source.close()
   if PYLUA.op_is_not(outputfile, nil) then
     output.close()

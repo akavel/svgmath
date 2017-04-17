@@ -14,12 +14,14 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     self.defaults = { }
     self.opstyles = { }
     self.fallbackFamilies = {}
-    parser = sax.make_parser()
-    parser.setContentHandler(self)
-    parser.setFeature(sax.handler.feature_namespaces, 0)
-    parser.parse(configfile)
-sax.SAXExceptionxcpt    io.write('Error parsing configuration file ', configfile, ': ', xcpt.getMessage(), '\n')
-    sys.exit(1)
+    -- PYLUA.FIXME: TRY:
+      parser = sax.make_parser()
+      parser.setContentHandler(self)
+      parser.setFeature(sax.handler.feature_namespaces, 0)
+      parser.parse(configfile)
+    -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
+      io.write('Error parsing configuration file ', configfile, ': ', xcpt.getMessage(), '\n')
+      sys.exit(1)
   end
   ;
 
@@ -45,24 +47,27 @@ sax.SAXExceptionxcpt    io.write('Error parsing configuration file ', configfile
       if style~='normal' then
         fontfullname = fontfullname+' '+style
       end
-      if PYLUA.op_in('afm', attributes.keys()) then
-        fontpath = attributes.get('afm')
-        metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
-      elseif PYLUA.op_in('ttf', attributes.keys()) then
-        fontpath = attributes.get('ttf')
-        metric = TTFMetric(fontpath, sys.stderr)
-      else
-        sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
+      -- PYLUA.FIXME: TRY:
+        if PYLUA.op_in('afm', attributes.keys()) then
+          fontpath = attributes.get('afm')
+          metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
+        elseif PYLUA.op_in('ttf', attributes.keys()) then
+          fontpath = attributes.get('ttf')
+          metric = TTFMetric(fontpath, sys.stderr)
+        else
+          sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
+          sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+          return 
+        end
+      -- PYLUA.FIXME: EXCEPT FontFormatError err:
+        sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
         sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
         return 
-      end
-FontFormatErrorerr      sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
-      sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
-      return 
-IOError      message = sys.exc_info()[2]
-      sys.stderr.write(PYLUA.mod('I/O error reading font file \'%s\': %s\n', fontpath, str(message)))
-      sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
-      return 
+      -- PYLUA.FIXME: EXCEPT IOError:
+        message = sys.exc_info()[2]
+        sys.stderr.write(PYLUA.mod('I/O error reading font file \'%s\': %s\n', fontpath, str(message)))
+        sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+        return 
       self.fonts[weight+' '+style+' '+self.currentFamily] = metric
     elseif name=='mathvariant' then
       variantattr = attributes.get('name')
