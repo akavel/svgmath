@@ -3,6 +3,9 @@
 -- The module contains two kinds of methods to set up context:
 --    - context creators process the context of the current node;
 --    - child context setters alter the context of a child.
+local sys = require('sys')
+local mathnode = require('mathnode')
+local operators = require('operators')
 
 default_context = function(node)
   -- Default context creator for a MathML tree node.

@@ -1,6 +1,15 @@
 -- Command-line tool to replace MathML with SVG throughout a document.
 -- 
 -- Replaces all instances of MathML throughout the document
+local getopt = require('getopt')
+local sys = require('sys')
+local os.path = require('os.path')
+local sax = require('xml').sax
+local XMLGenerator = require('svgmath.tools.saxtools').XMLGenerator
+local ContentFilter = require('svgmath.tools.saxtools').ContentFilter
+local MathHandler = require('svgmath.mathhandler').MathHandler
+local MathNS = require('svgmath.mathhandler').MathNS
+local MathEntityResolver = require('svgmath.mathhandler').MathEntityResolver
 
 open_or_die = function(fname, fmode, role)
   -- PYLUA.FIXME: TRY:

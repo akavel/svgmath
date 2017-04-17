@@ -1,4 +1,6 @@
 -- Miscellaneous SAX-related utilities used in SVGMath
+local handler = require('xml.sax').handler
+local getwriter = require('codecs').getwriter
 
 escape = function(data)
   -- Escape &, <, and > in a string of data.

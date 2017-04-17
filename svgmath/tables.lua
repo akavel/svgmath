@@ -1,6 +1,8 @@
 -- Table-related formatting functions.
 -- 
 -- This module contains functions called from measurers.py to format tables.
+local sys = require('sys')
+local mathnode = require('mathnode')
 
 getByIndexOrLast = function(lst, idx)
   if idx<len(lst) then

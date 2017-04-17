@@ -1,4 +1,5 @@
 -- Node locator for MathML parser.
+local sys = require('sys')
 
 NodeLocator = PYLUA.class() {
   -- Node locator for MathML parser.

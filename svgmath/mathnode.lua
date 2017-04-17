@@ -1,4 +1,10 @@
 -- Main structure class for MathML formatting.
+local sys = require('sys')
+local contextmakers = require('contextmakers')
+local measurers = require('measurers')
+local generators = require('generators')
+local sax = require('xml').sax
+local NodeLocator = require('nodelocator').NodeLocator
 
 isHighSurrogate = function(ch)
   -- Tests whether a Unicode character is from the high surrogates range

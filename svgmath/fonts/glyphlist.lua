@@ -1,3 +1,5 @@
+local sys = require('sys')
+local os = require('os')
 
 GlyphList = PYLUA.class(dict) {
 

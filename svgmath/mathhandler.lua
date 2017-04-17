@@ -1,4 +1,10 @@
 -- SAX filter for MathML-to-SVG conversion.
+local os = require('os')
+local sys = require('sys')
+local sax = require('xml').sax
+local MathNode = require('mathnode').MathNode
+local MathConfig = require('mathconfig').MathConfig
+local NodeLocator = require('nodelocator').NodeLocator
 MathNS = 'http://www.w3.org/1998/Math/MathML'
 
 MathHandler = PYLUA.class(sax.ContentHandler) {

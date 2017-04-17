@@ -1,4 +1,5 @@
 -- MathML operator dictionary and related functions
+local sys = require('sys')
 operatorDictionary = { }
 
 lookup = function(op, form)

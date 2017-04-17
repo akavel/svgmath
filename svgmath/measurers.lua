@@ -1,4 +1,10 @@
 -- Functions to determine size and position of MathML elements
+local sys = require('sys')
+local math = require('math')
+local mathnode = require('mathnode')
+local operators = require('operators')
+local tables = require('tables')
+local enclosures = require('enclosures')
 defaultSlope = 1.383
 
 default_measure = function(node)

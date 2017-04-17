@@ -1,4 +1,10 @@
 -- Configuration for MathML-to-SVG formatter.
+local os = require('os')
+local sys = require('sys')
+local sax = require('xml').sax
+local AFMMetric = require('fonts.afm').AFMMetric
+local TTFMetric = require('fonts.ttf').TTFMetric
+local FontFormatError = require('fonts.metric').FontFormatError
 
 MathConfig = PYLUA.class(sax.ContentHandler) {
   -- Configuration for MathML-to-SVG formatter.

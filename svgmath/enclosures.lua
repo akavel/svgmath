@@ -1,4 +1,7 @@
 -- Functions to format enclosures around MathML elements.
+local sys = require('sys')
+local math = require('math')
+local mathnode = require('mathnode')
 
 addRadicalEnclosure = function(node)
   node.lineWidth = node.nominalThinStrokeWidth()

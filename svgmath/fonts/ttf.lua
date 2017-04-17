@@ -1,3 +1,7 @@
+local sys = require('sys')
+local FontMetric = require('metric').FontMetric
+local CharMetric = require('metric').CharMetric
+local FontFormatError = require('metric').FontFormatError
 
 readUnsigned = function(ff, size)
   res = 0

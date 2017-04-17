@@ -1,4 +1,9 @@
 -- Drawing methods for MathML elements
+local sys = require('sys')
+local math = require('math')
+local mathnode = require('mathnode')
+local sax = require('xml').sax
+local xmlreader = require('xml.sax').xmlreader
 SVGNS = 'http://www.w3.org/2000/svg'
 SVGMathNS = 'http://www.grigoriev.ru/svgmath'
 useNamespaces = true

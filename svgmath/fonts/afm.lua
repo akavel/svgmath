@@ -1,3 +1,8 @@
+local sys = require('sys')
+local glyphlist = require('glyphlist')
+local FontMetric = require('metric').FontMetric
+local CharMetric = require('metric').CharMetric
+local FontFormatError = require('metric').FontFormatError
 
 parseLength = function(s)
   return 0.001*float(s)
