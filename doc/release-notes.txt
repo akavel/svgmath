@@ -1,0 +1,73 @@
+SVGMath 0.3.3-1
+
+* Merged some improvements from github.com/w3c/svgwg repo
+
+SVGMath 0.3.3
+
+* Bugfixing - tapped a blatant hole in AFM parsing.
+
+
+SVGMath 0.3.2
+
+* Improved sizing of character-like stretchable operators (sum, product, etc).
+
+* Improved configuration error handling.
+
+* Enabled reading of non-Unicode TrueType fonts - symbols from Private Use Area 
+  are (somewhat abusively) mapped to ASCII. This helps dealing with TrueType 
+  fonts from Mathematica.
+
+* Changed the shape of the radical. 
+
+* SVGMath can now work with Jython 2.2.
+
+
+SVGMath 0.3.1
+
+* Fixed a bug in 0.3.0 - operators were incorrectly stretched in tables.
+
+
+SVGMath 0.3.0
+
+* Default behaviour of math2svg.py changed: it treats input as a compound
+  document, and replaces all occurrences of MathML. To force the old
+  behaviour, --standalone switch shall be used.
+
+* Added --encoding switch to math2svg.py to set the output encoding
+
+* Namespace-aware output generation is now the default one. Added a
+  patched XMLGenerator to the package, in svgmath.tools.saxtools.
+
+* Added ability to redefine implementation-specific defaults in the
+  configuration file, using the <defaults> element.
+  
+* Added ability to apply additional styling to individual <mo> elements.
+  Extra styling is specified in <operator-style> elements in the configuration
+  file. The provided svgmath.xml makes differential operators italic.
+  
+* Added an XSLT stylesheet to adjust vertical position of SVGMath-generated
+  images in XSL-FO documents: fo/adjustbase.xsl.
+  
+* Generated SVG images now contain a boilerplate text in svg:desc, 
+  to discern them from other SVG images.
+
+* Several bugs fixed.  
+
+
+SVGMath 0.2.0
+
+* Added proper treatment of surrogate pairs: one pair now counts 
+  as one symbol, and gets looked up in the font directory by its 
+  extended code.
+  
+* View box modified so that its zero Y coordinate corresponds 
+  to the alphabetic baseline of the MathML expression. This should 
+  permit proper alignment of rendered MathML in inline contexts.
+  
+* Fixed bug in math2svg.py: it displays information about missing
+  files properly.
+
+
+SVGMath 0.1.0
+ 
+* Initial release

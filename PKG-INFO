@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: SVGMath
+Version: 0.3.3-1
+Summary: MathML-to-SVG converter
+Home-page: http://svgmath.sourceforge.net/
+Author: Nikolai Grigoriev
+Author-email: svgmath@grigoriev.ru
+License: UNKNOWN
+Description: Converter from MathML (Mathematical Markup Language) to SVG (Scalable Vector Graphics).
+Platform: UNKNOWN

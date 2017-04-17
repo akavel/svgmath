@@ -1,0 +1,139 @@
+SVGMath Configuration 
+
+
+In order to calculate space occupied by MathML expressions, the converter 
+must know the metrics of the fonts used to draw text elements. SVGMath
+has no access to system fonts: all correspondence between font properties
+and metric files is configured manually, and stored in the configuration
+file.
+
+At startup, the location of the configuration file should be made known 
+to SVGMath. If you use a command-line script 'math2svg.py', it attempts 
+to read the configuration from file named svgmath.xml in the same directory 
+as the script itself; in the API, there is no default location.
+
+The configuration file is essential for proper operation of SVGMath; 
+and there can be no automatic procedure to build it. The distribution
+contains a sample configuration file, 'svgmath.xml' in the root directory
+of the package; it can be used as a guide, but is highly unlikely to work
+in your environment without modification. Inspect it and modify to match
+your installation.
+
+
+1. Overall structure
+
+The configuration file is an XML document in an anonymous namespace. 
+The topmost element is <config>. It has an optional 'verbose' attribute: 
+if set to 'true', SVGMath prints a slightly more extended information 
+when it encounters problems.
+
+Inside <config>, there can be five kinds of elements:
+
+    - <family> - describes a single font family;
+    - <mathvariant> - maps one value of 'mathvariant' property in MathML 
+      to a combination of font family, font weight, and font style;
+    - <fallback> - specifies the font family to use in emergency situations;
+    - <defaults> - sets default values for MathML properties;
+    - <operator-style> - specifies extra styling for math operators.
+
+The order of elements is irrelevant. Each element type is discussed in more
+details below.
+
+
+2. Font family descriptor - <family>
+
+Any font family used in the input MathML files should be registered in an
+appropriate <family> element. Here is an example:
+
+    <family name="Times New Roman">
+         <font ttf="C:\WINDOWS\Fonts\times.ttf"/>
+         <font weight="bold" ttf="C:\WINDOWS\Fonts\timesbd.ttf"/>
+         <font style="italic" ttf="C:\WINDOWS\Fonts\timesi.ttf"/>
+         <font weight="bold" style="italic" ttf="C:\WINDOWS\Fonts\timesbi.ttf"/>        
+    </family>
+    
+The only mandatory attribute of the <family> element is 'name'. It is the name 
+by which the font family is referenced in MathML sources and in <mathvariant>
+alias definitions; it will also appear in the output SVG. 
+
+Inside the element, there should be one or more <font> elements. Each <font>
+element describes a single font that belongs to a family. The font descriptor 
+should have an attribute that points to a font metric file. Currently, 
+two font types are supported: 
+
+   - TrueType - metrics are specified in 'ttf' attribute that should point 
+     to a TTF file;
+
+   - PostScript Type1 - metrics are specified in 'afm' attribute pointing 
+     to an AFM file. Optionally, a glyph list file can be specified in 
+     'glyph-list' attribute: it should point to a file mapping Unicode 
+     codes to glyph names, in the same format as in Adobe Glyph List 2.0
+     (http://partners.adobe.com/public/developer/opentype/index_glyph.html).
+
+Besides the metric, the font descriptor can bear 'weight' and 'style' 
+attributes that specify the weight and style of this font within the family.
+
+
+3. Math variant specifier - <mathvariant>
+
+MathML 2.0 introduces a new method to specify font properties for text 
+elements through use of 'mathvariant' property. There is a closed list 
+of predefined values of this property that are mapped to a combination
+of font family, weight, and style in a system-dependent way. In SVGMath,
+this mapping is specified by <mathvariant> elements. Below is an
+example:
+
+    <mathvariant name="bold-italic"
+                 family="Times New Roman, Lucida Sans Unicode" 
+                 weight="bold" 
+                 style="italic"/>
+
+There are four possible attributes: 
+    - 'name' (mandatory) 
+         One of the predefined values for 'mathvariant' property, 
+         as listed in the MathML Recommendation.         
+    - 'family' 
+         A comma-separated list of font families that shall be used 
+         to style the 'mathvariant' value specified in the 'name' 
+         attribute. Each family in the list should be described in
+         a <family> element.
+    - 'weight' 
+         Specifies font weight to represent the 'mathvariant' value.
+    - 'style' 
+         Specifies font style to represent the 'mathvariant' value.
+ 
+ 
+4. Fallback font family - <fallback>
+
+The <fallback> element is used to specify the default font family, 
+picked when no font can be selected to match constraints in a MathML 
+source. The only obligatory attribute is 'family': it sets a list 
+of font families, separated by commas.
+
+
+5. Default values for MathML properties - <defaults>
+
+The element is empty. Each attribute of this element sets the default 
+value for the MathML property with the same name. Example:
+
+   <defaults mathsize="24pt"/>
+
+sets the default font size to 24 pt.
+
+
+6. Extra styling for MathML operators - <operator-style>
+
+The element is empty. The attributes of the element specify additional
+default formatting to be applied to each occurrence of a specified operator.
+The operator itself is specified in 'operator' attribute: its contents
+is the text of the operator, as it appears inside <mo> element in MathML.
+Example:
+
+   <operator-style operator="&#x2146;" fontstyle="italic"/>
+   
+applies italic font style to the differential operator (&DifferentialD;).
+
+-----------------------------------------------------------------------
+Please send your comments, bug reports, and enhancement requests 
+to the author, Nikolai Grigoriev <svgmath@grigoriev.ru>
+
