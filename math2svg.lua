@@ -12,15 +12,25 @@ local MathNS = require('svgmath.mathhandler').MathNS
 local MathEntityResolver = require('svgmath.mathhandler').MathEntityResolver
 
 open_or_die = function(fname, fmode, role)
-  -- PYLUA.FIXME: TRY:
-    return open(fname, fmode)
-  -- PYLUA.FIXME: EXCEPT IOError xcpt:
-    io.write(PYLUA.mod('Cannot open %s file \'%s\': %s', role, fname, str(xcpt)), '\n')
-    sys.exit(1)
+  local f, err = io.open(fname, fmode)
+  if err then
+    print(string.format("Cannot open %s file '%s': %s", role, fname, err))
+    os.exit(1)
+  end
 end
 
 usage = function()
-  sys.stderr.write('\nUsage: math2svg.py [options] FILE\nReplaces MathML formulae in a document by SVG images. Argument is a file name.\n\nOptions:\n    -h, --help               display this synopsis and exit\n    -s, --standalone         treat input as a standalone MathML document\n    -o FILE, --output=FILE   write results to FILE instead of stdout\n    -c FILE, --config=FILE   read configuration from FILE\n    -e ENC,  --encoding=ENC  produce output in ENC encoding\n')
+  sys.stderr.write [[
+Usage: math2svg.lua [options] FILE
+Replaces MathML formulae in a document by SVG images. Argument is a file name.
+
+Options:
+    -h, --help               display this synopsis and exit
+    -s, --standalone         treat input as a standalone MathML document
+    -o=FILE, --output=FILE   write results to FILE instead of stdout
+    -c=FILE, --config=FILE   read configuration from FILE
+    -e=ENC,  --encoding=ENC  produce output in ENC encoding
+]]
 end
 
 MathFilter = PYLUA.class(ContentFilter) {
@@ -30,14 +40,13 @@ MathFilter = PYLUA.class(ContentFilter) {
     self.plainOutput = out
     self.mathOutput = mathout
     self.depth = 0
-  end
-  ;
+  end;
 
+  -- ContentHandler methods
   setDocumentLocator = function(self, locator)
     self.plainOutput.setDocumentLocator(locator)
     self.mathOutput.setDocumentLocator(locator)
-  end
-  ;
+  end;
 
   startElementNS = function(self, elementName, qName, attrs)
     if self.depth==0 then
@@ -50,8 +59,7 @@ MathFilter = PYLUA.class(ContentFilter) {
       self.depth = self.depth+1
     end
     ContentFilter.startElementNS(self, elementName, qName, attrs)
-  end
-  ;
+  end;
 
   endElementNS = function(self, elementName, qName)
     ContentFilter.endElementNS(self, elementName, qName)
@@ -61,8 +69,7 @@ MathFilter = PYLUA.class(ContentFilter) {
         self.output = self.plainOutput
       end
     end
-  end
-  ;
+  end;
 }
 
 
@@ -72,10 +79,12 @@ main = function()
   -- PYLUA.FIXME: EXCEPT getopt.GetoptError:
     usage()
     sys.exit(2)
+
   outputfile = nil
   configfile = nil
   encoding = 'utf-8'
   standalone = false
+
   for _, o, a in ipairs(opts) do
     if PYLUA.op_in(o, '-h', '--help') then
       usage()
@@ -94,6 +103,8 @@ main = function()
       standalone = true
     end
   end
+
+  -- Check input
   if len(args)<1 then
     sys.stderr.write('No input file specified!\n')
     usage()
@@ -101,21 +112,30 @@ main = function()
   elseif len(args)>1 then
     sys.stderr.write('WARNING: extra command line arguments ignored\n')
   end
+
   source = open_or_die(args[1], 'rb', 'input')
+
+  -- Determine output destination
   if PYLUA.op_is(outputfile, nil) then
     output = sys.stdout
   else
     output = open_or_die(outputfile, 'wb', 'output')
   end
+
+  -- Determine config file location
   if PYLUA.op_is(configfile, nil) then
     configfile = PYLUA.str_maybe(os.path).join(os.path.dirname(__file__), 'svgmath.xml')
   end
   config = open_or_die(configfile, 'rb', 'configuration')
+
+  -- Create the converter as a content handler. 
   saxoutput = XMLGenerator(output, encoding)
   handler = MathHandler(saxoutput, config)
   if  not standalone then
     handler = MathFilter(saxoutput, handler)
   end
+
+  -- Parse input file
   exitcode = 0
   -- PYLUA.FIXME: TRY:
     parser = sax.make_parser()
@@ -132,6 +152,7 @@ main = function()
   end
   sys.exit(exitcode)
 end
+
 if __name__=='__main__' then
   main()
 end
