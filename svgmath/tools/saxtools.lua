@@ -95,7 +95,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   startPrefixMapping = function(self, prefix, uri)
     self._ns_contexts.append(self._current_context.copy())
     self._current_context[uri] = prefix
-    self._undeclared_ns_maps.append(prefix, uri)
+    self._undeclared_ns_maps.append({prefix, uri})
   end
   ;
 
@@ -107,8 +107,8 @@ self._ns_contexts[0]  end
   startElement = function(self, name, attrs)
     self._flush_starttag()
     self._write(PYLUA.mod('<%s', unicode(name)))
-    for _, name, value in ipairs(attrs.items()) do
-      self._write(PYLUA.mod(' %s=%s', unicode(name), quoteattr(value)))
+    for name, value in pairs(attrs) do
+      self._write(PYLUA.mod(' %s=%s', {unicode(name), quoteattr(value)}))
     end
     self._starttag_pending = true
   end
@@ -126,10 +126,10 @@ self._ns_contexts[0]  end
 
   startElementNS = function(self, name, qname, attrs)
     qattrs = { }
-    for _, attname, attvalue in ipairs(attrs.items()) do
+    for attname, attvalue in pairs(attrs) do
       qattrs[self._qname(attname)] = attvalue
     end
-    for _, prefix, uri in ipairs(self._undeclared_ns_maps) do
+    for _, {prefix, uri} in ipairs(self._undeclared_ns_maps) do
       if prefix then
         qattrs[PYLUA.mod('xmlns:%s', unicode(prefix))] = uri
       else
@@ -159,7 +159,7 @@ self._ns_contexts[0]  end
 
   processingInstruction = function(self, target, data)
     self._flush_starttag()
-    self._write(PYLUA.mod('<?%s %s?>', unicode(target), unicode(data)))
+    self._write(PYLUA.mod('<?%s %s?>', {unicode(target), unicode(data)}))
   end
   ;
 }

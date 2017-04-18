@@ -73,7 +73,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       checksum = readUnsigned(ff, 4)
       offset = readUnsigned(ff, 4)
       length = readUnsigned(ff, 4)
-      tables[tag] = offset, length
+      tables[tag] = {offset, length}
     end
 
     switchTable = function(tableTag)
@@ -82,7 +82,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       end
       return tables[tableTag]
     end
-    offset, length = switchTable('head')
+    offset, length = table.unpack(switchTable('head'))
     ff.seek(offset+12)
     magic = readUnsigned(ff, 4)
     if magic~=1594834165 then
@@ -99,10 +99,10 @@ TTFMetric = PYLUA.class(FontMetric) {
     self.bbox = {xMin, yMin, xMax, yMax}
     skip(ff, 6)
     self.indexToLocFormat = readSigned(ff, 2)
-    offset, length = switchTable('maxp')
+    offset, length = table.unpack(switchTable('maxp'))
     ff.seek(offset+4)
     self.numGlyphs = readUnsigned(ff, 2)
-    offset, length = switchTable('name')
+    offset, length = table.unpack(switchTable('name'))
     ff.seek(offset+2)
     numRecords = readUnsigned(ff, 2)
     storageOffset = readUnsigned(ff, 2)+offset
@@ -118,22 +118,22 @@ TTFMetric = PYLUA.class(FontMetric) {
       nameOffset = readUnsigned(ff, 2)
       if platformID==3 and encodingID==1 then
         if PYLUA.op_in(languageID, englishCodes) or PYLUA.op_not_in(nameID, uniNames.keys()) then
-          uniNames[nameID] = nameOffset, nameLength
+          uniNames[nameID] = {nameOffset, nameLength}
         end
       elseif platformID==1 and encodingID==0 then
         if languageID==0 or PYLUA.op_not_in(nameID, macNames.keys()) then
-          macNames[nameID] = nameOffset, nameLength
+          macNames[nameID] = {nameOffset, nameLength}
         end
       end
     end
 
     getName = function(code)
       if PYLUA.op_in(code, macNames.keys()) then
-        nameOffset, nameLength = macNames[code]
+        nameOffset, nameLength = table.unpack(macNames[code])
         ff.seek(storageOffset+nameOffset)
         return ff.read(nameLength)
       elseif PYLUA.op_in(code, uniNames.keys()) then
-        nameOffset, nameLength = uniNames[code]
+        nameOffset, nameLength = table.unpack(uniNames[code])
         ff.seek(storageOffset+nameOffset)
         result = ''
         for _, i in ipairs(range(0, nameLength/2)) do
@@ -145,7 +145,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     self.family = getName(1)
     self.fullname = getName(4)
     self.fontname = getName(6)
-    offset, length = switchTable('OS/2')
+    offset, length = table.unpack(switchTable('OS/2'))
     ff.seek(offset)
     tableVersion = readUnsigned(ff, 2)
     cw = readSigned(ff, 2)
@@ -186,15 +186,15 @@ TTFMetric = PYLUA.class(FontMetric) {
         self.capheight = ch*emScale
       end
     end
-    offset, length = switchTable('post')
+    offset, length = table.unpack(switchTable('post'))
     ff.seek(offset+4)
     self.italicangle = readFixed32(ff)
     self.underlineposition = readSigned(ff, 2)*emScale
     self.underlinethickness = readSigned(ff, 2)*emScale
-    offset, length = switchTable('hhea')
+    offset, length = table.unpack(switchTable('hhea'))
     ff.seek(offset+34)
     numHmtx = readUnsigned(ff, 2)
-    offset, length = switchTable('hmtx')
+    offset, length = table.unpack(switchTable('hmtx'))
     ff.seek(offset)
     glyphArray = {}
     w = 0
@@ -205,7 +205,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       end
       glyphArray.append(CharMetric(PYLUA.keywords{width=w}))
     end
-    offset, length = switchTable('cmap')
+    offset, length = table.unpack(switchTable('cmap'))
     ff.seek(offset+2)
     subtableOffset = 0
     numTables = readUnsigned(ff, 2)
@@ -214,13 +214,13 @@ TTFMetric = PYLUA.class(FontMetric) {
       platformID = readUnsigned(ff, 2)
       encodingID = readUnsigned(ff, 2)
       subtableOffset = readUnsigned(ff, 4)
-      cmapEncodings[platformID, encodingID] = subtableOffset
+      cmapEncodings[{platformID, encodingID}] = subtableOffset
     end
     encodingScheme = 'Unicode'
-    subtableOffset = cmapEncodings.get(3, 1)
+    subtableOffset = cmapEncodings.get({3, 1})
     if PYLUA.op_is(subtableOffset, nil) then
       encodingScheme = 'Symbol'
-      subtableOffset = cmapEncodings.get(3, 0)
+      subtableOffset = cmapEncodings.get({3, 0})
       if PYLUA.op_is(subtableOffset, nil) then
         error(TTFFormatError)
       elseif self.log then
@@ -288,7 +288,7 @@ TTFMetric = PYLUA.class(FontMetric) {
         end
       end
     end
-    offset, length = switchTable('loca')
+    offset, length = table.unpack(switchTable('loca'))
     ff.seek(offset)
     glyphIndex = {}
     scalefactor = self.indexToLocFormat+1
@@ -303,7 +303,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     else
       error(TTFFormatError)
     end
-    offset, length = switchTable('glyf')
+    offset, length = table.unpack(switchTable('glyf'))
     for _, i in ipairs(range(0, self.numGlyphs)) do
       cm = glyphArray[i]
       if glyphIndex[i]==glyphIndex[i+1] then

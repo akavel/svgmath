@@ -372,5 +372,5 @@ getAlign = function(node)
       alignrownumber = len(node.rows)-alignrownumber+1
     end
   end
-  return alignType, alignRow
+  return {alignType, alignRow}
 end

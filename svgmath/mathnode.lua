@@ -384,7 +384,7 @@ MathNode = PYLUA.class() {
     for _, fd in ipairs(self.fontpool()) do
       cm = fd.metric.chardata.get(ch)
       if cm then
-        return cm, fd
+        return {cm, fd}
       end
     end
   end
@@ -404,7 +404,7 @@ MathNode = PYLUA.class() {
       if PYLUA.op_is(chardesc, nil) then
         self.width = self.width+self.metric().missingGlyph.width
       else
-        cm, fd = chardesc
+        cm, fd = table.unpack(chardesc)
         fd.used = true
         if chcode==ucstext[1] then
           cm0 = cm

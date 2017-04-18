@@ -38,7 +38,7 @@ measure_maction = function(node)
     node.error(PYLUA.mod('No valid subexpression inside maction element - element ignored', selectionattr))
   else
     if selection>len(node.children) then
-      node.error(PYLUA.mod('Invalid value \'%d\' for \'selection\' attribute - there are only %d expression descendants in the element', selection, len(node.children)))
+      node.error(PYLUA.mod('Invalid value \'%d\' for \'selection\' attribute - there are only %d expression descendants in the element', {selection, len(node.children)}))
       selection = 1
     end
     setNodeBase(node, node.children[selection-1])
@@ -253,7 +253,7 @@ measure_mrow = function(node)
       end
     end
   end
-  node.ascender, node.descender = getVerticalStretchExtent(node.children, node.alignToAxis, node.axis())
+  node.ascender, node.descender = table.unpack(getVerticalStretchExtent(node.children, node.alignToAxis, node.axis()))
   for _, ch in ipairs(node.children) do
     if ch.core.stretchy then
       desiredHeight = node.ascender
@@ -267,7 +267,7 @@ measure_mrow = function(node)
       stretch(PYLUA.keywords{toHeight=desiredHeight, toDepth=desiredDepth, symmetric=node.alignToAxis}, ch)
     end
   end
-  node.height, node.depth, node.ascender, node.descender = getRowVerticalExtent(node.children, node.alignToAxis, node.axis())
+  node.height, node.depth, node.ascender, node.descender = table.unpack(getRowVerticalExtent(node.children, node.alignToAxis, node.axis()))
   for _, ch in ipairs(node.children) do
     node.width = node.width+ch.width+ch.leftspace+ch.rightspace
   end
@@ -284,7 +284,7 @@ measure_mfrac = function(node)
       return 
     end
   end
-  node.enumerator, node.denominator = PYLUA.slice(node.children, nil, 2)
+  node.enumerator, node.denominator = table.unpack(PYLUA.slice(node.children, nil, 2))
   node.alignToAxis = true
   ruleWidthKeywords = { medium='1', thin='0.5', thick='2', }
   widthAttr = node.getProperty('linethickness')
@@ -597,7 +597,7 @@ measure_mtable = function(node)
   node.width = node.width+2*node.framespacings[1]
   vsize = sum(PYLUA.COMPREHENSION())
   vsize = vsize+2*node.framespacings[2]
-  alignType, alignRow = tables.getAlign(node)
+  alignType, alignRow = table.unpack(tables.getAlign(node))
   if PYLUA.op_is(alignRow, nil) then
     topLine = 0
     bottomLine = vsize
@@ -684,8 +684,8 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   gap = max(PYLUA.COMPREHENSION())
   protrusion = node.parseLength('0.25ex')
   scriptMedian = node.axis()
-  subHeight, subDepth, subAscender, subDescender = getRowVerticalExtent(subs, false, node.subscriptAxis)
-  superHeight, superDepth, superAscender, superDescender = getRowVerticalExtent(supers, false, node.superscriptAxis)
+  subHeight, subDepth, subAscender, subDescender = table.unpack(getRowVerticalExtent(subs, false, node.subscriptAxis))
+  superHeight, superDepth, superAscender, superDescender = table.unpack(getRowVerticalExtent(supers, false, node.superscriptAxis))
   node.subShift = 0
   if len(subs)>0 then
     shiftAttr = node.getProperty('subscriptshift')
@@ -922,7 +922,7 @@ getVerticalStretchExtent = function(descendants, rowAlignToAxis, axis)
     ascender = max(asc, ascender)
     descender = max(desc, descender)
   end
-  return ascender, descender
+  return {ascender, descender}
 end
 
 getRowVerticalExtent = function(descendants, rowAlignToAxis, axis)
@@ -952,5 +952,5 @@ getRowVerticalExtent = function(descendants, rowAlignToAxis, axis)
     ascender = max(asc, ascender)
     descender = max(desc, descender)
   end
-  return height, depth, ascender, descender
+  return {height, depth, ascender, descender}
 end

@@ -66,12 +66,12 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
           return 
         end
       -- PYLUA.FIXME: EXCEPT FontFormatError err:
-        sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
+        sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', {fontpath, err.message}))
         sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
         return 
       -- PYLUA.FIXME: EXCEPT IOError:
         message = sys.exc_info()[2]
-        sys.stderr.write(PYLUA.mod('I/O error reading font file \'%s\': %s\n', fontpath, str(message)))
+        sys.stderr.write(PYLUA.mod('I/O error reading font file \'%s\': %s\n', {fontpath, str(message)}))
         sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
         return 
       self.fonts[weight+' '+style+' '+self.currentFamily] = metric
@@ -81,7 +81,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       splitFamily = PYLUA.COMPREHENSION()
       weightattr = attributes.get('weight', 'normal')
       styleattr = attributes.get('style', 'normal')
-      self.variants[variantattr] = weightattr, styleattr, splitFamily
+      self.variants[variantattr] = {weightattr, styleattr, splitFamily}
     elseif name=='operator-style' then
       opname = attributes.get('operator')
       if opname then
@@ -129,19 +129,19 @@ main = function()
   end
   io.write('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
   io.write('Fonts:', '\n')
-  for _, font, metric in ipairs(config.fonts.items()) do
+  for font, metric in pairs(config.fonts) do
     io.write('    ', font, '-->', metric.fontname, '\n')
   end
   io.write('Math variants:', '\n')
-  for _, variant, value in ipairs(config.variants.items()) do
+  for variant, value in pairs(config.variants) do
     io.write('    ', variant, '-->', value, '\n')
   end
   io.write('Defaults:', '\n')
-  for _, attr, value in ipairs(config.defaults.items()) do
+  for attr, value in pairs(config.defaults) do
     io.write('    ', attr, '=', value, '\n')
   end
   io.write('Operator styling:', '\n')
-  for _, opname, value in ipairs(config.opstyles.items()) do
+  for opname, value in pairs(config.opstyles) do
     io.write('    ', repr(opname), ':', value, '\n')
   end
   io.write('Fallback font families:', config.fallbackFamilies, '\n')

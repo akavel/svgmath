@@ -19,7 +19,7 @@ end
 
 createEntry = function(content, form, fence, separator, accent, largeop, lspace, rspace, stretchy, scaling, minsize, maxsize, movablelimits, symmetric)
   if PYLUA.op_in(content+form, operatorDictionary.keys()) then
-    sys.stderr.write(PYLUA.mod('WARNING: duplicate entry in operator dictionary, %s %s\n', form, str(content)))
+    sys.stderr.write(PYLUA.mod('WARNING: duplicate entry in operator dictionary, %s %s\n', {form, str(content)}))
   end
   operatorDictionary[content+form] = { form=form, fence=fence, separator=separator, accent=accent, largeop=largeop, lspace=lspace, rspace=rspace, stretchy=stretchy, scaling=scaling, minsize=minsize, maxsize=maxsize, movablelimits=movablelimits, symmetric=symmetric, }
 end

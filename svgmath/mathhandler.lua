@@ -44,20 +44,20 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       return 
     end
     locator = NodeLocator(self.locator)
-    namespace, localName = elementName
+    namespace, localName = table.unpack(elementName)
     if namespace and namespace~=MathNS then
       if self.config.verbose then
-        locator.message(PYLUA.mod('Skipped element \'%s\' from an unknown namespace \'%s\'', localName, namespace), 'INFO')
+        locator.message(PYLUA.mod('Skipped element \'%s\' from an unknown namespace \'%s\'', {localName, namespace}), 'INFO')
       end
       self.skip = 1
       return 
     end
     properties = { }
-    for _, attName, value in ipairs(attributes.items()) do
-      attNamespace, attLocalName = attName
+    for attName, value in pairs(attributes) do
+      attNamespace, attLocalName = table.unpack(attName)
       if attNamespace and attNamespace~=MathNS then
         if self.config.verbose then
-          locator.message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', attLocalName, attNamespace), 'INFO')
+          locator.message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
         end
         goto continue
       end
@@ -74,7 +74,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
         return 
       end
     end
-    namespace, localname = elementName
+    namespace, localname = table.unpack(elementName)
     if namespace and namespace~=MathNS then
       error(sax.SAXParseException('SAX parser error: namespace on opening and closing elements don\'t match', nil, self.locator))
     end

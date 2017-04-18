@@ -17,11 +17,11 @@ startElement = function(output, localname, namespace, prefix, attrs)
   end
   if useNamespaces then
     nsAttrs = { }
-    for _, att, value in ipairs(attrs.items()) do
-      nsAttrs[nil, att] = value
+    for att, value in pairs(attrs) do
+      nsAttrs[{nil, att}] = value
     end
     qnames = attrs.keys()
-    output.startElementNS(namespace, localname, prefix+localname, xmlreader.AttributesNSImpl(nsAttrs, qnames))
+    output.startElementNS({namespace, localname}, prefix+localname, xmlreader.AttributesNSImpl(nsAttrs, qnames))
   else
     output.startElement(prefix+localname, xmlreader.AttributesImpl(attrs))
   end
@@ -30,7 +30,7 @@ end
 endElement = function(output, localname, namespace, prefix)
   -- Wrapper to emit an end tag
   if useNamespaces then
-    output.endElementNS(namespace, localname, prefix+localname)
+    output.endElementNS({namespace, localname}, prefix+localname)
   else
     output.endElement(prefix+localname)
   end
@@ -56,7 +56,7 @@ drawImage = function(node, output)
   height = max(node.height, node.ascender)
   depth = max(node.depth, node.descender)
   vsize = height+depth
-  attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', -height+baseline, node.width, vsize), }
+  attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', {-height+baseline, node.width, vsize}), }
   if useNamespaces then
     output.startPrefixMapping('svg', SVGNS)
     output.startPrefixMapping('svgmath', SVGMathNS)
@@ -241,7 +241,7 @@ draw_msqrt = function(node, output)
   y3b = (y2b*slopeA-ytmp*slopeB+xtmp-x2b)/(slopeA-slopeB)
   x3b = xtmp+(y3b-ytmp)*slopeB
   y1 = y1+(x2-x1)*slopeA
-  attrs = { stroke=node.color, fill='none', ['stroke-width']=PYLUA.mod('%f', node.lineWidth), ['stroke-linecap']='butt', ['stroke-linejoin']='miter', ['stroke-miterlimit']='10', d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f', x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5), }
+  attrs = { stroke=node.color, fill='none', ['stroke-width']=PYLUA.mod('%f', node.lineWidth), ['stroke-linecap']='butt', ['stroke-linejoin']='miter', ['stroke-miterlimit']='10', d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f', {x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5}), }
   startSVGElement(output, 'path', attrs)
   endSVGElement(output, 'path')
 end
@@ -405,7 +405,7 @@ draw_mtable = function(node, output)
     if linestyle=='dashed' then
       linelength = math.sqrt(math.pow(x1-x2, 2)+math.pow(y1-y2, 2))
       dashoffset = 5-PYLUA.mod(linelength/node.lineWidth+3, 10)/2
-      extrastyle = { ['stroke-dasharray']=PYLUA.mod('%f,%f', node.lineWidth*7, node.lineWidth*3), ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset), }
+      extrastyle = { ['stroke-dasharray']=PYLUA.mod('%f,%f', {node.lineWidth*7, node.lineWidth*3}), ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset), }
     else
       extrastyle = nil
     end
@@ -533,7 +533,7 @@ end
 
 drawTranslatedNode = function(node, output, dx, dy)
   if dx~=0 or dy~=0 then
-    startSVGElement(output, 'g', { transform=PYLUA.mod('translate(%f, %f)', dx, dy), })
+    startSVGElement(output, 'g', { transform=PYLUA.mod('translate(%f, %f)', {dx, dy}), })
   end
   node.draw(output)
   if dx~=0 or dy~=0 then
@@ -557,7 +557,7 @@ drawSVGText = function(node, output)
   if node.textStretch~=1 then
     attrs['transform'] = PYLUA.mod('scale(%f, 1)', node.textStretch)
   end
-  for _, oldchar, newchar in ipairs(mathnode.specialChars.items()) do
+  for oldchar, newchar in pairs(mathnode.specialChars) do
     node.text = node.text.replace(oldchar, newchar)
   end
   startSVGElement(output, 'text', attrs)
@@ -599,7 +599,7 @@ drawBordersEnclosure = function(node, output)
   y1 = node.borderWidth/2-node.height
   x2 = node.width-node.borderWidth/2
   y2 = node.depth-node.borderWidth/2
-  left, right, top, bottom = node.decorationData
+  left, right, top, bottom = table.unpack(node.decorationData)
   if left then
     drawBorder(x1, y1, x1, y2)
   end
@@ -632,7 +632,7 @@ drawStrikesEnclosure = function(node, output)
   node.base.draw(output)
   mid_x = node.width/2
   mid_y = (node.depth-node.height)/2
-  horiz, vert, updiag, downdiag = node.decorationData
+  horiz, vert, updiag, downdiag = table.unpack(node.decorationData)
   if horiz then
     drawStrike(0, mid_y, node.width, mid_y)
   end

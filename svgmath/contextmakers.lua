@@ -34,7 +34,7 @@ default_context = function(node)
     if PYLUA.op_is(defaultVariant, nil) then
       error(sax.SAXException('Default mathvariant not defined in configuration file: configuration is unusable'))
     end
-    node.fontweight, node.fontstyle, node.fontfamilies = defaultVariant
+    node.fontweight, node.fontstyle, node.fontfamilies = table.unpack(defaultVariant)
   end
   processFontAttributes(node)
   node.width = 0
@@ -95,7 +95,7 @@ end
 context_mo = function(node)
   extra_style = node.config.opstyles.get(node.text)
   if extra_style then
-    for _, prop, value in ipairs(extra_style.items()) do
+    for prop, value in pairs(extra_style) do
       node.attributes.setdefault(prop, value)
     end
   end
@@ -166,7 +166,7 @@ processFontAttributes = function(node)
     if PYLUA.op_is(mathvariant, nil) then
       node.error('Ignored mathvariant attribute: value \''+str(mathvariantattr)+'\' not defined in the font configuration file')
     else
-      node.fontweight, node.fontstyle, node.fontfamilies = mathvariant
+      node.fontweight, node.fontstyle, node.fontfamilies = table.unpack(mathvariant)
     end
   else
     node.fontweight = node.attributes.get('fontweight', node.fontweight)

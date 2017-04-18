@@ -155,7 +155,7 @@ FontMetric = PYLUA.class() {
     io.write('Character data: ', '\n')
     chars = self.chardata.items()
     chars.sort(PYLUA.keywords{key=cc[1]})
-    for _, i, cm in ipairs(chars) do
+    for _, {i, cm} in ipairs(chars) do
       if PYLUA.op_is(cm, nil) then
         goto continue
       end
