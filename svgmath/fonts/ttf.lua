@@ -268,7 +268,7 @@ TTFMetric = PYLUA.class(FontMetric) {
         end
         local gid = 0
         if rangeOffsets[i] then
-          local idx = c-startCounts[i]+rangeOffsets[i]/2-segCount-i
+          local idx = c-startCounts[i]+rangeOffsets[i]/2-(segCount-i)
           gid = glyphIdArray[idx]
         else
           gid = c+idDeltas[i]
