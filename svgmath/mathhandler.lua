@@ -1,7 +1,9 @@
 -- SAX filter for MathML-to-SVG conversion.
+--[[
 local os = require('os')
 local sys = require('sys')
 local sax = require('xml').sax
+--]]
 local MathNode = require('mathnode').MathNode
 local MathConfig = require('mathconfig').MathConfig
 local NodeLocator = require('nodelocator').NodeLocator
@@ -101,7 +103,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   ;
 }
 
-
+--[[
 MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
 
   __init__ = function(self)
@@ -116,4 +118,4 @@ MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
   end
   ;
 }
-
+--]]
