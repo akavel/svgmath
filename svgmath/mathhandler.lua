@@ -1,10 +1,8 @@
 -- SAX filter for MathML-to-SVG conversion.
-local os = require('os')
-local sys = require('sys')
-local sax = require('xml').sax
 local MathNode = require('mathnode').MathNode
 local MathConfig = require('mathconfig').MathConfig
 local NodeLocator = require('nodelocator').NodeLocator
+
 MathNS = 'http://www.w3.org/1998/Math/MathML'
 
 MathHandler = PYLUA.class(sax.ContentHandler) {
@@ -20,23 +18,19 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     self.skip = 0
     self.currentNode = nil
     self.locator = nil
-  end
-  ;
+  end;
 
   setDocumentLocator = function(self, locator)
     self.locator = locator
-  end
-  ;
+  end;
 
   startDocument = function(self)
     self.output.startDocument()
-  end
-  ;
+  end;
 
   endDocument = function(self)
     self.output.endDocument()
-  end
-  ;
+  end;
 
   startElementNS = function(self, elementName, qName, attributes)
     if self.skip>0 then
@@ -47,7 +41,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     namespace, localName = table.unpack(elementName)
     if namespace and namespace~=MathNS then
       if self.config.verbose then
-        locator.message(PYLUA.mod('Skipped element \'%s\' from an unknown namespace \'%s\'', {localName, namespace}), 'INFO')
+        self.locator:message(PYLUA.mod('Skipped element \'%s\' from an unknown namespace \'%s\'', {localName, namespace}), 'INFO')
       end
       self.skip = 1
       return 
@@ -63,9 +57,8 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       end
       properties[attLocalName] = value
     end
-    self.currentNode = MathNode(localName, properties, locator, self.config, self.currentNode)
-  end
-  ;
+    self.currentNode = MathNode(localName, attributes, locator, self.config, self.currentNode)
+  end;
 
   endElementNS = function(self, elementName, qName)
     if self.skip>0 then
@@ -81,13 +74,12 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     if PYLUA.op_is(self.currentNode, nil) then
       error(sax.SAXParseException('SAX parser error: unmatched closing tag', nil, self.locator))
     end
-    self.currentNode.text = PYLUA.str_maybe(' ').join(self.currentNode.text.split())
-    if PYLUA.op_is(self.currentNode.parent, nil) then
-      self.currentNode.makeImage(self.output)
+    self.currentNode.text = string.gsub(self.currentNode.text, '%s+', ' ')
+    if not self.currentNode.parent then
+      self.currentNode:makeImage(self.output)
     end
     self.currentNode = self.currentNode.parent
-  end
-  ;
+  end;
 
   characters = function(self, content)
     if self.skip>0 then
@@ -96,23 +88,6 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     if self.currentNode then
       self.currentNode.text = self.currentNode.text+content
     end
-  end
-  ;
-}
-
-
-MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
-
-  __init__ = function(self)
-  end
-  ;
-
-  resolveEntity = function(self, publicId, systemId)
-    if systemId=='http://www.w3.org/TR/MathML2/dtd/mathml2.dtd' then
-      return os.path.abspath(PYLUA.str_maybe(os.path).join(os.path.dirname(sys.argv[1]), 'mathml2.dtd'))
-    end
-    return systemId
-  end
-  ;
+  end;
 }
 
