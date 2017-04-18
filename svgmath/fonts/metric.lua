@@ -55,7 +55,7 @@ FontMetric = PYLUA.class() {
   ;
 
   postParse = function(self)
-    if PYLUA.op_is(self.ascender, nil) then
+    if self.ascender == nil then
       local cm = self.chardata.get(ord('d'))
       if PYLUA.op_is_not(cm, nil) then
         self.descender = cm.bbox[4]
@@ -63,7 +63,7 @@ FontMetric = PYLUA.class() {
         self.ascender = 0.7
       end
     end
-    if PYLUA.op_is(self.descender, nil) then
+    if self.descender == nil then
       cm = self.chardata.get(ord('p'))
       if PYLUA.op_is_not(cm, nil) then
         self.descender = cm.bbox[2]
@@ -71,7 +71,7 @@ FontMetric = PYLUA.class() {
         self.descender = -0.2
       end
     end
-    if PYLUA.op_is(self.capheight, nil) then
+    if self.capheight == nil then
       cm = self.chardata.get(ord('H'))
       if PYLUA.op_is_not(cm, nil) then
         self.capheight = cm.bbox[4]
@@ -79,7 +79,7 @@ FontMetric = PYLUA.class() {
         self.capheight = self.ascender
       end
     end
-    if PYLUA.op_is(self.xheight, nil) then
+    if self.xheight == nil then
       cm = self.chardata.get(ord('x'))
       if PYLUA.op_is_not(cm, nil) then
         self.xheight = cm.bbox[4]
@@ -87,7 +87,7 @@ FontMetric = PYLUA.class() {
         self.xheight = 0.45
       end
     end
-    if PYLUA.op_is(self.axisposition, nil) then
+    if self.axisposition == nil then
       for _, ch in ipairs({ord('+'), 8722, ord('='), ord('<'), ord('>'), 183}) do
         cm = self.chardata.get(ch)
         if PYLUA.op_is_not(cm, nil) then
@@ -107,16 +107,16 @@ FontMetric = PYLUA.class() {
         end
       end
     end
-    if PYLUA.op_is(self.stdhw, nil) then
+    if self.stdhw == nil then
       self.stdhw = 0.03
     end
-    if PYLUA.op_is(self.stdvw, nil) and  not self.italicangle then
+    if self.stdvw == nil and  not self.italicangle then
       cm = self.chardata.get(ord('!'))
       if PYLUA.op_is_not(cm, nil) then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
       end
     end
-    if PYLUA.op_is(self.stdvw, nil) then
+    if self.stdvw == nil then
       cm = self.chardata.get(ord('.'))
       if PYLUA.op_is_not(cm, nil) then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
@@ -158,7 +158,7 @@ FontMetric = PYLUA.class() {
     local chars = self.chardata.items()
     chars.sort(PYLUA.keywords{key=cc[1]})
     for _, {i, cm} in ipairs(chars) do
-      if PYLUA.op_is(cm, nil) then
+      if cm == nil then
         goto continue
       end
       io.write('    ', PYLUA.mod('U+%04X', i), cm.name+':', '  W', cm.width, '  B')

@@ -106,7 +106,7 @@ arrangeCells = function(node)
     end
     for _, i in ipairs(range(len(row.cells))) do
       local cell = row.cells[i]
-      if PYLUA.op_is(cell, nil) then
+      if cell == nil then
         goto continue
       end
       if cell.rowspan>1 then
@@ -174,7 +174,7 @@ calculateColumnWidths = function(node)
     if PYLUA.op_in(attr, {'auto', 'fit'}) then
       column.fit = attr=='fit'
     elseif attr.endswith('%') then
-      if PYLUA.op_is(fullwidth, nil) then
+      if fullwidth == nil then
         node.error(PYLUA.mod('Percents in column widths supported only in tables with explicit width; width of column %d treated as \'auto\'', i+1))
       else
         local value = node.parseFloat(PYLUA.slice(attr, nil, -1))
@@ -191,7 +191,7 @@ calculateColumnWidths = function(node)
   for _, r in ipairs(node.rows) do
     for _, i in ipairs(range(len(r.cells))) do
       local c = r.cells[i]
-      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.colspan>1 then
+      if c == nil or c.content == nil or c.colspan>1 then
         goto continue
       end
       local column = node.columns[i]
@@ -206,7 +206,7 @@ calculateColumnWidths = function(node)
     for _, r in ipairs(node.rows) do
       for _, i in ipairs(range(len(r.cells))) do
         local c = r.cells[i]
-        if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.colspan==1 then
+        if c == nil or c.content == nil or c.colspan==1 then
           goto continue
         end
         local columns = PYLUA.slice(node.columns, i, i+c.colspan)
@@ -289,7 +289,7 @@ calculateRowHeights = function(node)
     r.height = 0
     r.depth = 0
     for _, c in ipairs(r.cells) do
-      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.rowspan~=1 then
+      if c == nil or c.content == nil or c.rowspan~=1 then
         goto continue
       end
       local cellAxis = c.content.axis()
@@ -321,7 +321,7 @@ calculateRowHeights = function(node)
     for _, i in ipairs(range(len(node.rows))) do
       local r = node.rows[i]
       for _, c in ipairs(r.cells) do
-        if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) or c.rowspan==1 then
+        if c == nil or c.content == nil or c.rowspan==1 then
           goto continue
         end
         local rows = PYLUA.slice(node.rows, i, i+c.rowspan)

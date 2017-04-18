@@ -22,7 +22,7 @@ AFMMetric = PYLUA.class(FontMetric) {
   __init__ = function(self, afmname, glyphlistname, log)
     FontMetric.__init__(self, log)
     local afmfile = open(afmname, 'r')
-    if PYLUA.op_is(glyphlistname, nil) then
+    if glyphlistname == nil then
       self.glyphList = glyphlist.defaultGlyphList
     else
       self.glyphList = glyphlist.GlyphList(open(afmname, 'r'))
@@ -124,17 +124,17 @@ AFMMetric = PYLUA.class(FontMetric) {
         glyphname = d[2]
       end
     end
-    if PYLUA.op_is(glyphname, nil) then
+    if glyphname == nil then
       return 
     end
-    if PYLUA.op_is(bbox, nil) then
+    if bbox == nil then
       if PYLUA.op_is_not(self.bbox, nil) then
         bbox = self.bbox
       else
         bbox = {0, 0, 0, 0}
       end
     end
-    if PYLUA.op_is(width, nil) then
+    if width == nil then
       if PYLUA.op_is_not(self.charwidth, nil) then
         width = self.charwidth
       else

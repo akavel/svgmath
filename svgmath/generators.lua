@@ -135,7 +135,7 @@ draw_mpadded = function(node, output)
 end
 
 draw_menclose = function(node, output)
-  if PYLUA.op_is(node.decoration, nil) then
+  if node.decoration == nil then
     node.base.draw(output)
   elseif node.decoration=='strikes' then
     drawStrikesEnclosure(node, output)
@@ -396,7 +396,7 @@ draw_mtable = function(node, output)
   end
 
   drawBorder = function(x1, y1, x2, y2, linestyle)
-    if PYLUA.op_is(linestyle, nil) then
+    if linestyle == nil then
       return 
     end
     if x1==x2 and y1==y2 then
@@ -440,12 +440,12 @@ draw_mtable = function(node, output)
   local vspans = {0}*len(node.columns)
   for _, r in ipairs(range(len(node.rows)-1)) do
     local row = node.rows[r]
-    if PYLUA.op_is(row.lineAfter, nil) then
+    if row.lineAfter == nil then
       goto continue
     end
     for _, c in ipairs(range(len(row.cells))) do
       local cell = row.cells[c]
-      if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
+      if cell == nil or cell.content == nil then
         goto continue
       end
       for _, j in ipairs(range(c, c+cell.colspan)) do
@@ -468,7 +468,7 @@ draw_mtable = function(node, output)
   local hspans = {0}*len(node.rows)
   for _, c in ipairs(range(len(node.columns)-1)) do
     local column = node.columns[c]
-    if PYLUA.op_is(column.lineAfter, nil) then
+    if column.lineAfter == nil then
       goto continue
     end
     for _, r in ipairs(range(len(node.rows))) do
@@ -477,7 +477,7 @@ draw_mtable = function(node, output)
         goto continue
       end
       local cell = row.cells[c]
-      if PYLUA.op_is(cell, nil) or PYLUA.op_is(cell.content, nil) then
+      if cell == nil or cell.content == nil then
         goto continue
       end
       for _, j in ipairs(range(r, r+cell.rowspan)) do
@@ -502,11 +502,11 @@ end
 drawBox = function(node, output, borderWidth, borderColor, borderRadius)
   local background = getBackground(node)
   if background=='none' then
-    if PYLUA.op_is(borderWidth, nil) or borderWidth==0 then
+    if borderWidth == nil or borderWidth==0 then
       return 
     end
   end
-  if PYLUA.op_is(borderColor, nil) then
+  if borderColor == nil then
     borderColor = node.color
   end
   local attrs = { fill=background, stroke='none', x=PYLUA.mod('%f', borderWidth/2), y=PYLUA.mod('%f', borderWidth/2-node.height), width=PYLUA.mod('%f', node.width-borderWidth), height=PYLUA.mod('%f', node.height+node.depth-borderWidth), }

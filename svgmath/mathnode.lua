@@ -198,7 +198,7 @@ MathNode = PYLUA.class() {
         spaceattr = PYLUA.slice(spaceattr, 8, nil)
       end
       local realspaceattr = self.defaults.get(spaceattr)
-      if PYLUA.op_is(realspaceattr, nil) then
+      if realspaceattr == nil then
         self.error(PYLUA.mod('Bad space token: \'%s\'', spaceattr))
         realspaceattr = '0em'
       end
@@ -243,7 +243,7 @@ MathNode = PYLUA.class() {
   ;
 
   getListProperty = function(self, attr, value)
-    if PYLUA.op_is(value, nil) then
+    if value == nil then
       value = self.getProperty(attr)
     end
     local splitvalue = value.split()
@@ -261,7 +261,7 @@ MathNode = PYLUA.class() {
     for _, ch in ipairs(self.text) do
       local chcode = ord(ch)
       if isLowSurrogate(ch) then
-        if PYLUA.op_is(hisurr, nil) then
+        if hisurr == nil then
           self.error(PYLUA.mod('Invalid Unicode sequence - low surrogate character (U+%X) not preceded by a high surrogate', ord(ch)))
         else
           chcode = decodeSurrogatePair(hisurr, ch)
@@ -286,7 +286,7 @@ MathNode = PYLUA.class() {
   ;
 
   fontpool = function(self)
-    if PYLUA.op_is(self.metriclist, nil) then
+    if self.metriclist == nil then
 
       fillMetricList = function(familylist)
         local metriclist = {}
@@ -304,11 +304,11 @@ MathNode = PYLUA.class() {
         end
       end
       self.metriclist = fillMetricList(self.fontfamilies)
-      if PYLUA.op_is(self.metriclist, nil) then
+      if self.metriclist == nil then
         self.fontfamilies = self.config.fallbackFamilies
         self.metriclist = fillMetricList(self.fontfamilies)
       end
-      if PYLUA.op_is(self.metriclist, nil) then
+      if self.metriclist == nil then
         self.error('Fatal error: cannot find any font metric for the node; fallback font families misconfiguration')
         error(sax.SAXException('Fatal error: cannot find any font metric for the node'))
       end
@@ -318,7 +318,7 @@ MathNode = PYLUA.class() {
   ;
 
   metric = function(self)
-    if PYLUA.op_is(self.nominalMetric, nil) then
+    if self.nominalMetric == nil then
       self.nominalMetric = self.fontpool()[1].metric
       for _, fd in ipairs(self.metriclist) do
         if fd.used then
@@ -402,7 +402,7 @@ MathNode = PYLUA.class() {
     local ucstext = self.getUCSText()
     for _, chcode in ipairs(ucstext) do
       local chardesc = self.findChar(chcode)
-      if PYLUA.op_is(chardesc, nil) then
+      if chardesc == nil then
         self.width = self.width+self.metric().missingGlyph.width
       else
         local cm, fd = table.unpack(chardesc)

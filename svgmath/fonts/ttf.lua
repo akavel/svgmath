@@ -218,10 +218,10 @@ TTFMetric = PYLUA.class(FontMetric) {
     end
     local encodingScheme = 'Unicode'
     subtableOffset = cmapEncodings.get({3, 1})
-    if PYLUA.op_is(subtableOffset, nil) then
+    if subtableOffset == nil then
       encodingScheme = 'Symbol'
       subtableOffset = cmapEncodings.get({3, 0})
-      if PYLUA.op_is(subtableOffset, nil) then
+      if subtableOffset == nil then
         error(TTFFormatError)
       elseif self.log then
         self.log.write(PYLUA.mod('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))

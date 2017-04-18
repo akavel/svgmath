@@ -78,11 +78,11 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     if namespace and namespace~=MathNS then
       error(sax.SAXParseException('SAX parser error: namespace on opening and closing elements don\'t match', nil, self.locator))
     end
-    if PYLUA.op_is(self.currentNode, nil) then
+    if self.currentNode == nil then
       error(sax.SAXParseException('SAX parser error: unmatched closing tag', nil, self.locator))
     end
     self.currentNode.text = PYLUA.str_maybe(' ').join(self.currentNode.text.split())
-    if PYLUA.op_is(self.currentNode.parent, nil) then
+    if self.currentNode.parent == nil then
       self.currentNode.makeImage(self.output)
     end
     self.currentNode = self.currentNode.parent

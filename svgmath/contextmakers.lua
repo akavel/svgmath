@@ -31,7 +31,7 @@ default_context = function(node)
     node.displaystyle = node.defaults['displaystyle']=='true'
     node.color = node.defaults['mathcolor']
     local defaultVariant = node.config.variants.get(node.defaults['mathvariant'])
-    if PYLUA.op_is(defaultVariant, nil) then
+    if defaultVariant == nil then
       error(sax.SAXException('Default mathvariant not defined in configuration file: configuration is unusable'))
     end
     node.fontweight, node.fontstyle, node.fontfamilies = table.unpack(defaultVariant)
@@ -100,7 +100,7 @@ context_mo = function(node)
     end
   end
   local form = 'infix'
-  if PYLUA.op_is(node.parent, nil) then
+  if node.parent == nil then
   elseif PYLUA.op_in(node.parent.elementName, {'mrow', 'mstyle', 'msqrt', 'merror', 'mpadded', 'mphantom', 'menclose', 'mtd', 'math'}) then
 
     isNonSpaceNode = function(x)
@@ -163,7 +163,7 @@ processFontAttributes = function(node)
   local mathvariantattr = node.attributes.get('mathvariant')
   if PYLUA.op_is_not(mathvariantattr, nil) then
     local mathvariant = node.config.variants.get(mathvariantattr)
-    if PYLUA.op_is(mathvariant, nil) then
+    if mathvariant == nil then
       node.error('Ignored mathvariant attribute: value \''+str(mathvariantattr)+'\' not defined in the font configuration file')
     else
       node.fontweight, node.fontstyle, node.fontfamilies = table.unpack(mathvariant)
@@ -203,7 +203,7 @@ processFontAttributes = function(node)
     node.fontSize = node.fontSize*math.pow(scriptsizemultiplier, node.scriptlevel)
   end
   local fontsizeattr = node.attributes.get('fontsize')
-  if PYLUA.op_is_not(fontsizeattr, nil) and PYLUA.op_is(mathsizeattr, nil) then
+  if PYLUA.op_is_not(fontsizeattr, nil) and mathsizeattr == nil then
     local fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
     if fontSizeOverride>0 then
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize
@@ -286,7 +286,7 @@ makeLimitContext = function(node, child, accentProperty)
   child.displaystyle = false
   child.tightspaces = true
   local accentValue = node.getProperty(accentProperty)
-  if PYLUA.op_is(accentValue, nil) then
+  if accentValue == nil then
     local embellishments = {'msub', 'msup', 'msubsup', 'munder', 'mover', 'munderover', 'mmultiscripts'}
 
     getAccentValue = function(ch)

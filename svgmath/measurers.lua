@@ -79,7 +79,7 @@ measure_mpadded = function(node)
 
   getDimension = function(attname, startvalue, canUseSpaces)
     local attr = node.attributes.get(attname)
-    if PYLUA.op_is(attr, nil) then
+    if attr == nil then
       return startvalue
     end
     attr = PYLUA.str_maybe(' ').join(attr.split())
@@ -226,7 +226,7 @@ measure_mrow = function(node)
       ch.text = ''
 
       longtext = function(n)
-        if PYLUA.op_is(n, nil) then
+        if n == nil then
           return false
         end
         if n.isSpace then
@@ -451,7 +451,7 @@ end
 measure_menclose = function(node)
 
   pushEnclosure = function()
-    if PYLUA.op_is(node.decoration, nil) then
+    if node.decoration == nil then
       return 
     end
     wrapChildren(node, 'menclose')
@@ -538,7 +538,7 @@ measure_mtable = function(node)
   for _, r in ipairs(node.rows) do
     for _, i in ipairs(range(len(r.cells))) do
       local c = r.cells[i]
-      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
+      if c == nil or c.content == nil then
         goto continue
       end
       local content = c.content
@@ -567,7 +567,7 @@ measure_mtable = function(node)
   for _, i in ipairs(range(len(node.rows))) do
     local r = node.rows[i]
     for _, c in ipairs(r.cells) do
-      if PYLUA.op_is(c, nil) or PYLUA.op_is(c.content, nil) then
+      if c == nil or c.content == nil then
         goto continue
       end
       local content = c.content
@@ -598,7 +598,7 @@ measure_mtable = function(node)
   local vsize = sum(PYLUA.COMPREHENSION())
   vsize = vsize+2*node.framespacings[2]
   local alignType, alignRow = table.unpack(tables.getAlign(node))
-  if PYLUA.op_is(alignRow, nil) then
+  if alignRow == nil then
     local topLine = 0
     local bottomLine = vsize
     local axisLine = vsize/2
@@ -644,7 +644,7 @@ measure_mtable = function(node)
 end
 
 measure_mtr = function(node)
-  if PYLUA.op_is(node.parent, nil) or node.parent.elementName~='mtable' then
+  if node.parent == nil or node.parent.elementName~='mtable' then
     node.error(PYLUA.mod('Misplaced \'%s\' element: should be child of \'mtable\'', node.elementName))
   end
 end
@@ -660,7 +660,7 @@ measure_mlabeledtr = function(node)
 end
 
 measure_mtd = function(node)
-  if PYLUA.op_is(node.parent, nil) or PYLUA.op_not_in(node.parent.elementName, {'mtr', 'mlabeledtr', 'mtable'}) then
+  if node.parent == nil or PYLUA.op_not_in(node.parent.elementName, {'mtr', 'mlabeledtr', 'mtable'}) then
     node.error(PYLUA.mod('Misplaced \'%s\' element: should be child of \'mtr\', \'mlabeledtr\', or \'mtable\'', node.elementName))
   end
   measure_mrow(node)
@@ -689,7 +689,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.subShift = 0
   if len(subs)>0 then
     local shiftAttr = node.getProperty('subscriptshift')
-    if PYLUA.op_is(shiftAttr, nil) then
+    if shiftAttr == nil then
       shiftAttr = '0.5ex'
     end
     node.subShift = node.parseLength(shiftAttr)
@@ -706,7 +706,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.superShift = 0
   if len(supers)>0 then
     shiftAttr = node.getProperty('superscriptshift')
-    if PYLUA.op_is(shiftAttr, nil) then
+    if shiftAttr == nil then
       shiftAttr = '1ex'
     end
     node.superShift = node.parseLength(shiftAttr)
@@ -786,7 +786,7 @@ measureLimits = function(node, underscript, overscript)
 end
 
 stretch = function(node, toWidth, toHeight, toDepth, symmetric)
-  if PYLUA.op_is(node, nil) then
+  if node == nil then
     return 
   end
   if  not node.core.stretchy then
@@ -812,7 +812,7 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
     local minsizedefault = node.opdefaults.get('minsize')
     local minsizeattr = node.getProperty('minsize', minsizedefault)
     local minScale = node.parseSpaceOrPercent(minsizeattr, node.fontSize, node.fontSize)/node.fontSize
-    if PYLUA.op_is(toWidth, nil) then
+    if toWidth == nil then
       stretchVertically(node, toHeight, toDepth, minScale, maxScale, symmetric)
     else
       stretchHorizontally(node, toWidth, minScale, maxScale)
