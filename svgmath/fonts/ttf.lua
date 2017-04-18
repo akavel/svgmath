@@ -77,7 +77,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     end
 
     switchTable = function(tableTag)
-      if PYLUA.op_not_in(tableTag, tables.keys()) then
+      if PYLUA.op_not_in(tableTag, PYLUA.keys(tables)) then
         error(TTFFormatError)
       end
       return tables[tableTag]
@@ -117,22 +117,22 @@ TTFMetric = PYLUA.class(FontMetric) {
       local nameLength = readUnsigned(ff, 2)
       local nameOffset = readUnsigned(ff, 2)
       if platformID==3 and encodingID==1 then
-        if PYLUA.op_in(languageID, englishCodes) or PYLUA.op_not_in(nameID, uniNames.keys()) then
+        if PYLUA.op_in(languageID, englishCodes) or PYLUA.op_not_in(nameID, PYLUA.keys(uniNames)) then
           uniNames[nameID] = {nameOffset, nameLength}
         end
       elseif platformID==1 and encodingID==0 then
-        if languageID==0 or PYLUA.op_not_in(nameID, macNames.keys()) then
+        if languageID==0 or PYLUA.op_not_in(nameID, PYLUA.keys(macNames)) then
           macNames[nameID] = {nameOffset, nameLength}
         end
       end
     end
 
     getName = function(code)
-      if PYLUA.op_in(code, macNames.keys()) then
+      if PYLUA.op_in(code, PYLUA.keys(macNames)) then
         local nameOffset, nameLength = table.unpack(macNames[code])
         ff.seek(storageOffset+nameOffset)
         return ff.read(nameLength)
-      elseif PYLUA.op_in(code, uniNames.keys()) then
+      elseif PYLUA.op_in(code, PYLUA.keys(uniNames)) then
         nameOffset, nameLength = table.unpack(uniNames[code])
         ff.seek(storageOffset+nameOffset)
         local result = ''

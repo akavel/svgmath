@@ -92,7 +92,7 @@ arrangeCells = function(node)
     if ch.elementName=='mtr' or ch.elementName=='mlabeledtr' then
       local cells = ch.children
       rowalign = ch.attributes.get('rowalign', rowalign)
-      if PYLUA.op_in('columnalign', ch.attributes.keys()) then
+      if PYLUA.op_in('columnalign', PYLUA.keys(ch.attributes)) then
         local columnaligns = node.getListProperty('columnalign', ch.attributes.get('columnalign'))
       end
     else

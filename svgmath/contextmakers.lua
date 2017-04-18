@@ -72,7 +72,7 @@ end
 
 context_mstyle = function(node)
   default_context(node)
-  if node.attributes and PYLUA.op_in('mathsize', node.attributes.keys()) then
+  if node.attributes and PYLUA.op_in('mathsize', PYLUA.keys(node.attributes)) then
 node.attributes['mathsize']  end
   if node.attributes then
     node.defaults = node.defaults.copy()

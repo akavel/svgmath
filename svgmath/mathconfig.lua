@@ -54,10 +54,10 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         fontfullname = fontfullname+' '+style
       end
       -- PYLUA.FIXME: TRY:
-        if PYLUA.op_in('afm', attributes.keys()) then
+        if PYLUA.op_in('afm', PYLUA.keys(attributes)) then
           local fontpath = attributes.get('afm')
           local metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
-        elseif PYLUA.op_in('ttf', attributes.keys()) then
+        elseif PYLUA.op_in('ttf', PYLUA.keys(attributes)) then
           fontpath = attributes.get('ttf')
           metric = TTFMetric(fontpath, sys.stderr)
         else

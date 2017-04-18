@@ -20,7 +20,7 @@ startElement = function(output, localname, namespace, prefix, attrs)
     for att, value in pairs(attrs) do
       nsAttrs[{nil, att}] = value
     end
-    local qnames = attrs.keys()
+    local qnames = PYLUA.keys(attrs)
     output.startElementNS({namespace, localname}, prefix+localname, xmlreader.AttributesNSImpl(nsAttrs, qnames))
   else
     output.startElement(prefix+localname, xmlreader.AttributesImpl(attrs))
@@ -567,7 +567,7 @@ end
 
 getAlign = function(node, attrName)
   local attrValue = node.getProperty(attrName, 'center')
-  if PYLUA.op_not_in(attrValue, alignKeywords.keys()) then
+  if PYLUA.op_not_in(attrValue, PYLUA.keys(alignKeywords)) then
     node.error('Bad value %s for %s', attrValue, attrName)
   end
   return alignKeywords.get(attrValue, 0.5)
