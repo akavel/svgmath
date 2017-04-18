@@ -658,4 +658,6 @@ getBackground = function(node)
       end
     end
   end
+  -- PYLUA.FIXME: else:
+    return 'none'
 end

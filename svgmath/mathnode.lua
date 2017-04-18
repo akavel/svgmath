@@ -388,6 +388,12 @@ MathNode = PYLUA.class() {
         return {cm, fd}
       end
     end
+    -- PYLUA.FIXME: else:
+      if 0<ch and ch<65535 and PYLUA.op_in(unichr(ch), PYLUA.keys(specialChars)) then
+        return self.findChar(ord(specialChars[unichr(ch)]))
+      end
+      self.warning(PYLUA.mod('Glyph U+%X not found', ch))
+      return nil
   end
   ;
 

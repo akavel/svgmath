@@ -95,6 +95,8 @@ FontMetric = PYLUA.class() {
           break
         end
       end
+      -- PYLUA.FIXME: else:
+        self.axisposition = self.capheight/2
     end
     if self.underlinethickness ~= nil then
       self.rulewidth = self.underlinethickness
@@ -106,6 +108,8 @@ FontMetric = PYLUA.class() {
           break
         end
       end
+      -- PYLUA.FIXME: else:
+        self.rulewidth = 0.05
     end
     if self.stdhw == nil then
       self.stdhw = 0.03
