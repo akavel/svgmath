@@ -23,6 +23,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   end
   ;
 
+  --[[
   setDocumentLocator = function(self, locator)
     self.locator = locator
   end
@@ -35,8 +36,8 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
 
   endDocument = function(self)
     self.output.endDocument()
-  end
-  ;
+  end;
+  --]]
 
   startElementNS = function(self, elementName, qName, attributes)
     if self.skip>0 then
@@ -57,11 +58,11 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       local attNamespace, attLocalName = table.unpack(attName)
       if attNamespace and attNamespace~=MathNS then
         if self.config.verbose then
-          locator.message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
+          locator:message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
         end
-        goto continue
+      else
+        properties[attLocalName] = value
       end
-      properties[attLocalName] = value
     end
     self.currentNode = MathNode(localName, properties, locator, self.config, self.currentNode)
   end
