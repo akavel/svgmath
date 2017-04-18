@@ -21,10 +21,10 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     self.opstyles = { }
     self.fallbackFamilies = {}
     -- PYLUA.FIXME: TRY:
-      local parser = sax.make_parser()
-      parser.setContentHandler(self)
-      parser.setFeature(sax.handler.feature_namespaces, 0)
-      parser.parse(configfile)
+    local parser = sax.make_parser()
+    parser.setContentHandler(self)
+    parser.setFeature(sax.handler.feature_namespaces, 0)
+    parser.parse(configfile)
     -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
       io.write('Error parsing configuration file ', configfile, ': ', xcpt.getMessage(), '\n')
       sys.exit(1)
@@ -54,17 +54,17 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         fontfullname = fontfullname+' '+style
       end
       -- PYLUA.FIXME: TRY:
-        if PYLUA.op_in('afm', PYLUA.keys(attributes)) then
-          local fontpath = attributes.get('afm')
-          local metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
-        elseif PYLUA.op_in('ttf', PYLUA.keys(attributes)) then
-          fontpath = attributes.get('ttf')
-          metric = TTFMetric(fontpath, sys.stderr)
-        else
-          sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
-          sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
-          return 
-        end
+      if PYLUA.op_in('afm', PYLUA.keys(attributes)) then
+        local fontpath = attributes.get('afm')
+        local metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
+      elseif PYLUA.op_in('ttf', PYLUA.keys(attributes)) then
+        fontpath = attributes.get('ttf')
+        metric = TTFMetric(fontpath, sys.stderr)
+      else
+        sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
+        sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+        return 
+      end
       -- PYLUA.FIXME: EXCEPT FontFormatError err:
         sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', {fontpath, err.message}))
         sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))

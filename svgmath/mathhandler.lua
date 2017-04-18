@@ -1,9 +1,7 @@
 -- SAX filter for MathML-to-SVG conversion.
---[[
 local os = require('os')
 local sys = require('sys')
 local sax = require('xml').sax
---]]
 local MathNode = require('mathnode').MathNode
 local MathConfig = require('mathconfig').MathConfig
 local NodeLocator = require('nodelocator').NodeLocator
@@ -25,7 +23,6 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   end
   ;
 
-  --[[
   setDocumentLocator = function(self, locator)
     self.locator = locator
   end
@@ -38,8 +35,8 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
 
   endDocument = function(self)
     self.output.endDocument()
-  end;
-  --]]
+  end
+  ;
 
   startElementNS = function(self, elementName, qName, attributes)
     if self.skip>0 then
@@ -60,11 +57,11 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       local attNamespace, attLocalName = table.unpack(attName)
       if attNamespace and attNamespace~=MathNS then
         if self.config.verbose then
-          locator:message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
+          locator.message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
         end
-      else
-        properties[attLocalName] = value
+        goto continue
       end
+      properties[attLocalName] = value
     end
     self.currentNode = MathNode(localName, properties, locator, self.config, self.currentNode)
   end
@@ -103,7 +100,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   ;
 }
 
---[[
+
 MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
 
   __init__ = function(self)
@@ -118,4 +115,4 @@ MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
   end
   ;
 }
---]]
+

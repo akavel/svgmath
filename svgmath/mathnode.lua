@@ -143,7 +143,7 @@ MathNode = PYLUA.class() {
 
   parseInt = function(self, x)
     -- PYLUA.FIXME: TRY:
-      return int(x, 10)
+    return int(x, 10)
     -- PYLUA.FIXME: EXCEPT TypeError:
       self.error(PYLUA.mod('Cannot parse string \'%s\' as an integer', str(x)))
       return 0
@@ -152,7 +152,7 @@ MathNode = PYLUA.class() {
 
   parseFloat = function(self, x)
     -- PYLUA.FIXME: TRY:
-      local value = float(x)
+    local value = float(x)
     -- PYLUA.FIXME: EXCEPT ValueError:
       self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))
       return 0.0
