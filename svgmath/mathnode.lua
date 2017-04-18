@@ -3,27 +3,87 @@ local sys = require('sys')
 local contextmakers = require('contextmakers')
 local measurers = require('measurers')
 local generators = require('generators')
+--[[
 local sax = require('xml').sax
+--]]
 local NodeLocator = require('nodelocator').NodeLocator
 
 isHighSurrogate = function(ch)
   -- Tests whether a Unicode character is from the high surrogates range
   local code = ord(ch)
-  return 55296<=code and code<=56319
+  return (0xD800 <= code and code <= 0xDBFF)
 end
 
 isLowSurrogate = function(ch)
   -- Tests whether a Unicode character is from the low surrogates range
   local code = ord(ch)
-  return 56320<=code and code<57343
+  return (0xDC00 <= code and code < 0xDFFF)
 end
 
 decodeSurrogatePair = function(hi, lo)
   -- Returns a scalar value  that corresponds to a surrogate pair
-  return (ord(hi)-55296)*1024+ord(lo)-56320+65536
+  return ((ord(hi) - 0xD800) * 0x400) + (ord(lo) - 0xDC00) + 0x10000
 end
-local globalDefaults = { mathvariant='normal', mathsize='12pt', mathcolor='black', mathbackground='transparent', displaystyle='false', scriptlevel='0', scriptsizemultiplier='0.71', scriptminsize='8pt', veryverythinmathspace='0.0555556em', verythinmathspace='0.111111em', thinmathspace='0.166667em', mediummathspace='0.222222em', thickmathspace='0.277778em', verythickmathspace='0.333333em', veryverythickmathspace='0.388889em', linethickness='1', bevelled='false', enumalign='center', denomalign='center', lquote='"', rquote='"', height='0ex', depth='0ex', width='0em', open='(', close=')', separators=',', notation='longdiv', align='axis', rowalign='baseline', columnalign='center', columnwidth='auto', equalrows='false', equalcolumns='false', rowspacing='1.0ex', columnspacing='0.8em', framespacing='0.4em 0.5ex', rowlines='none', columnlines='none', frame='none', }
-local specialChars = { ['\xe2\x85\x85']='D', ['\xe2\x85\x86']='d', ['\xe2\x85\x87']='e', ['\xe2\x85\x88']='i', ['\xc2\xa0']=' ', }
+
+local globalDefaults = {
+  -- Font and color properties
+  mathvariant='normal',
+  mathsize='12pt',
+  mathcolor='black',
+  mathbackground='transparent',
+  displaystyle='false',
+  scriptlevel='0',
+  -- Script size factor and minimum value
+  scriptsizemultiplier='0.71',
+  scriptminsize='8pt',
+  -- Spaces
+  veryverythinmathspace='0.0555556em',
+  verythinmathspace='0.111111em',
+  thinmathspace='0.166667em',
+  mediummathspace='0.222222em',
+  thickmathspace='0.277778em',
+  verythickmathspace='0.333333em',
+  veryverythickmathspace='0.388889em',
+  -- Line thickness and slope for mfrac    
+  linethickness='1',
+  bevelled='false',
+  enumalign='center',
+  denomalign='center',
+  -- String quotes for ms
+  lquote='"',
+  rquote='"',
+  -- Properties for mspace
+  height='0ex',
+  depth='0ex',
+  width='0em',
+  -- Properties for mfenced
+  open='(',
+  close=')',
+  separators=',',
+  -- Property for menclose
+  notation='longdiv',
+  -- Properties for mtable
+  align='axis',
+  rowalign='baseline',
+  columnalign='center',
+  columnwidth='auto',
+  equalrows='false',
+  equalcolumns='false',
+  rowspacing='1.0ex',
+  columnspacing='0.8em',
+  framespacing='0.4em 0.5ex',
+  rowlines='none',
+  columnlines='none',
+  frame='none',
+}
+
+local specialChars = {
+  ['\xe2\x85\x85']='D',
+  ['\xe2\x85\x86']='d',
+  ['\xe2\x85\x87']='e',
+  ['\xe2\x85\x88']='i',
+  ['\xc2\xa0']=' ',
+}
 
 FontMetricRecord = PYLUA.class() {
   -- Structure to track usage of a single font family
@@ -50,13 +110,16 @@ MathNode = PYLUA.class() {
   __init__ = function(self, elementName, attributes, locator, config, parent)
     self.elementName = elementName
     self.config = config
+
     if locator ~= nil then
       self.locator = locator
     elseif parent ~= nil then
+      -- handy when we add nodes in preprocessing
       self.locator = parent.locator
     else
       self.locator = NodeLocator(nil)
     end
+
     self.text = ''
     self.children = {}
     self.attributes = attributes
@@ -76,12 +139,12 @@ MathNode = PYLUA.class() {
   ;
 
   makeContext = function(self)
-    contextmakers.__dict__.get('context_'+self.elementName, contextmakers.default_context)(self)
+    contextmakers.__dict__.get('context_'..self.elementName, contextmakers.default_context)(self)
   end
   ;
 
   makeChildContext = function(self, child)
-    contextmakers.__dict__.get('child_context_'+self.elementName, contextmakers.default_child_context)(self, child)
+    contextmakers.__dict__.get('child_context_'..self.elementName, contextmakers.default_child_context)(self, child)
   end
   ;
 
@@ -95,7 +158,7 @@ MathNode = PYLUA.class() {
   ;
 
   measureNode = function(self)
-    local measureMethod = measurers.__dict__.get('measure_'+self.elementName, measurers.default_measure)
+    local measureMethod = measurers.__dict__.get('measure_'..self.elementName, measurers.default_measure)
     if self.config.verbose and PYLUA.op_is(measureMethod, measurers.default_measure) then
       self.warning(PYLUA.mod('MathML element \'%s\' is unsupported', self.elementName))
     end
@@ -104,7 +167,7 @@ MathNode = PYLUA.class() {
   ;
 
   draw = function(self, output)
-    generators.__dict__.get('draw_'+self.elementName, generators.default_draw)(self, output)
+    generators.__dict__.get('draw_'..self.elementName, generators.default_draw)(self, output)
   end
   ;
 
@@ -178,12 +241,14 @@ MathNode = PYLUA.class() {
     elseif lenattr.endswith('pc') then
       return self.parseFloat(PYLUA.slice(lenattr, nil, -2))*12.0
     elseif lenattr.endswith('px') then
+      -- pixels are calculated for 96 dpi
       return self.parseFloat(PYLUA.slice(lenattr, nil, -2))*72.0/96.0
     elseif lenattr.endswith('em') then
       return self.parseFloat(PYLUA.slice(lenattr, nil, -2))*self.fontSize
     elseif lenattr.endswith('ex') then
       return self.parseFloat(PYLUA.slice(lenattr, nil, -2))*self.fontSize*self.metric().xheight
     else
+      -- unitless lengths are treated as if  expressed in pixels
       return self.parseFloat(lenattr)*unitlessScale
     end
   end
@@ -260,6 +325,8 @@ MathNode = PYLUA.class() {
     local hisurr = nil
     for _, ch in ipairs(self.text) do
       local chcode = ord(ch)
+
+      -- Processing surrogate pairs
       if isLowSurrogate(ch) then
         if hisurr == nil then
           self.error(PYLUA.mod('Invalid Unicode sequence - low surrogate character (U+%X) not preceded by a high surrogate', ord(ch)))
@@ -274,9 +341,9 @@ MathNode = PYLUA.class() {
       end
       if isHighSurrogate(ch) then
         hisurr = ch
-        goto continue
+      else
+        table.insert(codes, chcode)
       end
-      table.insert(codes, chcode)
     end
     if hisurr ~= nil then
       self.error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
@@ -388,12 +455,11 @@ MathNode = PYLUA.class() {
         return {cm, fd}
       end
     end
-    -- PYLUA.FIXME: else:
-      if 0<ch and ch<65535 and PYLUA.op_in(unichr(ch), PYLUA.keys(specialChars)) then
-        return self.findChar(ord(specialChars[unichr(ch)]))
-      end
-      self.warning(PYLUA.mod('Glyph U+%X not found', ch))
-      return nil
+    if 0<ch and ch<0xFFFF and PYLUA.op_in(unichr(ch), PYLUA.keys(specialChars)) then
+      return self.findChar(ord(specialChars[unichr(ch)]))
+    end
+    self.warning(PYLUA.mod('Glyph U+%X not found', ch))
+    return nil
   end
   ;
 
@@ -416,24 +482,30 @@ MathNode = PYLUA.class() {
         if chcode==ucstext[1] then
           cm0 = cm
         end
-        if chcode==ucstext[0] then
+        if chcode==ucstext[#ucstext-1] then
           cm1 = cm
         end
         self.width = self.width+cm.width
         if self.height+self.depth==0 then
           self.height = cm.bbox[4]
           self.depth = -cm.bbox[2]
-        elseif cm.bbox[4]~=cm.bbox[2] then
+        elseif cm.bbox[4]~=cm.bbox[2] then -- exclude space  
           self.height = max(self.height, cm.bbox[4])
           self.depth = max(self.depth, -cm.bbox[2])
         end
       end
     end
+
+    -- Normalize to the font size
     self.width = self.width*self.fontSize
     self.depth = self.depth*self.fontSize
     self.height = self.height*self.fontSize
+
+    -- Add ascender/descender values
     self.ascender = self.nominalAscender()
     self.descender = self.nominalDescender()
+
+    -- Shape correction  
     if cm0 ~= nil then
       self.leftBearing = max(0, -cm0.bbox[1])*self.fontSize
     end
@@ -441,6 +513,8 @@ MathNode = PYLUA.class() {
       self.rightBearing = max(0, cm1.bbox[3]-cm.width)*self.fontSize
     end
     self.width = self.width+self.leftBearing+self.rightBearing
+
+    -- Reset nominal metric
     self.nominalMetric = nil
   end
   ;
