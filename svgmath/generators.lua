@@ -372,7 +372,7 @@ draw_mtable = function(node, output)
         else
           cellWidth = column.width
         end
-        local hadjust = (cellWidth-cell.content.width)*alignKeywords.get(cell.halign, 0.5)
+        local hadjust = (cellWidth-cell.content.width)*alignKeywords[cell.halign] or 0.5
         if cell.rowspan>1 then
           local cellHeight = sum(PYLUA.COMPREHENSION())
           cellHeight = cellHeight+sum(PYLUA.COMPREHENSION())
@@ -570,7 +570,7 @@ getAlign = function(node, attrName)
   if PYLUA.op_not_in(attrValue, PYLUA.keys(alignKeywords)) then
     node.error('Bad value %s for %s', attrValue, attrName)
   end
-  return alignKeywords.get(attrValue, 0.5)
+  return alignKeywords[attrValue] or 0.5
 end
 
 drawBoxEnclosure = function(node, output, roundRadius)
@@ -649,7 +649,7 @@ end
 
 getBackground = function(node)
   for _, attr in ipairs({'mathbackground', 'background-color', 'background'}) do
-    local value = node.attributes.get(attr)
+    local value = node.attributes[attr]
     if value ~= nil then
       if value=='transparent' then
         return 'none'

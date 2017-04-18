@@ -35,9 +35,9 @@ GlyphList = PYLUA.class(dict) {
 
   lookup = function(self, glyphname)
     if PYLUA.op_in(glyphname, PYLUA.keys(self)) then
-      return self.get(glyphname)
+      return self[glyphname]
     else
-      return defaultGlyphList.get(glyphname)
+      return defaultGlyphList[glyphname]
     end
   end
   ;

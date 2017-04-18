@@ -29,7 +29,7 @@ measure_mstyle = function(node)
 end
 
 measure_maction = function(node)
-  local selectionattr = node.attributes.get('selection', '1')
+  local selectionattr = node.attributes['selection'] or '1'
   local selection = node.parseInt(selectionattr)
   node.base = nil
   if selection<=0 then
@@ -78,7 +78,7 @@ measure_mpadded = function(node)
   end
 
   getDimension = function(attname, startvalue, canUseSpaces)
-    local attr = node.attributes.get(attname)
+    local attr = node.attributes[attname]
     if attr == nil then
       return startvalue
     end
@@ -288,7 +288,7 @@ measure_mfrac = function(node)
   node.alignToAxis = true
   local ruleWidthKeywords = { medium='1', thin='0.5', thick='2', }
   local widthAttr = node.getProperty('linethickness')
-  widthAttr = ruleWidthKeywords.get(widthAttr, widthAttr)
+  widthAttr = ruleWidthKeywords[widthAttr] or widthAttr
   local unitWidth = node.nominalLineWidth()
   node.ruleWidth = node.parseLength(widthAttr, unitWidth)
   node.ruleGap = node.nominalLineGap()
@@ -802,14 +802,14 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
     if node.fontSize==0 then
       return 
     end
-    local maxsizedefault = node.opdefaults.get('maxsize')
+    local maxsizedefault = node.opdefaults['maxsize']
     local maxsizeattr = node.getProperty('maxsize', maxsizedefault)
     if maxsizeattr=='infinity' then
       local maxScale = nil
     else
       maxScale = node.parseSpaceOrPercent(maxsizeattr, node.fontSize, node.fontSize)/node.fontSize
     end
-    local minsizedefault = node.opdefaults.get('minsize')
+    local minsizedefault = node.opdefaults['minsize']
     local minsizeattr = node.getProperty('minsize', minsizedefault)
     local minScale = node.parseSpaceOrPercent(minsizeattr, node.fontSize, node.fontSize)/node.fontSize
     if toWidth == nil then

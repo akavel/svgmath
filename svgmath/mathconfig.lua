@@ -33,19 +33,19 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
 
   startElement = function(self, name, attributes)
     if name=='config' then
-      self.verbose = attributes.get('verbose')=='true'
-      self.debug = attributes.get('debug', '').replace(',', ' ').split()
+      self.verbose = attributes['verbose']=='true'
+      self.debug = attributes['debug'] or ''.replace(',', ' ').split()
     elseif name=='defaults' then
       self.defaults.update(attributes)
     elseif name=='fallback' then
-      local familyattr = attributes.get('family', '')
+      local familyattr = attributes['family'] or ''
       self.fallbackFamilies = PYLUA.COMPREHENSION()
     elseif name=='family' then
-      self.currentFamily = attributes.get('name', '')
+      self.currentFamily = attributes['name'] or ''
       self.currentFamily = PYLUA.str_maybe('').join(self.currentFamily.lower().split())
     elseif name=='font' then
-      local weight = attributes.get('weight', 'normal')
-      local style = attributes.get('style', 'normal')
+      local weight = attributes['weight'] or 'normal'
+      local style = attributes['style'] or 'normal'
       local fontfullname = self.currentFamily
       if weight~='normal' then
         fontfullname = fontfullname+' '+weight
@@ -55,10 +55,10 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       end
       -- PYLUA.FIXME: TRY:
       if PYLUA.op_in('afm', PYLUA.keys(attributes)) then
-        local fontpath = attributes.get('afm')
-        local metric = AFMMetric(fontpath, attributes.get('glyph-list'), sys.stderr)
+        local fontpath = attributes['afm']
+        local metric = AFMMetric(fontpath, attributes['glyph-list'], sys.stderr)
       elseif PYLUA.op_in('ttf', PYLUA.keys(attributes)) then
-        fontpath = attributes.get('ttf')
+        fontpath = attributes['ttf']
         metric = TTFMetric(fontpath, sys.stderr)
       else
         sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
@@ -76,14 +76,14 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         return 
       self.fonts[weight+' '+style+' '+self.currentFamily] = metric
     elseif name=='mathvariant' then
-      local variantattr = attributes.get('name')
-      familyattr = attributes.get('family', '')
+      local variantattr = attributes['name']
+      familyattr = attributes['family'] or ''
       local splitFamily = PYLUA.COMPREHENSION()
-      local weightattr = attributes.get('weight', 'normal')
-      local styleattr = attributes.get('style', 'normal')
+      local weightattr = attributes['weight'] or 'normal'
+      local styleattr = attributes['style'] or 'normal'
       self.variants[variantattr] = {weightattr, styleattr, splitFamily}
     elseif name=='operator-style' then
-      local opname = attributes.get('operator')
+      local opname = attributes['operator']
       if opname then
         local styling = { }
         styling.update(attributes)
@@ -109,7 +109,7 @@ styling['operator']        self.opstyles[opname] = styling
     family = PYLUA.str_maybe('').join(family or ''.lower().split())
     for _, w in ipairs({weight, 'normal'}) do
       for _, s in ipairs({style, 'normal'}) do
-        local metric = self.fonts.get(w+' '+s+' '+family)
+        local metric = self.fonts[w+' '+s+' '+family]
         if metric then
           return metric
         end

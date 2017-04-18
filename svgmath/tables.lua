@@ -59,10 +59,10 @@ RowDescriptor = PYLUA.class() {
       local colspan = 1
       local rowspan = 1
       if c.elementName=='mtd' then
-        halign = c.attributes.get('columnalign', halign)
-        valign = c.attributes.get('rowalign', valign)
-        colspan = node.parseInt(c.attributes.get('colspan', '1'))
-        rowspan = node.parseInt(c.attributes.get('rowspan', '1'))
+        halign = c.attributes['columnalign'] or halign
+        valign = c.attributes['rowalign'] or valign
+        colspan = node.parseInt(c.attributes['colspan'] or '1')
+        rowspan = node.parseInt(c.attributes['rowspan'] or '1')
       end
       while len(self.cells)>=len(node.columns) do
         table.insert(node.columns, ColumnDescriptor())
@@ -91,9 +91,9 @@ arrangeCells = function(node)
     local row_columnaligns = table_columnaligns
     if ch.elementName=='mtr' or ch.elementName=='mlabeledtr' then
       local cells = ch.children
-      rowalign = ch.attributes.get('rowalign', rowalign)
+      rowalign = ch.attributes['rowalign'] or rowalign
       if PYLUA.op_in('columnalign', PYLUA.keys(ch.attributes)) then
-        local columnaligns = node.getListProperty('columnalign', ch.attributes.get('columnalign'))
+        local columnaligns = node.getListProperty('columnalign', ch.attributes['columnalign'])
       end
     else
       cells = {ch}
@@ -158,7 +158,7 @@ arrangeLines = function(node)
 end
 
 calculateColumnWidths = function(node)
-  local fullwidthattr = node.attributes.get('width', 'auto')
+  local fullwidthattr = node.attributes['width'] or 'auto'
   if fullwidthattr=='auto' then
     local fullwidth = nil
   else

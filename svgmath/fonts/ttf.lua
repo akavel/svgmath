@@ -217,10 +217,10 @@ TTFMetric = PYLUA.class(FontMetric) {
       cmapEncodings[{platformID, encodingID}] = subtableOffset
     end
     local encodingScheme = 'Unicode'
-    subtableOffset = cmapEncodings.get({3, 1})
+    subtableOffset = cmapEncodings[{3, 1}]
     if subtableOffset == nil then
       encodingScheme = 'Symbol'
-      subtableOffset = cmapEncodings.get({3, 0})
+      subtableOffset = cmapEncodings[{3, 0}]
       if subtableOffset == nil then
         error(TTFFormatError)
       elseif self.log then

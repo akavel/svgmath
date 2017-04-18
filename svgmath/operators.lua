@@ -4,12 +4,12 @@ local operatorDictionary = { }
 
 lookup = function(op, form)
   -- Find the entry for an operator in the dictionary
-  local res = operatorDictionary.get(op+form)
+  local res = operatorDictionary[op+form]
   if res ~= nil then
     return res
   end
   for _, f in ipairs({'infix', 'postfix', 'prefix'}) do
-    res = operatorDictionary.get(op+f)
+    res = operatorDictionary[op+f]
     if res ~= nil then
       return res
     end
