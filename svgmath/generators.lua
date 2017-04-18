@@ -56,7 +56,7 @@ drawImage = function(node, output)
   local height = max(node.height, node.ascender)
   local depth = max(node.depth, node.descender)
   local vsize = height+depth
-  local attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', {-height+baseline, node.width, vsize}), }
+  local attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', {-(height+baseline), node.width, vsize}), }
   if useNamespaces then
     output.startPrefixMapping('svg', SVGNS)
     output.startPrefixMapping('svgmath', SVGMathNS)
