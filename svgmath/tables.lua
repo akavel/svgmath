@@ -52,7 +52,7 @@ RowDescriptor = PYLUA.class() {
     self.cells = {}
     for _, c in ipairs(cells) do
       while len(busycells)>len(self.cells) and busycells[len(self.cells)]>0 do
-        self.cells.append(nil)
+        table.insert(self.cells, nil)
       end
       local halign = getByIndexOrLast(columnaligns, len(self.cells))
       local valign = rowalign
@@ -65,14 +65,14 @@ RowDescriptor = PYLUA.class() {
         rowspan = node.parseInt(c.attributes.get('rowspan', '1'))
       end
       while len(self.cells)>=len(node.columns) do
-        node.columns.append(ColumnDescriptor())
+        table.insert(node.columns, ColumnDescriptor())
       end
-      self.cells.append(CellDescriptor(c, halign, valign, colspan, rowspan))
+      table.insert(self.cells, CellDescriptor(c, halign, valign, colspan, rowspan))
       for _, i in ipairs(range(1, colspan)) do
-        self.cells.append(nil)
+        table.insert(self.cells, nil)
       end
       while len(self.cells)>len(node.columns) do
-        node.columns.append(ColumnDescriptor())
+        table.insert(node.columns, ColumnDescriptor())
       end
     end
   end
@@ -99,10 +99,10 @@ arrangeCells = function(node)
       cells = {ch}
     end
     local row = RowDescriptor(node, cells, rowalign, row_columnaligns, busycells)
-    node.rows.append(row)
+    table.insert(node.rows, row)
     busycells = PYLUA.COMPREHENSION()
     while len(busycells)<len(row.cells) do
-      busycells.append(0)
+      table.insert(busycells, 0)
     end
     for _, i in ipairs(range(len(row.cells))) do
       local cell = row.cells[i]
@@ -118,7 +118,7 @@ arrangeCells = function(node)
   end
   while max(busycells)>0 do
     local rowalign = getByIndexOrLast(table_rowaligns, len(node.rows))
-    node.rows.append(RowDescriptor(node, {}, rowalign, table_columnaligns, busycells))
+    table.insert(node.rows, RowDescriptor(node, {}, rowalign, table_columnaligns, busycells))
     busycells = PYLUA.COMPREHENSION()
   end
 end

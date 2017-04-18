@@ -66,7 +66,7 @@ MathNode = PYLUA.class() {
     if PYLUA.op_is_not(parent, nil) then
       self.nodeIndex = len(parent.children)
       self.defaults = parent.defaults
-      parent.children.append(self)
+      table.insert(parent.children, self)
     else
       self.defaults = globalDefaults.copy()
       self.defaults.update(config.defaults)
@@ -276,7 +276,7 @@ MathNode = PYLUA.class() {
         hisurr = ch
         goto continue
       end
-      codes.append(chcode)
+      table.insert(codes, chcode)
     end
     if PYLUA.op_is_not(hisurr, nil) then
       self.error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
@@ -293,7 +293,7 @@ MathNode = PYLUA.class() {
         for _, family in ipairs(familylist) do
           local metric = self.config.findfont(self.fontweight, self.fontstyle, family)
           if PYLUA.op_is_not(metric, nil) then
-            metriclist.append(FontMetricRecord(family, metric))
+            table.insert(metriclist, FontMetricRecord(family, metric))
           end
         end
         if len(metriclist)==0 then

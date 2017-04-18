@@ -424,7 +424,7 @@ draw_mtable = function(node, output)
   for _, c in ipairs(range(len(node.columns))) do
     local spacing = node.columns[c].spaceAfter
     hshift = hshift+node.columns[c].width
-    hoffsets.append(hshift+spacing/2)
+    table.insert(hoffsets, hshift+spacing/2)
     hshift = hshift+spacing
   end
   hoffsets[0] = x2
@@ -433,7 +433,7 @@ draw_mtable = function(node, output)
   for _, r in ipairs(range(len(node.rows))) do
     local spacing = node.rows[r].spaceAfter
     vshift = vshift+node.rows[r].height+node.rows[r].depth
-    voffsets.append(vshift+spacing/2)
+    table.insert(voffsets, vshift+spacing/2)
     vshift = vshift+spacing
   end
   voffsets[0] = y2

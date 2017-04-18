@@ -203,7 +203,7 @@ TTFMetric = PYLUA.class(FontMetric) {
         w = readUnsigned(ff, 2)*emScale
         skip(ff, 2)
       end
-      glyphArray.append(CharMetric(PYLUA.keywords{width=w}))
+      table.insert(glyphArray, CharMetric(PYLUA.keywords{width=w}))
     end
     offset, length = table.unpack(switchTable('cmap'))
     ff.seek(offset+2)
@@ -238,20 +238,20 @@ TTFMetric = PYLUA.class(FontMetric) {
     skip(ff, 6)
     local endCounts = {}
     for _, i in ipairs(range(0, segCount)) do
-      endCounts.append(readUnsigned(ff, 2))
+      table.insert(endCounts, readUnsigned(ff, 2))
     end
     skip(ff, 2)
     local startCounts = {}
     for _, i in ipairs(range(0, segCount)) do
-      startCounts.append(readUnsigned(ff, 2))
+      table.insert(startCounts, readUnsigned(ff, 2))
     end
     local idDeltas = {}
     for _, i in ipairs(range(0, segCount)) do
-      idDeltas.append(readSigned(ff, 2))
+      table.insert(idDeltas, readSigned(ff, 2))
     end
     local rangeOffsets = {}
     for _, i in ipairs(range(0, segCount)) do
-      rangeOffsets.append(readUnsigned(ff, 2))
+      table.insert(rangeOffsets, readUnsigned(ff, 2))
     end
     local remainingLength = subtableLength-8*segCount-16
     if remainingLength<=0 then
@@ -259,7 +259,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     end
     local glyphIdArray = {}
     for _, i in ipairs(range(0, remainingLength/2)) do
-      glyphIdArray.append(readUnsigned(ff, 2))
+      table.insert(glyphIdArray, readUnsigned(ff, 2))
     end
     for _, i in ipairs(range(0, segCount)) do
       for _, c in ipairs(range(startCounts[i], endCounts[i]+1)) do
@@ -279,9 +279,9 @@ TTFMetric = PYLUA.class(FontMetric) {
           gid = gid+65536
         end
         local cm = glyphArray[gid]
-        cm.codes.append(c)
+        table.insert(cm.codes, c)
         if encodingScheme=='Symbol' and PYLUA.op_in(c, range(61472, 61567)) then
-          cm.codes.append(c-61440)
+          table.insert(cm.codes, c-61440)
         end
         if  not cm.name then
           cm.name = PYLUA.mod('u%04X', c)
@@ -294,11 +294,11 @@ TTFMetric = PYLUA.class(FontMetric) {
     local scalefactor = self.indexToLocFormat+1
     if self.indexToLocFormat==0 then
       for _, i in ipairs(range(0, self.numGlyphs+1)) do
-        glyphIndex.append(readUnsigned(ff, 2)*2)
+        table.insert(glyphIndex, readUnsigned(ff, 2)*2)
       end
     elseif self.indexToLocFormat==1 then
       for _, i in ipairs(range(0, self.numGlyphs+1)) do
-        glyphIndex.append(readUnsigned(ff, 4))
+        table.insert(glyphIndex, readUnsigned(ff, 4))
       end
     else
       error(TTFFormatError)

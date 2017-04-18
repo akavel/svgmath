@@ -25,7 +25,7 @@ GlyphList = PYLUA.class(dict) {
       end
       local codepoint = int(codelist[1], 16)
       if PYLUA.op_in(glyph, self.keys()) then
-        self[glyph].append(codepoint)
+        table.insert(self[glyph], codepoint)
       else
         self[glyph] = {codepoint}
       end

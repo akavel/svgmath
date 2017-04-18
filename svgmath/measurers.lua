@@ -124,7 +124,7 @@ measure_mfenced = function(node)
       sep.measure()
       sepindex = min(sepindex+1, lastsep)
     end
-    node.children.append(ch)
+    table.insert(node.children, ch)
   end
   local closingFence = node.getProperty('close')
   closingFence = PYLUA.str_maybe(' ').join(closingFence.split())
@@ -434,14 +434,14 @@ measure_mmultiscripts = function(node)
     end
     if isSub then
       if isPre then
-        presubscripts.append(ch)
+        table.insert(presubscripts, ch)
       else
-        subscripts.append(ch)
+        table.insert(subscripts, ch)
       end
     elseif isPre then
-      presuperscripts.append(ch)
+      table.insert(presuperscripts, ch)
     else
-      superscripts.append(ch)
+      table.insert(superscripts, ch)
     end
     isSub =  not isSub
   end
@@ -731,7 +731,7 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
       if i<len(nodes2) then
         w = max(w, nodes2[i].width)
       end
-      widths.append(w)
+      table.insert(widths, w)
     end
     return widths
   end

@@ -93,9 +93,9 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   ;
 
   startPrefixMapping = function(self, prefix, uri)
-    self._ns_contexts.append(self._current_context.copy())
+    table.insert(self._ns_contexts, self._current_context.copy())
     self._current_context[uri] = prefix
-    self._undeclared_ns_maps.append({prefix, uri})
+    table.insert(self._undeclared_ns_maps, {prefix, uri})
   end
   ;
 
