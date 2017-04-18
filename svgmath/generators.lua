@@ -1,41 +1,54 @@
 -- Drawing methods for MathML elements
+--[[
 local sys = require('sys')
+--]]
 local math = require('math')
 local mathnode = require('mathnode')
 local sax = require('xml').sax
 local xmlreader = require('xml.sax').xmlreader
+
+-- SVG namespace
 local SVGNS = 'http://www.w3.org/2000/svg'
+-- SVGMath proprietary namespace - used in metadata
 local SVGMathNS = 'http://www.grigoriev.ru/svgmath'
+
+-- Use namespace-aware (SAX2) or plain (SAX1) callbacks 
 local useNamespaces = true
+-- Output extra linefeeds to improve readability
 local readable = false
+
+-- Handy mapping of horizontal alignment keywords
 local alignKeywords = { left=0, center=0.5, right=1, }
 
 startElement = function(output, localname, namespace, prefix, attrs)
   -- Wrapper to emit a start tag
   if readable then
-    output.characters('\n')
+    output:characters('\n')  -- for readability
   end
+
   if useNamespaces then
     local nsAttrs = { }
     for att, value in pairs(attrs) do
       nsAttrs[{nil, att}] = value
     end
     local qnames = PYLUA.keys(attrs)
-    output.startElementNS({namespace, localname}, prefix+localname, xmlreader.AttributesNSImpl(nsAttrs, qnames))
+    output:startElementNS({namespace, localname},
+      prefix..localname, xmlreader.AttributesNSImpl(nsAttrs, qnames))
   else
-    output.startElement(prefix+localname, xmlreader.AttributesImpl(attrs))
+    output:startElement(prefix..localname, xmlreader.AttributesImpl(attrs))
   end
 end
 
 endElement = function(output, localname, namespace, prefix)
   -- Wrapper to emit an end tag
   if useNamespaces then
-    output.endElementNS({namespace, localname}, prefix+localname)
+    output:endElementNS({namespace, localname}, prefix..localname)
   else
-    output.endElement(prefix+localname)
+    output:endElement(prefix..localname)
   end
+
   if readable then
-    output.characters('\n')
+    output:characters('\n')  -- for readability
   end
 end
 
@@ -49,31 +62,51 @@ end
 
 drawImage = function(node, output)
   -- Top-level draw function: prepare the canvas, then call the draw method of the root node
+ 
+  -- The zero level of the viewbox is always aligned on the alphabetic baseline
   local baseline = 0
   if node.alignToAxis then
-    baseline = node.axis()
+    baseline = node:axis()
   end
+
   local height = max(node.height, node.ascender)
   local depth = max(node.depth, node.descender)
   local vsize = height+depth
-  local attrs = { width=PYLUA.mod('%fpt', node.width), height=PYLUA.mod('%fpt', vsize), viewBox=PYLUA.mod('0 %f %f %f', {-(height+baseline), node.width, vsize}), }
+
+  local attrs = {
+    width=PYLUA.mod('%fpt', node.width),
+    height=PYLUA.mod('%fpt', vsize),
+    viewBox=PYLUA.mod('0 %f %f %f', {-(height+baseline), node.width, vsize}),
+  }
   if useNamespaces then
-    output.startPrefixMapping('svg', SVGNS)
-    output.startPrefixMapping('svgmath', SVGMathNS)
+    output:startPrefixMapping('svg', SVGNS)
+    output:startPrefixMapping('svgmath', SVGMathNS)
   else
     attrs['xmlns:svg'] = SVGNS
     attrs['xmlns:svgmath'] = SVGMathNS
   end
+
   startSVGElement(output, 'svg', attrs)
+
+  -- Prints baseline table as metadata    
   startSVGElement(output, 'metadata', { })
-  startElement(output, 'metrics', SVGMathNS, 'svgmath:', { baseline=depth-baseline, axis=depth-baseline+node.axis(), top=depth+node.height, bottom=depth-node.depth, })
+  startElement(output,
+    'metrics', SVGMathNS, 'svgmath:', {
+      baseline=depth-baseline,
+      axis=depth-baseline+node:axis(),
+      top=depth+node.height,
+      bottom=depth-node.depth,
+    })
   endElement(output, 'metrics', SVGMathNS, 'svgmath:')
+
   endSVGElement(output, 'metadata')
+
   drawTranslatedNode(node, output, 0, -baseline)
   endSVGElement(output, 'svg')
+
   if useNamespaces then
-    output.endPrefixMapping('svg')
-    output.endPrefixMapping('svgmath')
+    output:endPrefixMapping('svg')
+    output:endPrefixMapping('svgmath')
   end
 end
 
@@ -89,12 +122,13 @@ draw_mrow = function(node, output)
   if len(node.children)==0 then
     return 
   end
+
   local offset = -node.children[1].leftspace
   for _, ch in ipairs(node.children) do
     offset = offset+ch.leftspace
     local baseline = 0
-    if ch.alignToAxis and  not node.alignToAxis then
-      baseline = -node.axis()
+    if ch.alignToAxis and not node.alignToAxis then
+      baseline = -node:axis()
     end
     drawTranslatedNode(ch, output, offset, baseline)
     offset = offset+ch.width+ch.rightspace
@@ -109,7 +143,7 @@ end
 
 draw_maction = function(node, output)
   if node.base ~= nil then
-    node.base.draw(output)
+    node.base:draw(output)
   end
 end
 
@@ -136,7 +170,7 @@ end
 
 draw_menclose = function(node, output)
   if node.decoration == nil then
-    node.base.draw(output)
+    node.base:draw(output)
   elseif node.decoration=='strikes' then
     drawStrikesEnclosure(node, output)
   elseif node.decoration=='borders' then
@@ -144,70 +178,70 @@ draw_menclose = function(node, output)
   elseif node.decoration=='box' then
     drawBoxEnclosure(node, output)
   elseif node.decoration=='roundedbox' then
-    local r = (node.width-node.base.width+node.height-node.base.height+node.depth-node.base.depth)/4
+    local r = (node.width-node.base.width+
+              node.height-node.base.height+
+              node.depth-node.base.depth) / 4
     drawBoxEnclosure(node, output, r)
   elseif node.decoration=='circle' then
     drawCircleEnclosure(node, output)
   else
-    node.error('Internal error: unhandled decoration %s', str(node.decoration))
-    node.base.draw(output)
+    node:error('Internal error: unhandled decoration %s', str(node.decoration))
+    node.base:draw(output)
   end
 end
 
 draw_mfrac = function(node, output)
   drawBox(node, output)
-  if node.getProperty('bevelled')=='true' then
-    drawTranslatedNode(node.enumerator, output, 0, node.enumerator.height-node.height)
-    drawTranslatedNode(node.denominator, output, node.width-node.denominator.width, node.depth-node.denominator.depth)
+
+  if node:getProperty('bevelled')=='true' then
+    drawTranslatedNode(node.enumerator, output,
+      0,
+      node.enumerator.height - node.height)
+    drawTranslatedNode(node.denominator, output,
+      node.width - node.denominator.width,
+      node.depth - node.denominator.depth)
   else
     local enumalign = getAlign(node, 'enumalign')
     local denomalign = getAlign(node, 'denomalign')
-    drawTranslatedNode(node.enumerator, output, node.ruleWidth+(node.width-2*node.ruleWidth-node.enumerator.width)*enumalign, node.enumerator.height-node.height)
-    drawTranslatedNode(node.denominator, output, node.ruleWidth+(node.width-2*node.ruleWidth-node.denominator.width)*denomalign, node.depth-node.denominator.depth)
+    drawTranslatedNode(node.enumerator, output,
+      node.ruleWidth + (node.width - 2*node.ruleWidth - node.enumerator.width) * enumalign,
+      node.enumerator.height - node.height)
+    drawTranslatedNode(node.denominator, output,
+      node.ruleWidth + (node.width - 2*node.ruleWidth - node.denominator.width) * denomalign,
+      node.depth - node.denominator.depth)
   end
   if node.ruleWidth then
+    local x1, y1, x2, y2
     if node.getProperty('bevelled')=='true' then
       local eh = node.enumerator.height+node.enumerator.depth
       local dh = node.denominator.height+node.denominator.depth
       local ruleX = (node.width+node.enumerator.width-node.denominator.width)/2.0
+      local ruleY
       if eh<dh then
-        local ruleY = 0.75*eh-node.height
+        ruleY = 0.75*eh-node.height
       else
         ruleY = node.depth-0.75*dh
       end
-      local x1 = max(0, ruleX-(node.depth-ruleY)/node.slope)
-      local x2 = min(node.width, ruleX+(ruleY+node.height)/node.slope)
-      local y1 = min(node.depth, ruleY+ruleX*node.slope)
-      local y2 = max(-node.height, ruleY-(node.width-ruleX)*node.slope)
+      x1 = max(0, ruleX - (node.depth-ruleY)/node.slope)
+      x2 = min(node.width, ruleX + (ruleY+node.height)/node.slope)
+      y1 = min(node.depth, ruleY + ruleX*node.slope)
+      y2 = max(-node.height, ruleY - (node.width-ruleX)*node.slope)
     else
       x1 = 0
       y1 = 0
       x2 = node.width
       y2 = 0
     end
-    drawLine(output, node.color, node.ruleWidth, x1, y1, x2, y2, { ['stroke-linecap']='butt', })
+    drawLine(output, node.color, node.ruleWidth,
+      x1, y1, x2, y2, { ['stroke-linecap']='butt', })
   end
 end
 
-draw_mo = function(node, output)
-  drawSVGText(node, output)
-end
-
-draw_mi = function(node, output)
-  drawSVGText(node, output)
-end
-
-draw_mn = function(node, output)
-  drawSVGText(node, output)
-end
-
-draw_mtext = function(node, output)
-  drawSVGText(node, output)
-end
-
-draw_ms = function(node, output)
-  drawSVGText(node, output)
-end
+draw_mo = function(node, output) drawSVGText(node, output) end 
+draw_mi = function(node, output) drawSVGText(node, output) end 
+draw_mn = function(node, output) drawSVGText(node, output) end 
+draw_mtext = function(node, output) drawSVGText(node, output) end 
+draw_ms = function(node, output) drawSVGText(node, output) end
 
 draw_mspace = function(node, output)
   drawBox(node, output)
@@ -215,33 +249,60 @@ end
 
 draw_msqrt = function(node, output)
   drawBox(node, output)
-  drawTranslatedNode(node.base, output, node.width-node.base.width-node.gap, 0)
+  drawTranslatedNode(node.base, output,
+    node.width-node.base.width-node.gap, 0)
+
+  -- Basic contour            
   local x1 = node.width-node.base.width-node.rootWidth-2*node.gap
   local y1 = (node.rootDepth-node.rootHeight)/2
+
   local x2 = x1+node.rootWidth*0.2
   local y2 = y1
+
   local x3 = x1+node.rootWidth*0.6
   local y3 = node.rootDepth
+
   local x4 = x1+node.rootWidth
   local y4 = -node.rootHeight+node.lineWidth/2
+
   local x5 = node.width
   local y5 = y4
+
+  -- Thickening
   local slopeA = (x2-x3)/(y2-y3)
   local slopeB = (x3-x4)/(y3-y4)
+
   local x2a = x2+node.thickLineWidth-node.lineWidth
   local y2a = y2
+
   local x2c = x2+node.lineWidth*slopeA/2
   local y2c = y2+node.lineWidth*0.9
+
   local x2b = x2c+(node.thickLineWidth-node.lineWidth)/2
   local y2b = y2c
+
   local ytmp = y3-node.lineWidth/2
   local xtmp = x3-node.lineWidth*(slopeA+slopeB)/4
+
   local y3a = (y2a*slopeA-ytmp*slopeB+xtmp-x2a)/(slopeA-slopeB)
   local x3a = xtmp+(y3a-ytmp)*slopeB
+
   local y3b = (y2b*slopeA-ytmp*slopeB+xtmp-x2b)/(slopeA-slopeB)
   local x3b = xtmp+(y3b-ytmp)*slopeB
+
+  -- Lean the left protrusion down
   y1 = y1+(x2-x1)*slopeA
-  local attrs = { stroke=node.color, fill='none', ['stroke-width']=PYLUA.mod('%f', node.lineWidth), ['stroke-linecap']='butt', ['stroke-linejoin']='miter', ['stroke-miterlimit']='10', d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f', {x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5}), }
+
+  local attrs = {
+    stroke=node.color,
+    fill='none',
+    ['stroke-width']=PYLUA.mod('%f', node.lineWidth),
+    ['stroke-linecap']='butt',
+    ['stroke-linejoin']='miter',
+    ['stroke-miterlimit']='10',
+    d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f',
+      {x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5}),
+  }
   startSVGElement(output, 'path', attrs)
   endSVGElement(output, 'path')
 end
@@ -255,76 +316,65 @@ draw_mroot = function(node, output)
   end
 end
 
-draw_msub = function(node, output)
-  drawScripts(node, output)
-end
-
-draw_msup = function(node, output)
-  drawScripts(node, output)
-end
-
-draw_msubsup = function(node, output)
-  drawScripts(node, output)
-end
-
-draw_mmultiscripts = function(node, output)
-  drawScripts(node, output)
-end
+draw_msub = function(node, output) drawScripts(node, output) end 
+draw_msup = function(node, output) drawScripts(node, output) end 
+draw_msubsup = function(node, output) drawScripts(node, output) end 
+draw_mmultiscripts = function(node, output) drawScripts(node, output) end
 
 drawScripts = function(node, output)
   if len(node.children)<2 then
     draw_mrow(node)
     return 
   end
+
   local subY = node.subShift
   local superY = -node.superShift
 
   adjustment = function(script)
     if script.alignToAxis then
-      return script.axis()
+      return script:axis()
     else
       return 0
     end
   end
+
   drawBox(node, output)
   local offset = 0
-  for _, i in ipairs(range(len(node.prewidths))) do
+  for i = 1,len(node.prewidths) do
     offset = offset+node.prewidths[i]
-    if i<len(node.presubscripts) then
+    if i<=len(node.presubscripts) then
       local presubscript = node.presubscripts[i]
-      drawTranslatedNode(presubscript, output, offset-presubscript.width, subY-adjustment(presubscript))
+      drawTranslatedNode(presubscript, output,
+        offset-presubscript.width, subY-adjustment(presubscript))
     end
-    if i<len(node.presuperscripts) then
+    if i<=len(node.presuperscripts) then
       local presuperscript = node.presuperscripts[i]
-      drawTranslatedNode(presuperscript, output, offset-presuperscript.width, superY-adjustment(presuperscript))
+      drawTranslatedNode(presuperscript, output,
+        offset-presuperscript.width, superY-adjustment(presuperscript))
     end
   end
+
   drawTranslatedNode(node.base, output, offset, 0)
   offset = offset+node.base.width
-  for _, i in ipairs(range(len(node.postwidths))) do
-    if i<len(node.subscripts) then
+
+  for i = 1,len(node.postwidths) do
+    if i<=len(node.subscripts) then
       local subscript = node.subscripts[i]
-      drawTranslatedNode(subscript, output, offset, subY-adjustment(subscript))
+      drawTranslatedNode(subscript, output,
+        offset, subY-adjustment(subscript))
     end
-    if i<len(node.superscripts) then
+    if i<=len(node.superscripts) then
       local superscript = node.superscripts[i]
-      drawTranslatedNode(superscript, output, offset, superY-adjustment(superscript))
+      drawTranslatedNode(superscript, output,
+        offset, superY-adjustment(superscript))
     end
     offset = offset+node.postwidths[i]
   end
 end
 
-draw_munder = function(node, output)
-  drawLimits(node, output)
-end
-
-draw_mover = function(node, output)
-  drawLimits(node, output)
-end
-
-draw_munderover = function(node, output)
-  drawLimits(node, output)
-end
+draw_munder = function(node, output) drawLimits(node, output) end 
+draw_mover = function(node, output) drawLimits(node, output) end 
+draw_munderover = function(node, output) drawLimits(node, output) end
 
 drawLimits = function(node, output)
   if len(node.children)<2 then
@@ -335,13 +385,19 @@ drawLimits = function(node, output)
     drawScripts(node, output)
     return 
   end
+
   drawBox(node, output)
-  drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
+  drawTranslatedNode(node.base, output,
+    (node.width-node.base.width)/2, 0)
   if node.underscript ~= nil then
-    drawTranslatedNode(node.underscript, output, (node.width-node.underscript.width)/2, node.depth-node.underscript.depth)
+    drawTranslatedNode(node.underscript, output,
+      (node.width-node.underscript.width)/2,
+      node.depth-node.underscript.depth)
   end
   if node.overscript ~= nil then
-    drawTranslatedNode(node.overscript, output, (node.width-node.overscript.width)/2, node.overscript.height-node.height)
+    drawTranslatedNode(node.overscript, output,
+      (node.width-node.overscript.width)/2,
+      node.overscript.height-node.height)
   end
 end
 
@@ -357,15 +413,18 @@ end
 
 draw_mtable = function(node, output)
   drawBox(node, output)
+
+  -- Draw cells
   local vshift = -node.height+node.framespacings[2]
-  for _, r in ipairs(range(len(node.rows))) do
+  for r = 1,len(node.rows) do
     local row = node.rows[r]
     vshift = vshift+row.height
     local hshift = node.framespacings[1]
-    for _, c in ipairs(range(len(row.cells))) do
+    for c = 1,len(row.cells) do
       local column = node.columns[c]
       local cell = row.cells[c]
       if cell ~= nil and cell.content ~= nil then
+        -- Calculate horizontal alignment
         if cell.colspan>1 then
           local cellWidth = sum(PYLUA.COMPREHENSION())
           cellWidth = cellWidth+sum(PYLUA.COMPREHENSION())
