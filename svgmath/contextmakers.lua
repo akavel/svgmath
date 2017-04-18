@@ -236,18 +236,21 @@ processFontAttributes = function(node)
   end
   local fontsizeattr = node.attributes['fontsize']
   if fontsizeattr ~= nil and mathsizeattr == nil then
-    local fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
+    local fontSizeOverride = node:parseLengthOrPercent(fontsizeattr, node.fontSize)
     if fontSizeOverride>0 then
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize
       node.fontSize = fontSizeOverride
     else
-      node.error('Value of attribute \'fontsize\' ignored - not a positive length: '+str(fontsizeattr))
+      node:error('Value of attribute \'fontsize\' ignored - not a positive length: '+str(fontsizeattr))
     end
   end
-  local scriptminsize = node.parseLength(node.defaults.get('scriptminsize'))
+  local scriptminsize = node:parseLength(node.defaults['scriptminsize'])
   node.fontSize = max(node.fontSize, scriptminsize)
-  node.originalFontSize = node.fontSize
+  node.originalFontSize = node.fontSize  -- save a copy - font size may change in scaling
 end
+
+---------------------------------------------------------------------
+---- CHILD CONTEXT SETTERS 
 
 default_child_context = function(node, child)
   -- Default child context processing for a MathML tree node.
@@ -269,21 +272,10 @@ child_context_mroot = function(node, child)
   end
 end
 
-child_context_msub = function(node, child)
-  makeScriptContext(child)
-end
-
-child_context_msup = function(node, child)
-  makeScriptContext(child)
-end
-
-child_context_msubsup = function(node, child)
-  makeScriptContext(child)
-end
-
-child_context_mmultiscripts = function(node, child)
-  makeScriptContext(child)
-end
+child_context_msub = function(node, child) makeScriptContext(child) end 
+child_context_msup = function(node, child) makeScriptContext(child) end 
+child_context_msubsup = function(node, child) makeScriptContext(child) end 
+child_context_mmultiscripts = function(node, child) makeScriptContext(child) end
 
 child_context_munder = function(node, child)
   if child.nodeIndex==1 then
@@ -317,13 +309,15 @@ end
 makeLimitContext = function(node, child, accentProperty)
   child.displaystyle = false
   child.tightspaces = true
-  local accentValue = node.getProperty(accentProperty)
-  if accentValue == nil then
-    local embellishments = {'msub', 'msup', 'msubsup', 'munder', 'mover', 'munderover', 'mmultiscripts'}
 
-    getAccentValue = function(ch)
+  local accentValue = node:getProperty(accentProperty)
+  if accentValue == nil then
+    local embellishments = {'msub', 'msup', 'msubsup',
+      'munder', 'mover', 'munderover', 'mmultiscripts'}
+
+    local getAccentValue = function(ch)
       if ch.elementName=='mo' then
-        return ch.opdefaults.get('accent')
+        return ch.opdefaults['accent']
       elseif PYLUA.op_in(ch.elementName, embellishments) and len(ch.children)>0 then
         return getAccentValue(ch.children[1])
       else
