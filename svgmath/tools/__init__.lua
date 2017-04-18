@@ -1,1 +1,1 @@
-__all__ = {'saxtools'}
+local __all__ = {'saxtools'}

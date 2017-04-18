@@ -64,7 +64,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
 
   _qname = function(self, name)
     if name[1] then
-      prefix = self._current_context[name[1]]
+      local prefix = self._current_context[name[1]]
       if prefix then
         return unicode(prefix)+':'+unicode(name[2])
       end
@@ -125,7 +125,7 @@ self._ns_contexts[0]  end
   ;
 
   startElementNS = function(self, name, qname, attrs)
-    qattrs = { }
+    local qattrs = { }
     for attname, attvalue in pairs(attrs) do
       qattrs[self._qname(attname)] = attvalue
     end

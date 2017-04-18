@@ -21,8 +21,8 @@ NodeLocator = PYLUA.class() {
   ;
 
   message = function(self, msg, label)
-    coordinate = ''
-    separator = ''
+    local coordinate = ''
+    local separator = ''
     if PYLUA.op_is_not(self.filename, nil) then
       coordinate = coordinate+PYLUA.mod('file %s', self.filename)
       separator = ', '

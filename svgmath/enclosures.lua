@@ -41,10 +41,10 @@ addBoxEnclosure = function(node)
 end
 
 addCircleEnclosure = function(node)
-  d = math.sqrt(math.pow(node.width, 2)+math.pow(node.height, 2))
+  local d = math.sqrt(math.pow(node.width, 2)+math.pow(node.height, 2))
   d = max(d, node.width+2*node.hdelta)
   d = max(d, node.height+node.depth+2*node.vdelta)
-  cy = (node.height-node.depth)/2
+  local cy = (node.height-node.depth)/2
   node.width = d
   node.height = d/2+cy
   node.depth = d/2-cy

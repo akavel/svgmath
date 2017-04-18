@@ -1,10 +1,10 @@
 -- MathML operator dictionary and related functions
 local sys = require('sys')
-operatorDictionary = { }
+local operatorDictionary = { }
 
 lookup = function(op, form)
   -- Find the entry for an operator in the dictionary
-  res = operatorDictionary.get(op+form)
+  local res = operatorDictionary.get(op+form)
   if PYLUA.op_is_not(res, nil) then
     return res
   end

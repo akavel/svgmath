@@ -30,7 +30,7 @@ default_context = function(node)
     node.tightspaces = false
     node.displaystyle = node.defaults['displaystyle']=='true'
     node.color = node.defaults['mathcolor']
-    defaultVariant = node.config.variants.get(node.defaults['mathvariant'])
+    local defaultVariant = node.config.variants.get(node.defaults['mathvariant'])
     if PYLUA.op_is(defaultVariant, nil) then
       error(sax.SAXException('Default mathvariant not defined in configuration file: configuration is unusable'))
     end
@@ -61,7 +61,7 @@ end
 
 context_math = function(node)
   default_context(node)
-  attr = node.attributes.get('display')
+  local attr = node.attributes.get('display')
   if PYLUA.op_is_not(attr, nil) then
     node.displaystyle = attr=='block'
   else
@@ -93,22 +93,22 @@ context_mi = function(node)
 end
 
 context_mo = function(node)
-  extra_style = node.config.opstyles.get(node.text)
+  local extra_style = node.config.opstyles.get(node.text)
   if extra_style then
     for prop, value in pairs(extra_style) do
       node.attributes.setdefault(prop, value)
     end
   end
-  form = 'infix'
+  local form = 'infix'
   if PYLUA.op_is(node.parent, nil) then
   elseif PYLUA.op_in(node.parent.elementName, {'mrow', 'mstyle', 'msqrt', 'merror', 'mpadded', 'mphantom', 'menclose', 'mtd', 'math'}) then
 
     isNonSpaceNode = function(x)
       return x.elementName~='mspace'
     end
-    prevSiblings = PYLUA.slice(node.parent.children, nil, node.nodeIndex)
+    local prevSiblings = PYLUA.slice(node.parent.children, nil, node.nodeIndex)
     prevSiblings = filter(isNonSpaceNode, prevSiblings)
-    nextSiblings = PYLUA.slice(node.parent.children, node.nodeIndex+1, nil)
+    local nextSiblings = PYLUA.slice(node.parent.children, node.nodeIndex+1, nil)
     nextSiblings = filter(isNonSpaceNode, nextSiblings)
     if len(prevSiblings)==0 and len(nextSiblings)>0 then
       form = 'prefix'
@@ -120,19 +120,19 @@ context_mo = function(node)
   form = node.attributes.get('form', form)
   node.opdefaults = operators.lookup(node.text, form)
   default_context(node)
-  stretchyattr = node.getProperty('stretchy', node.opdefaults.get('stretchy'))
+  local stretchyattr = node.getProperty('stretchy', node.opdefaults.get('stretchy'))
   node.stretchy = stretchyattr=='true'
-  symmetricattr = node.getProperty('symmetric', node.opdefaults.get('symmetric'))
+  local symmetricattr = node.getProperty('symmetric', node.opdefaults.get('symmetric'))
   node.symmetric = symmetricattr=='true'
   node.scaling = node.opdefaults.get('scaling')
   if  not node.tightspaces then
-    lspaceattr = node.getProperty('lspace', node.opdefaults.get('lspace'))
+    local lspaceattr = node.getProperty('lspace', node.opdefaults.get('lspace'))
     node.leftspace = node.parseSpace(lspaceattr)
-    rspaceattr = node.getProperty('rspace', node.opdefaults.get('rspace'))
+    local rspaceattr = node.getProperty('rspace', node.opdefaults.get('rspace'))
     node.rightspace = node.parseSpace(rspaceattr)
   end
   if node.displaystyle then
-    value = node.opdefaults.get('largeop')
+    local value = node.opdefaults.get('largeop')
     if node.getProperty('largeop', value)=='true' then
       node.fontSize = node.fontSize*1.41
     end
@@ -143,11 +143,11 @@ context_mo = function(node)
 end
 
 processFontAttributes = function(node)
-  attr = node.attributes.get('displaystyle')
+  local attr = node.attributes.get('displaystyle')
   if PYLUA.op_is_not(attr, nil) then
     node.displaystyle = attr=='true'
   end
-  scriptlevelattr = node.attributes.get('scriptlevel')
+  local scriptlevelattr = node.attributes.get('scriptlevel')
   if PYLUA.op_is_not(scriptlevelattr, nil) then
     scriptlevelattr = scriptlevelattr.strip()
     if scriptlevelattr.startswith('+') then
@@ -160,9 +160,9 @@ processFontAttributes = function(node)
     node.scriptlevel = max(node.scriptlevel, 0)
   end
   node.color = node.attributes.get('mathcolor', node.attributes.get('color', node.color))
-  mathvariantattr = node.attributes.get('mathvariant')
+  local mathvariantattr = node.attributes.get('mathvariant')
   if PYLUA.op_is_not(mathvariantattr, nil) then
-    mathvariant = node.config.variants.get(mathvariantattr)
+    local mathvariant = node.config.variants.get(mathvariantattr)
     if PYLUA.op_is(mathvariant, nil) then
       node.error('Ignored mathvariant attribute: value \''+str(mathvariantattr)+'\' not defined in the font configuration file')
     else
@@ -171,12 +171,12 @@ processFontAttributes = function(node)
   else
     node.fontweight = node.attributes.get('fontweight', node.fontweight)
     node.fontstyle = node.attributes.get('fontstyle', node.fontstyle)
-    familyattr = node.attributes.get('fontfamily')
+    local familyattr = node.attributes.get('fontfamily')
     if PYLUA.op_is_not(familyattr, nil) then
       node.fontfamilies = PYLUA.COMPREHENSION()
     end
   end
-  mathsizeattr = node.attributes.get('mathsize')
+  local mathsizeattr = node.attributes.get('mathsize')
   if PYLUA.op_is_not(mathsizeattr, nil) then
     if mathsizeattr=='normal' then
       node.mathsize = node.parseLength(node.defaults['mathsize'])
@@ -185,7 +185,7 @@ processFontAttributes = function(node)
     elseif mathsizeattr=='small' then
       node.mathsize = node.parseLength(node.defaults['mathsize'])/1.41
     else
-      mathsize = node.parseLengthOrPercent(mathsizeattr, node.mathsize)
+      local mathsize = node.parseLengthOrPercent(mathsizeattr, node.mathsize)
       if mathsize>0 then
         node.mathsize = mathsize
       else
@@ -195,16 +195,16 @@ processFontAttributes = function(node)
   end
   node.fontSize = node.mathsize
   if node.scriptlevel>0 then
-    scriptsizemultiplier = node.parseFloat(node.defaults.get('scriptsizemultiplier'))
+    local scriptsizemultiplier = node.parseFloat(node.defaults.get('scriptsizemultiplier'))
     if scriptsizemultiplier<=0 then
       node.error('Bad inherited value of \'scriptsizemultiplier\' attribute: '+str(mathsizeattr)+'; using default value')
     end
     scriptsizemultiplier = node.parseFloat(mathnode.globalDefaults.get('scriptsizemultiplier'))
     node.fontSize = node.fontSize*math.pow(scriptsizemultiplier, node.scriptlevel)
   end
-  fontsizeattr = node.attributes.get('fontsize')
+  local fontsizeattr = node.attributes.get('fontsize')
   if PYLUA.op_is_not(fontsizeattr, nil) and PYLUA.op_is(mathsizeattr, nil) then
-    fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
+    local fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
     if fontSizeOverride>0 then
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize
       node.fontSize = fontSizeOverride
@@ -212,7 +212,7 @@ processFontAttributes = function(node)
       node.error('Value of attribute \'fontsize\' ignored - not a positive length: '+str(fontsizeattr))
     end
   end
-  scriptminsize = node.parseLength(node.defaults.get('scriptminsize'))
+  local scriptminsize = node.parseLength(node.defaults.get('scriptminsize'))
   node.fontSize = max(node.fontSize, scriptminsize)
   node.originalFontSize = node.fontSize
 end
@@ -285,9 +285,9 @@ end
 makeLimitContext = function(node, child, accentProperty)
   child.displaystyle = false
   child.tightspaces = true
-  accentValue = node.getProperty(accentProperty)
+  local accentValue = node.getProperty(accentProperty)
   if PYLUA.op_is(accentValue, nil) then
-    embellishments = {'msub', 'msup', 'msubsup', 'munder', 'mover', 'munderover', 'mmultiscripts'}
+    local embellishments = {'msub', 'msup', 'msubsup', 'munder', 'mover', 'munderover', 'mmultiscripts'}
 
     getAccentValue = function(ch)
       if ch.elementName=='mo' then

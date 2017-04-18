@@ -56,7 +56,7 @@ FontMetric = PYLUA.class() {
 
   postParse = function(self)
     if PYLUA.op_is(self.ascender, nil) then
-      cm = self.chardata.get(ord('d'))
+      local cm = self.chardata.get(ord('d'))
       if PYLUA.op_is_not(cm, nil) then
         self.descender = cm.bbox[4]
       else
@@ -92,6 +92,7 @@ FontMetric = PYLUA.class() {
         cm = self.chardata.get(ch)
         if PYLUA.op_is_not(cm, nil) then
           self.axisposition = (cm.bbox[2]+cm.bbox[4])/2
+          break
         end
       end
     end
@@ -102,6 +103,7 @@ FontMetric = PYLUA.class() {
         cm = self.chardata.get(ch)
         if PYLUA.op_is_not(cm, nil) then
           self.rulewidth = cm.bbox[4]-cm.bbox[2]
+          break
         end
       end
     end
@@ -153,7 +155,7 @@ FontMetric = PYLUA.class() {
     io.write('CharWidth: ', self.charwidth, '\n')
     io.write('MathematicalBaseline: ', self.axisposition, '\n')
     io.write('Character data: ', '\n')
-    chars = self.chardata.items()
+    local chars = self.chardata.items()
     chars.sort(PYLUA.keywords{key=cc[1]})
     for _, {i, cm} in ipairs(chars) do
       if PYLUA.op_is(cm, nil) then

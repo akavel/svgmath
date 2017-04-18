@@ -8,13 +8,13 @@ local NodeLocator = require('nodelocator').NodeLocator
 
 isHighSurrogate = function(ch)
   -- Tests whether a Unicode character is from the high surrogates range
-  code = ord(ch)
+  local code = ord(ch)
   return 55296<=code and code<=56319
 end
 
 isLowSurrogate = function(ch)
   -- Tests whether a Unicode character is from the low surrogates range
-  code = ord(ch)
+  local code = ord(ch)
   return 56320<=code and code<57343
 end
 
@@ -22,8 +22,8 @@ decodeSurrogatePair = function(hi, lo)
   -- Returns a scalar value  that corresponds to a surrogate pair
   return (ord(hi)-55296)*1024+ord(lo)-56320+65536
 end
-globalDefaults = { mathvariant='normal', mathsize='12pt', mathcolor='black', mathbackground='transparent', displaystyle='false', scriptlevel='0', scriptsizemultiplier='0.71', scriptminsize='8pt', veryverythinmathspace='0.0555556em', verythinmathspace='0.111111em', thinmathspace='0.166667em', mediummathspace='0.222222em', thickmathspace='0.277778em', verythickmathspace='0.333333em', veryverythickmathspace='0.388889em', linethickness='1', bevelled='false', enumalign='center', denomalign='center', lquote='"', rquote='"', height='0ex', depth='0ex', width='0em', open='(', close=')', separators=',', notation='longdiv', align='axis', rowalign='baseline', columnalign='center', columnwidth='auto', equalrows='false', equalcolumns='false', rowspacing='1.0ex', columnspacing='0.8em', framespacing='0.4em 0.5ex', rowlines='none', columnlines='none', frame='none', }
-specialChars = { ['\xe2\x85\x85']='D', ['\xe2\x85\x86']='d', ['\xe2\x85\x87']='e', ['\xe2\x85\x88']='i', ['\xc2\xa0']=' ', }
+local globalDefaults = { mathvariant='normal', mathsize='12pt', mathcolor='black', mathbackground='transparent', displaystyle='false', scriptlevel='0', scriptsizemultiplier='0.71', scriptminsize='8pt', veryverythinmathspace='0.0555556em', verythinmathspace='0.111111em', thinmathspace='0.166667em', mediummathspace='0.222222em', thickmathspace='0.277778em', verythickmathspace='0.333333em', veryverythickmathspace='0.388889em', linethickness='1', bevelled='false', enumalign='center', denomalign='center', lquote='"', rquote='"', height='0ex', depth='0ex', width='0em', open='(', close=')', separators=',', notation='longdiv', align='axis', rowalign='baseline', columnalign='center', columnwidth='auto', equalrows='false', equalcolumns='false', rowspacing='1.0ex', columnspacing='0.8em', framespacing='0.4em 0.5ex', rowlines='none', columnlines='none', frame='none', }
+local specialChars = { ['\xe2\x85\x85']='D', ['\xe2\x85\x86']='d', ['\xe2\x85\x87']='e', ['\xe2\x85\x88']='i', ['\xc2\xa0']=' ', }
 
 FontMetricRecord = PYLUA.class() {
   -- Structure to track usage of a single font family
@@ -95,7 +95,7 @@ MathNode = PYLUA.class() {
   ;
 
   measureNode = function(self)
-    measureMethod = measurers.__dict__.get('measure_'+self.elementName, measurers.default_measure)
+    local measureMethod = measurers.__dict__.get('measure_'+self.elementName, measurers.default_measure)
     if self.config.verbose and PYLUA.op_is(measureMethod, measurers.default_measure) then
       self.warning(PYLUA.mod('MathML element \'%s\' is unsupported', self.elementName))
     end
@@ -152,11 +152,11 @@ MathNode = PYLUA.class() {
 
   parseFloat = function(self, x)
     -- PYLUA.FIXME: TRY:
-      value = float(x)
+      local value = float(x)
     -- PYLUA.FIXME: EXCEPT ValueError:
       self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))
       return 0.0
-    text = str(value).lower()
+    local text = str(value).lower()
     if text.find('nan')>=0 or text.find('inf')>=0 then
       self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', str(x)))
       return 0.0
@@ -190,14 +190,14 @@ MathNode = PYLUA.class() {
   ;
 
   parseSpace = function(self, spaceattr, unitlessScale)
-    sign = 1.0
+    local sign = 1.0
     spaceattr = spaceattr.strip()
     if spaceattr.endswith('mathspace') then
       if spaceattr.startswith('negative') then
         sign = -1.0
         spaceattr = PYLUA.slice(spaceattr, 8, nil)
       end
-      realspaceattr = self.defaults.get(spaceattr)
+      local realspaceattr = self.defaults.get(spaceattr)
       if PYLUA.op_is(realspaceattr, nil) then
         self.error(PYLUA.mod('Bad space token: \'%s\'', spaceattr))
         realspaceattr = '0em'
@@ -210,7 +210,7 @@ MathNode = PYLUA.class() {
   ;
 
   parsePercent = function(self, lenattr, percentBase)
-    value = self.parseFloat(PYLUA.slice(lenattr, nil, -1))
+    local value = self.parseFloat(PYLUA.slice(lenattr, nil, -1))
     if PYLUA.op_is_not(value, nil) then
       return percentBase*value/100
     else
@@ -246,7 +246,7 @@ MathNode = PYLUA.class() {
     if PYLUA.op_is(value, nil) then
       value = self.getProperty(attr)
     end
-    splitvalue = value.split()
+    local splitvalue = value.split()
     if len(splitvalue)>0 then
       return splitvalue
     end
@@ -256,10 +256,10 @@ MathNode = PYLUA.class() {
   ;
 
   getUCSText = function(self)
-    codes = {}
-    hisurr = nil
+    local codes = {}
+    local hisurr = nil
     for _, ch in ipairs(self.text) do
-      chcode = ord(ch)
+      local chcode = ord(ch)
       if isLowSurrogate(ch) then
         if PYLUA.op_is(hisurr, nil) then
           self.error(PYLUA.mod('Invalid Unicode sequence - low surrogate character (U+%X) not preceded by a high surrogate', ord(ch)))
@@ -289,9 +289,9 @@ MathNode = PYLUA.class() {
     if PYLUA.op_is(self.metriclist, nil) then
 
       fillMetricList = function(familylist)
-        metriclist = {}
+        local metriclist = {}
         for _, family in ipairs(familylist) do
-          metric = self.config.findfont(self.fontweight, self.fontstyle, family)
+          local metric = self.config.findfont(self.fontweight, self.fontstyle, family)
           if PYLUA.op_is_not(metric, nil) then
             metriclist.append(FontMetricRecord(family, metric))
           end
@@ -323,6 +323,7 @@ MathNode = PYLUA.class() {
       for _, fd in ipairs(self.metriclist) do
         if fd.used then
           self.nominalMetric = fd.metric
+          break
         end
       end
     end
@@ -382,7 +383,7 @@ MathNode = PYLUA.class() {
 
   findChar = function(self, ch)
     for _, fd in ipairs(self.fontpool()) do
-      cm = fd.metric.chardata.get(ch)
+      local cm = fd.metric.chardata.get(ch)
       if cm then
         return {cm, fd}
       end
@@ -396,15 +397,15 @@ MathNode = PYLUA.class() {
       self.isSpace = true
       return 
     end
-    cm0 = nil
-    cm1 = nil
-    ucstext = self.getUCSText()
+    local cm0 = nil
+    local cm1 = nil
+    local ucstext = self.getUCSText()
     for _, chcode in ipairs(ucstext) do
-      chardesc = self.findChar(chcode)
+      local chardesc = self.findChar(chcode)
       if PYLUA.op_is(chardesc, nil) then
         self.width = self.width+self.metric().missingGlyph.width
       else
-        cm, fd = table.unpack(chardesc)
+        local cm, fd = table.unpack(chardesc)
         fd.used = true
         if chcode==ucstext[1] then
           cm0 = cm
