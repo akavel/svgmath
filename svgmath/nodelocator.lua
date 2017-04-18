@@ -23,15 +23,15 @@ NodeLocator = PYLUA.class() {
   message = function(self, msg, label)
     local coordinate = ''
     local separator = ''
-    if PYLUA.op_is_not(self.filename, nil) then
+    if self.filename ~= nil then
       coordinate = coordinate+PYLUA.mod('file %s', self.filename)
       separator = ', '
     end
-    if PYLUA.op_is_not(self.line, nil) then
+    if self.line ~= nil then
       coordinate = coordinate+separator+PYLUA.mod('line %d', self.line)
       separator = ', '
     end
-    if PYLUA.op_is_not(self.column, nil) then
+    if self.column ~= nil then
       coordinate = coordinate+separator+PYLUA.mod('column %d', self.column)
     end
     if label then

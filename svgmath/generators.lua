@@ -108,7 +108,7 @@ draw_none = function(node, output)
 end
 
 draw_maction = function(node, output)
-  if PYLUA.op_is_not(node.base, nil) then
+  if node.base ~= nil then
     node.base.draw(output)
   end
 end
@@ -248,7 +248,7 @@ end
 
 draw_mroot = function(node, output)
   draw_msqrt(node, output)
-  if PYLUA.op_is_not(node.rootindex, nil) then
+  if node.rootindex ~= nil then
     local w = max(0, node.cornerWidth-node.rootindex.width)/2
     local h = -node.rootindex.depth-node.rootHeight+node.cornerHeight
     drawTranslatedNode(node.rootindex, output, w, h)
@@ -337,10 +337,10 @@ drawLimits = function(node, output)
   end
   drawBox(node, output)
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
-  if PYLUA.op_is_not(node.underscript, nil) then
+  if node.underscript ~= nil then
     drawTranslatedNode(node.underscript, output, (node.width-node.underscript.width)/2, node.depth-node.underscript.depth)
   end
-  if PYLUA.op_is_not(node.overscript, nil) then
+  if node.overscript ~= nil then
     drawTranslatedNode(node.overscript, output, (node.width-node.overscript.width)/2, node.overscript.height-node.height)
   end
 end
@@ -365,7 +365,7 @@ draw_mtable = function(node, output)
     for _, c in ipairs(range(len(row.cells))) do
       local column = node.columns[c]
       local cell = row.cells[c]
-      if PYLUA.op_is_not(cell, nil) and PYLUA.op_is_not(cell.content, nil) then
+      if cell ~= nil and cell.content ~= nil then
         if cell.colspan>1 then
           local cellWidth = sum(PYLUA.COMPREHENSION())
           cellWidth = cellWidth+sum(PYLUA.COMPREHENSION())
@@ -510,7 +510,7 @@ drawBox = function(node, output, borderWidth, borderColor, borderRadius)
     borderColor = node.color
   end
   local attrs = { fill=background, stroke='none', x=PYLUA.mod('%f', borderWidth/2), y=PYLUA.mod('%f', borderWidth/2-node.height), width=PYLUA.mod('%f', node.width-borderWidth), height=PYLUA.mod('%f', node.height+node.depth-borderWidth), }
-  if borderWidth~=0 and PYLUA.op_is_not(borderColor, nil) then
+  if borderWidth~=0 and borderColor ~= nil then
     attrs['stroke'] = borderColor
     attrs['stroke-width'] = PYLUA.mod('%f', borderWidth)
     if borderRadius~=0 then
@@ -524,7 +524,7 @@ end
 
 drawLine = function(output, color, width, x1, y1, x2, y2, strokeattrs)
   local attrs = { fill='none', stroke=color, ['stroke-width']=PYLUA.mod('%f', width), ['stroke-linecap']='square', ['stroke-dasharray']='none', x1=PYLUA.mod('%f', x1), y1=PYLUA.mod('%f', y1), x2=PYLUA.mod('%f', x2), y2=PYLUA.mod('%f', y2), }
-  if PYLUA.op_is_not(strokeattrs, nil) then
+  if strokeattrs ~= nil then
     attrs.update(strokeattrs)
   end
   startSVGElement(output, 'line', attrs)
@@ -650,7 +650,7 @@ end
 getBackground = function(node)
   for _, attr in ipairs({'mathbackground', 'background-color', 'background'}) do
     local value = node.attributes.get(attr)
-    if PYLUA.op_is_not(value, nil) then
+    if value ~= nil then
       if value=='transparent' then
         return 'none'
       else

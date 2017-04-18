@@ -57,7 +57,7 @@ FontMetric = PYLUA.class() {
   postParse = function(self)
     if self.ascender == nil then
       local cm = self.chardata.get(ord('d'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.descender = cm.bbox[4]
       else
         self.ascender = 0.7
@@ -65,7 +65,7 @@ FontMetric = PYLUA.class() {
     end
     if self.descender == nil then
       cm = self.chardata.get(ord('p'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.descender = cm.bbox[2]
       else
         self.descender = -0.2
@@ -73,7 +73,7 @@ FontMetric = PYLUA.class() {
     end
     if self.capheight == nil then
       cm = self.chardata.get(ord('H'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.capheight = cm.bbox[4]
       else
         self.capheight = self.ascender
@@ -81,7 +81,7 @@ FontMetric = PYLUA.class() {
     end
     if self.xheight == nil then
       cm = self.chardata.get(ord('x'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.xheight = cm.bbox[4]
       else
         self.xheight = 0.45
@@ -90,18 +90,18 @@ FontMetric = PYLUA.class() {
     if self.axisposition == nil then
       for _, ch in ipairs({ord('+'), 8722, ord('='), ord('<'), ord('>'), 183}) do
         cm = self.chardata.get(ch)
-        if PYLUA.op_is_not(cm, nil) then
+        if cm ~= nil then
           self.axisposition = (cm.bbox[2]+cm.bbox[4])/2
           break
         end
       end
     end
-    if PYLUA.op_is_not(self.underlinethickness, nil) then
+    if self.underlinethickness ~= nil then
       self.rulewidth = self.underlinethickness
     else
       for _, ch in ipairs({8211, 8212, 8213, 8722, ord('-')}) do
         cm = self.chardata.get(ch)
-        if PYLUA.op_is_not(cm, nil) then
+        if cm ~= nil then
           self.rulewidth = cm.bbox[4]-cm.bbox[2]
           break
         end
@@ -112,19 +112,19 @@ FontMetric = PYLUA.class() {
     end
     if self.stdvw == nil and  not self.italicangle then
       cm = self.chardata.get(ord('!'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
       end
     end
     if self.stdvw == nil then
       cm = self.chardata.get(ord('.'))
-      if PYLUA.op_is_not(cm, nil) then
+      if cm ~= nil then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
       else
         self.stdvw = 0.08
       end
     end
-    if PYLUA.op_is_not(self.underlineposition, nil) then
+    if self.underlineposition ~= nil then
       self.vgap = -self.underlineposition
     else
       self.vgap = self.rulewidth*2

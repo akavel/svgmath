@@ -261,7 +261,7 @@ calculateColumnWidths = function(node)
       end
     end
   end
-  if PYLUA.op_is_not(fullwidth, nil) then
+  if fullwidth ~= nil then
     local delta = fullwidth
     delta = delta-sum(PYLUA.COMPREHENSION())
     delta = delta-sum(PYLUA.COMPREHENSION())

@@ -9,7 +9,7 @@ local operators = require('operators')
 
 default_context = function(node)
   -- Default context creator for a MathML tree node.
-  if PYLUA.op_is_not(node.parent, nil) then
+  if node.parent ~= nil then
     node.mathsize = node.parent.mathsize
     node.fontSize = node.parent.fontSize
     node.metriclist = node.parent.metriclist
@@ -62,7 +62,7 @@ end
 context_math = function(node)
   default_context(node)
   local attr = node.attributes.get('display')
-  if PYLUA.op_is_not(attr, nil) then
+  if attr ~= nil then
     node.displaystyle = attr=='block'
   else
     attr = node.attributes.get('mode')
@@ -144,11 +144,11 @@ end
 
 processFontAttributes = function(node)
   local attr = node.attributes.get('displaystyle')
-  if PYLUA.op_is_not(attr, nil) then
+  if attr ~= nil then
     node.displaystyle = attr=='true'
   end
   local scriptlevelattr = node.attributes.get('scriptlevel')
-  if PYLUA.op_is_not(scriptlevelattr, nil) then
+  if scriptlevelattr ~= nil then
     scriptlevelattr = scriptlevelattr.strip()
     if scriptlevelattr.startswith('+') then
       node.scriptlevel = node.scriptlevel+node.parseInt(PYLUA.slice(scriptlevelattr, 1, nil))
@@ -161,7 +161,7 @@ processFontAttributes = function(node)
   end
   node.color = node.attributes.get('mathcolor', node.attributes.get('color', node.color))
   local mathvariantattr = node.attributes.get('mathvariant')
-  if PYLUA.op_is_not(mathvariantattr, nil) then
+  if mathvariantattr ~= nil then
     local mathvariant = node.config.variants.get(mathvariantattr)
     if mathvariant == nil then
       node.error('Ignored mathvariant attribute: value \''+str(mathvariantattr)+'\' not defined in the font configuration file')
@@ -172,12 +172,12 @@ processFontAttributes = function(node)
     node.fontweight = node.attributes.get('fontweight', node.fontweight)
     node.fontstyle = node.attributes.get('fontstyle', node.fontstyle)
     local familyattr = node.attributes.get('fontfamily')
-    if PYLUA.op_is_not(familyattr, nil) then
+    if familyattr ~= nil then
       node.fontfamilies = PYLUA.COMPREHENSION()
     end
   end
   local mathsizeattr = node.attributes.get('mathsize')
-  if PYLUA.op_is_not(mathsizeattr, nil) then
+  if mathsizeattr ~= nil then
     if mathsizeattr=='normal' then
       node.mathsize = node.parseLength(node.defaults['mathsize'])
     elseif mathsizeattr=='big' then
@@ -203,7 +203,7 @@ processFontAttributes = function(node)
     node.fontSize = node.fontSize*math.pow(scriptsizemultiplier, node.scriptlevel)
   end
   local fontsizeattr = node.attributes.get('fontsize')
-  if PYLUA.op_is_not(fontsizeattr, nil) and mathsizeattr == nil then
+  if fontsizeattr ~= nil and mathsizeattr == nil then
     local fontSizeOverride = node.parseLengthOrPercent(fontsizeattr, node.fontSize)
     if fontSizeOverride>0 then
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize

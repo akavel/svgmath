@@ -744,10 +744,10 @@ measureLimits = function(node, underscript, overscript)
   if node.children[1].core.moveLimits then
     local subs = {}
     local supers = {}
-    if PYLUA.op_is_not(underscript, nil) then
+    if underscript ~= nil then
       subs = {underscript}
     end
-    if PYLUA.op_is_not(overscript, nil) then
+    if overscript ~= nil then
       supers = {overscript}
     end
     measureScripts(node, subs, supers)
@@ -757,17 +757,17 @@ measureLimits = function(node, underscript, overscript)
   node.overscript = overscript
   setNodeBase(node, node.children[1])
   node.width = node.base.width
-  if PYLUA.op_is_not(overscript, nil) then
+  if overscript ~= nil then
     node.width = max(node.width, overscript.width)
   end
-  if PYLUA.op_is_not(underscript, nil) then
+  if underscript ~= nil then
     node.width = max(node.width, underscript.width)
   end
   stretch(PYLUA.keywords{toWidth=node.width}, node.base)
   stretch(PYLUA.keywords{toWidth=node.width}, overscript)
   stretch(PYLUA.keywords{toWidth=node.width}, underscript)
   local gap = node.nominalLineGap()
-  if PYLUA.op_is_not(overscript, nil) then
+  if overscript ~= nil then
     local overscriptBaselineHeight = node.base.height+gap+overscript.depth
     node.height = overscriptBaselineHeight+overscript.height
     node.ascender = node.height
@@ -775,7 +775,7 @@ measureLimits = function(node, underscript, overscript)
     node.height = node.base.height
     node.ascender = node.base.ascender
   end
-  if PYLUA.op_is_not(underscript, nil) then
+  if underscript ~= nil then
     local underscriptBaselineDepth = node.base.depth+gap+underscript.height
     node.depth = underscriptBaselineDepth+underscript.depth
     node.descender = node.depth
@@ -793,7 +793,7 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
     return 
   end
   if PYLUA.op_is_not(node, node.base) then
-    if PYLUA.op_is_not(toWidth, nil) then
+    if toWidth ~= nil then
       toWidth = toWidth-node.width-node.base.width
     end
     stretch(node.base, toWidth, toHeight, toDepth, symmetric)

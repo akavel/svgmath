@@ -50,9 +50,9 @@ MathNode = PYLUA.class() {
   __init__ = function(self, elementName, attributes, locator, config, parent)
     self.elementName = elementName
     self.config = config
-    if PYLUA.op_is_not(locator, nil) then
+    if locator ~= nil then
       self.locator = locator
-    elseif PYLUA.op_is_not(parent, nil) then
+    elseif parent ~= nil then
       self.locator = parent.locator
     else
       self.locator = NodeLocator(nil)
@@ -63,7 +63,7 @@ MathNode = PYLUA.class() {
     self.parent = parent
     self.metriclist = nil
     self.nominalMetric = nil
-    if PYLUA.op_is_not(parent, nil) then
+    if parent ~= nil then
       self.nodeIndex = len(parent.children)
       self.defaults = parent.defaults
       table.insert(parent.children, self)
@@ -211,7 +211,7 @@ MathNode = PYLUA.class() {
 
   parsePercent = function(self, lenattr, percentBase)
     local value = self.parseFloat(PYLUA.slice(lenattr, nil, -1))
-    if PYLUA.op_is_not(value, nil) then
+    if value ~= nil then
       return percentBase*value/100
     else
       return 0
@@ -268,7 +268,7 @@ MathNode = PYLUA.class() {
           hisurr = nil
         end
       end
-      if PYLUA.op_is_not(hisurr, nil) then
+      if hisurr ~= nil then
         self.error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
         hisurr = nil
       end
@@ -278,7 +278,7 @@ MathNode = PYLUA.class() {
       end
       table.insert(codes, chcode)
     end
-    if PYLUA.op_is_not(hisurr, nil) then
+    if hisurr ~= nil then
       self.error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
     end
     return codes
@@ -292,7 +292,7 @@ MathNode = PYLUA.class() {
         local metriclist = {}
         for _, family in ipairs(familylist) do
           local metric = self.config.findfont(self.fontweight, self.fontstyle, family)
-          if PYLUA.op_is_not(metric, nil) then
+          if metric ~= nil then
             table.insert(metriclist, FontMetricRecord(family, metric))
           end
         end
@@ -373,7 +373,7 @@ MathNode = PYLUA.class() {
 
   hasGlyph = function(self, ch)
     for _, fdesc in ipairs(self.fontpool()) do
-      if PYLUA.op_is_not(fdesc.metric.chardata.get(ch), nil) then
+      if fdesc.metric.chardata.get(ch) ~= nil then
         return true
       end
     end
@@ -428,10 +428,10 @@ MathNode = PYLUA.class() {
     self.height = self.height*self.fontSize
     self.ascender = self.nominalAscender()
     self.descender = self.nominalDescender()
-    if PYLUA.op_is_not(cm0, nil) then
+    if cm0 ~= nil then
       self.leftBearing = max(0, -cm0.bbox[1])*self.fontSize
     end
-    if PYLUA.op_is_not(cm1, nil) then
+    if cm1 ~= nil then
       self.rightBearing = max(0, cm1.bbox[3]-cm.width)*self.fontSize
     end
     self.width = self.width+self.leftBearing+self.rightBearing

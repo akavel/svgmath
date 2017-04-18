@@ -128,21 +128,21 @@ AFMMetric = PYLUA.class(FontMetric) {
       return 
     end
     if bbox == nil then
-      if PYLUA.op_is_not(self.bbox, nil) then
+      if self.bbox ~= nil then
         bbox = self.bbox
       else
         bbox = {0, 0, 0, 0}
       end
     end
     if width == nil then
-      if PYLUA.op_is_not(self.charwidth, nil) then
+      if self.charwidth ~= nil then
         width = self.charwidth
       else
         width = bbox[3]-bbox[1]
       end
     end
     local codes = self.glyphList.lookup(glyphname)
-    if PYLUA.op_is_not(codes, nil) then
+    if codes ~= nil then
       local cm = CharMetric(glyphname, codes, width, bbox)
       for _, c in ipairs(codes) do
         self.chardata[c] = cm
