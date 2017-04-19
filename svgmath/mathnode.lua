@@ -485,7 +485,7 @@ MathNode = PYLUA.class() {
         if chcode==ucstext[1] then
           cm0 = cm
         end
-        if chcode==ucstext[#ucstext-1] then
+        if chcode==ucstext[#ucstext] then
           cm1 = cm
         end
         self.width = self.width+cm.width

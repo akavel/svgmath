@@ -330,7 +330,7 @@ drawScripts = function(node, output)
   local subY = node.subShift
   local superY = -node.superShift
 
-  adjustment = function(script)
+  local adjustment = function(script)
     if script.alignToAxis then
       return script:axis()
     else
@@ -425,26 +425,36 @@ draw_mtable = function(node, output)
       local cell = row.cells[c]
       if cell ~= nil and cell.content ~= nil then
         -- Calculate horizontal alignment
+        local cellWidth
         if cell.colspan>1 then
-          local cellWidth = sum(PYLUA.COMPREHENSION())
-          cellWidth = cellWidth+sum(PYLUA.COMPREHENSION())
+          for i = c, c+cell.colspan-1 do
+            cellWidth = cellWidth + node.columns[i].width + node.columns[i].spaceAfter
+          end
+          cellWidth = cellWidth - node.columns[c+cell.colspan-1].spaceAfter
         else
           cellWidth = column.width
         end
         local hadjust = (cellWidth-cell.content.width)*alignKeywords[cell.halign] or 0.5
+
+        -- Calculate vertical alignment.
+        local cellHeight
         if cell.rowspan>1 then
-          local cellHeight = sum(PYLUA.COMPREHENSION())
-          cellHeight = cellHeight+sum(PYLUA.COMPREHENSION())
+          for i = r, r+cell.rowspan-1 do
+            local x = node.rows[i]
+            cellHeight = cellHeight + x.height + x.depth + x.spaceAfter
+          end
+          cellHeight = cellHeight - node.rows[r+cell.rowspan-1].spaceAfter
         else
           cellHeight = row.height+row.depth
         end
+        local vadjust
         if cell.valign=='top' then
-          local vadjust = cell.content.height-row.height
+          vadjust = cell.content.height-row.height
         elseif cell.valign=='bottom' then
           vadjust = cellHeight-row.height-cell.content.depth
         elseif PYLUA.op_in(cell.valign, {'axis', 'baseline'}) and cell.rowspan==1 then
-          vadjust = -cell.vshift
-        else
+          vadjust = -cell.vshift  -- calculated in the measurer
+        else  -- the rest of cases is centered
           vadjust = (cell.content.height-cell.content.depth+cellHeight)/2-row.height
         end
         drawTranslatedNode(cell.content, output, hshift+hadjust, vshift+vadjust)
@@ -454,76 +464,92 @@ draw_mtable = function(node, output)
     vshift = vshift+row.depth+row.spaceAfter
   end
 
-  drawBorder = function(x1, y1, x2, y2, linestyle)
+  -- Draw frame
+  local drawBorder = function(x1, y1, x2, y2, linestyle)
     if linestyle == nil then
       return 
     end
     if x1==x2 and y1==y2 then
       return 
     end
+    local extrastyle = nil
     if linestyle=='dashed' then
       local linelength = math.sqrt(math.pow(x1-x2, 2)+math.pow(y1-y2, 2))
       local dashoffset = 5-PYLUA.mod(linelength/node.lineWidth+3, 10)/2
-      local extrastyle = { ['stroke-dasharray']=PYLUA.mod('%f,%f', {node.lineWidth*7, node.lineWidth*3}), ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset), }
-    else
-      extrastyle = nil
+      extrastyle = {
+        ['stroke-dasharray']=PYLUA.mod('%f,%f', {node.lineWidth*7, node.lineWidth*3}),
+        ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset),
+      }
     end
     drawLine(output, node.color, node.lineWidth, x1, y1, x2, y2, extrastyle)
   end
+
   local x1 = node.lineWidth/2
   local y1 = node.lineWidth/2-node.height
   local x2 = node.width-node.lineWidth/2
   local y2 = node.depth-node.lineWidth/2
+
   drawBorder(x1, y1, x1, y2, node.framelines[1])
   drawBorder(x2, y1, x2, y2, node.framelines[1])
   drawBorder(x1, y1, x2, y1, node.framelines[2])
   drawBorder(x1, y2, x2, y2, node.framelines[2])
+
+  -- Draw intermediate lines
+  -- First, let's make a grid
   local hshift = node.framespacings[1]
   local hoffsets = {}
-  for _, c in ipairs(range(len(node.columns))) do
+  for c = 1,#node.columns do
     local spacing = node.columns[c].spaceAfter
     hshift = hshift+node.columns[c].width
     table.insert(hoffsets, hshift+spacing/2)
     hshift = hshift+spacing
   end
-  hoffsets[0] = x2
-  vshift = -node.height+node.framespacings[2]
+  hoffsets[#hoffsets] = x2
+
+  local vshift = -node.height+node.framespacings[2]
   local voffsets = {}
-  for _, r in ipairs(range(len(node.rows))) do
+  for r = 1,#node.rows do
     local spacing = node.rows[r].spaceAfter
     vshift = vshift+node.rows[r].height+node.rows[r].depth
     table.insert(voffsets, vshift+spacing/2)
     vshift = vshift+spacing
   end
-  voffsets[0] = y2
-  local vspans = {0}*len(node.columns)
-  for _, r in ipairs(range(len(node.rows)-1)) do
+  voffsets[#voffsets] = y2
+
+  local vspans = {}
+  for r = 1,#node.rows-1 do
     local row = node.rows[r]
     if row.lineAfter == nil then
       goto continue
     end
-    for _, c in ipairs(range(len(row.cells))) do
+
+    for c = 1,#row.cells do
       local cell = row.cells[c]
-      if cell == nil or cell.content == nil then
-        goto continue
-      end
-      for _, j in ipairs(range(c, c+cell.colspan)) do
-        vspans[j] = cell.rowspan
+      if cell ~= nil and cell.content ~= nil then
+        for j = c, c+cell.colspan do
+          vspans[j] = cell.rowspan
+        end
       end
     end
-    vspans = PYLUA.COMPREHENSION()
+    for i = 1,node.columns do
+      -- FIXME(akavel): can c+cell.colspan above exceed node.columns?
+      vspans[i] = math.max(0, (vspans[i] or 0)-1)
+    end
+
     local lineY = voffsets[r]
     local startX = x1
     local endX = x1
-    for _, c in ipairs(range(len(node.columns))) do
-      if vspans[c]>0 then
+    for c = 1,#node.columns do
+      if (vspans[c] or 0)>0 then
         drawBorder(startX, lineY, endX, lineY, row.lineAfter)
         startX = hoffsets[c]
       end
       endX = hoffsets[c]
     end
     drawBorder(startX, lineY, endX, lineY, row.lineAfter)
+    ::continue::
   end
+
   local hspans = {0}*len(node.rows)
   for _, c in ipairs(range(len(node.columns)-1)) do
     local column = node.columns[c]
