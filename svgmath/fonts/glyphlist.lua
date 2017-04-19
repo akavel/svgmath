@@ -7,20 +7,20 @@ GlyphList = PYLUA.class(dict) {
     dict.__init__(self)
     while true do
       local line = f.readline()
-      if len(line)==0 then
+      if #line==0 then
         break
       end
-      line = line.strip()
-      if len(line)==0 or line.startswith('#') then
+      line = PYLUA.strip(line)
+      if #line==0 or PYLUA.startswith(line, '#') then
         goto continue
       end
-      local pair = line.split(';')
-      if len(pair)~=2 then
+      local pair = PYLUA.split(line, ';')
+      if #pair~=2 then
         goto continue
       end
-      local glyph = pair[1].strip()
-      local codelist = pair[2].split()
-      if len(codelist)~=1 then
+      local glyph = PYLUA.strip(pair[1])
+      local codelist = PYLUA.split(pair[2])
+      if #codelist~=1 then
         goto continue
       end
       local codepoint = int(codelist[1], 16)
@@ -43,11 +43,11 @@ GlyphList = PYLUA.class(dict) {
   ;
 }
 
-local glyphListName = PYLUA.str_maybe(os.path).join(os.path.dirname(__file__), 'default.glyphs')
+local glyphListName = PYLUA.join(os.path, os.path.dirname(__file__), 'default.glyphs')
 local defaultGlyphList = GlyphList(open(glyphListName, 'r'))
 
 main = function()
-  if len(sys.argv)>1 then
+  if #sys.argv>1 then
     local glyphList = parseGlyphList(open(sys.argv[2], 'r'))
   else
     glyphList = defaultGlyphList

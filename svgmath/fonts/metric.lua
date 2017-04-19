@@ -56,7 +56,7 @@ FontMetric = PYLUA.class() {
 
   postParse = function(self)
     if self.ascender == nil then
-      local cm = self.chardata[ord('d')]
+      local cm = self.chardata[PYLUA.ord('d')]
       if cm ~= nil then
         self.descender = cm.bbox[4]
       else
@@ -64,7 +64,7 @@ FontMetric = PYLUA.class() {
       end
     end
     if self.descender == nil then
-      cm = self.chardata[ord('p')]
+      cm = self.chardata[PYLUA.ord('p')]
       if cm ~= nil then
         self.descender = cm.bbox[2]
       else
@@ -72,7 +72,7 @@ FontMetric = PYLUA.class() {
       end
     end
     if self.capheight == nil then
-      cm = self.chardata[ord('H')]
+      cm = self.chardata[PYLUA.ord('H')]
       if cm ~= nil then
         self.capheight = cm.bbox[4]
       else
@@ -80,7 +80,7 @@ FontMetric = PYLUA.class() {
       end
     end
     if self.xheight == nil then
-      cm = self.chardata[ord('x')]
+      cm = self.chardata[PYLUA.ord('x')]
       if cm ~= nil then
         self.xheight = cm.bbox[4]
       else
@@ -88,7 +88,7 @@ FontMetric = PYLUA.class() {
       end
     end
     if self.axisposition == nil then
-      for _, ch in ipairs({ord('+'), 8722, ord('='), ord('<'), ord('>'), 183}) do
+      for _, ch in ipairs({PYLUA.ord('+'), 8722, PYLUA.ord('='), PYLUA.ord('<'), PYLUA.ord('>'), 183}) do
         cm = self.chardata[ch]
         if cm ~= nil then
           self.axisposition = (cm.bbox[2]+cm.bbox[4])/2
@@ -101,7 +101,7 @@ FontMetric = PYLUA.class() {
     if self.underlinethickness ~= nil then
       self.rulewidth = self.underlinethickness
     else
-      for _, ch in ipairs({8211, 8212, 8213, 8722, ord('-')}) do
+      for _, ch in ipairs({8211, 8212, 8213, 8722, PYLUA.ord('-')}) do
         cm = self.chardata[ch]
         if cm ~= nil then
           self.rulewidth = cm.bbox[4]-cm.bbox[2]
@@ -115,13 +115,13 @@ FontMetric = PYLUA.class() {
       self.stdhw = 0.03
     end
     if self.stdvw == nil and  not self.italicangle then
-      cm = self.chardata[ord('!')]
+      cm = self.chardata[PYLUA.ord('!')]
       if cm ~= nil then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
       end
     end
     if self.stdvw == nil then
-      cm = self.chardata[ord('.')]
+      cm = self.chardata[PYLUA.ord('.')]
       if cm ~= nil then
         self.stdvw = cm.bbox[3]-cm.bbox[1]
       else
@@ -133,7 +133,7 @@ FontMetric = PYLUA.class() {
     else
       self.vgap = self.rulewidth*2
     end
-    self.missingGlyph = self.chardata[ord(' ')] or self.chardata[160]
+    self.missingGlyph = self.chardata[PYLUA.ord(' ')] or self.chardata[160]
   end
   ;
 
@@ -165,7 +165,7 @@ FontMetric = PYLUA.class() {
       if cm == nil then
         goto continue
       end
-      io.write('    ', PYLUA.mod('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
+      io.write('    ', string.format('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
       for _, x in ipairs(cm.bbox) do
         io.write(x)
       end

@@ -10,17 +10,17 @@ addRadicalEnclosure = function(node)
   if  not node.displaystyle then
     node.gap = node.gap/2
   end
-  node.rootHeight = max(node.base.height, node.base.ascender)
-  node.rootHeight = max(node.rootHeight, node.nominalAscender())
+  node.rootHeight = math.max(node.base.height, node.base.ascender)
+  node.rootHeight = math.max(node.rootHeight, node.nominalAscender())
   node.rootHeight = node.rootHeight+node.gap+node.lineWidth
   node.height = node.rootHeight
   node.alignToAxis = node.base.alignToAxis
   if node.alignToAxis then
-    node.rootDepth = max(0, node.base.depth-node.lineWidth)
-    node.depth = max(node.base.depth, node.rootDepth+node.lineWidth)
+    node.rootDepth = math.max(0, node.base.depth-node.lineWidth)
+    node.depth = math.max(node.base.depth, node.rootDepth+node.lineWidth)
   else
     node.rootDepth = 0
-    node.depth = max(node.base.depth, node.lineWidth)
+    node.depth = math.max(node.base.depth, node.lineWidth)
   end
   node.rootWidth = (node.rootHeight+node.rootDepth)*0.6
   node.cornerWidth = node.rootWidth*0.9-node.gap-node.lineWidth/2
@@ -42,8 +42,8 @@ end
 
 addCircleEnclosure = function(node)
   local d = math.sqrt(math.pow(node.width, 2)+math.pow(node.height, 2))
-  d = max(d, node.width+2*node.hdelta)
-  d = max(d, node.height+node.depth+2*node.vdelta)
+  d = math.max(d, node.width+2*node.hdelta)
+  d = math.max(d, node.height+node.depth+2*node.vdelta)
   local cy = (node.height-node.depth)/2
   node.width = d
   node.height = d/2+cy

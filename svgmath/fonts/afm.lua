@@ -35,38 +35,38 @@ AFMMetric = PYLUA.class(FontMetric) {
 
   readFontMetrics = function(self, afmfile)
     local line = afmfile.readline()
-    if  not line.startswith('StartFontMetrics') then
+    if  not PYLUA.startswith(line, 'StartFontMetrics') then
       error(AFMFormatError)
     end
     while true do
       line = afmfile.readline()
-      if len(line)==0 then
+      if #line==0 then
         break
       end
-      if line.startswith('EndFontMetrics') then
+      if PYLUA.startswith(line, 'EndFontMetrics') then
         break
       end
-      if line.startswith('StartCharMetrics') then
+      if PYLUA.startswith(line, 'StartCharMetrics') then
         self.readCharMetrics(afmfile)
-      elseif line.startswith('StartKernData') then
+      elseif PYLUA.startswith(line, 'StartKernData') then
         self.readKernData(afmfile)
-      elseif line.startswith('StartComposites') then
+      elseif PYLUA.startswith(line, 'StartComposites') then
         self.readComposites(afmfile)
       else
-        local tokens = line.split(nil, 1)
-        if len(tokens)<2 then
+        local tokens = PYLUA.split(line, nil, 1)
+        if #tokens<2 then
           goto continue
         end
         if tokens[1]=='FontName' then
-          self.fontname = tokens[2].strip()
+          self.fontname = PYLUA.strip(tokens[2])
         elseif tokens[1]=='FullName' then
-          self.fullname = tokens[2].strip()
+          self.fullname = PYLUA.strip(tokens[2])
         elseif tokens[1]=='FamilyName' then
-          self.family = tokens[2].strip()
+          self.family = PYLUA.strip(tokens[2])
         elseif tokens[1]=='Weight' then
-          self.weight = tokens[2].strip()
+          self.weight = PYLUA.strip(tokens[2])
         elseif tokens[1]=='FontBBox' then
-          self.bbox = map(parseLength, tokens[2].split())
+          self.bbox = PYLUA.map(parseLength, PYLUA.split(tokens[2]))
         elseif tokens[1]=='CapHeight' then
           self.capheight = parseLength(tokens[2])
         elseif tokens[1]=='XHeight' then
@@ -86,7 +86,7 @@ AFMMetric = PYLUA.class(FontMetric) {
         elseif tokens[1]=='ItalicAngle' then
           self.italicangle = float(tokens[2])
         elseif tokens[1]=='CharWidth' then
-          self.charwidth = parseLength(tokens[2].split()[1])
+          self.charwidth = parseLength(PYLUA.split(tokens[2])[1])
         end
       end
     end
@@ -96,10 +96,10 @@ AFMMetric = PYLUA.class(FontMetric) {
   readCharMetrics = function(self, afmfile)
     while true do
       local line = afmfile.readline()
-      if len(line)==0 then
+      if #line==0 then
         break
       end
-      if line.startswith('EndCharMetrics') then
+      if PYLUA.startswith(line, 'EndCharMetrics') then
         break
       end
       self.parseCharMetric(line)
@@ -111,15 +111,15 @@ AFMMetric = PYLUA.class(FontMetric) {
     local glyphname = nil
     local width = nil
     local bbox = nil
-    for _, token in ipairs(line.split(';')) do
-      local d = token.split()
-      if len(d)<2 then
+    for _, token in ipairs(PYLUA.split(line, ';')) do
+      local d = PYLUA.split(token)
+      if #d<2 then
         goto continue
       end
       if d[1]=='W' or d[1]=='WX' or d[1]=='W0X' then
         width = parseLength(d[2])
-      elseif d[1]=='B' and len(d)==5 then
-        bbox = map(parseLength, PYLUA.slice(d, 1, nil))
+      elseif d[1]=='B' and #d==5 then
+        bbox = PYLUA.map(parseLength, PYLUA.slice(d, 1, nil))
       elseif d[1]=='N' then
         glyphname = d[2]
       end
@@ -147,8 +147,8 @@ AFMMetric = PYLUA.class(FontMetric) {
       for _, c in ipairs(codes) do
         self.chardata[c] = cm
       end
-    elseif glyphname.startswith('uni') then
-      if len(glyphname)~=7 then
+    elseif PYLUA.startswith(glyphname, 'uni') then
+      if #glyphname~=7 then
       end
       -- PYLUA.FIXME: TRY:
       local c = int(PYLUA.slice(glyphname, 3, nil), 16)
@@ -156,8 +156,8 @@ AFMMetric = PYLUA.class(FontMetric) {
         self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
       end
       -- PYLUA.FIXME: EXCEPT TypeError:
-    elseif glyphname.startswith('u') then
-      if PYLUA.op_not_in(len(glyphname), {5, 6, 7}) then
+    elseif PYLUA.startswith(glyphname, 'u') then
+      if PYLUA.op_not_in(#glyphname, {5, 6, 7}) then
       end
       -- PYLUA.FIXME: TRY:
       c = int(PYLUA.slice(glyphname, 1, nil), 16)
@@ -172,10 +172,10 @@ AFMMetric = PYLUA.class(FontMetric) {
   readKernData = function(self, afmfile)
     while true do
       local line = afmfile.readline()
-      if len(line)==0 then
+      if #line==0 then
         break
       end
-      if line.startswith('EndKernData') then
+      if PYLUA.startswith(line, 'EndKernData') then
         break
       end
     end
@@ -185,10 +185,10 @@ AFMMetric = PYLUA.class(FontMetric) {
   readComposites = function(self, afmfile)
     while true do
       local line = afmfile.readline()
-      if len(line)==0 then
+      if #line==0 then
         break
       end
-      if line.startswith('EndComposites') then
+      if PYLUA.startswith(line, 'EndComposites') then
         break
       end
     end
@@ -198,7 +198,7 @@ AFMMetric = PYLUA.class(FontMetric) {
 
 
 main = function()
-  if len(sys.argv)==2 then
+  if #sys.argv==2 then
     AFMMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]).dump()
   else
     io.write('Usage: AFM.py <path to AFM file>', '\n')

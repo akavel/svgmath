@@ -7,19 +7,19 @@ readUnsigned = function(ff, size)
   local res = 0
   for _, c in ipairs(ff.read(size)) do
     res = res*256
-    res = res+ord(c)
+    res = res+PYLUA.ord(c)
   end
   return res
 end
 
 readSigned = function(ff, size)
-  local res = ord(ff.read(1))
+  local res = PYLUA.ord(ff.read(1))
   if res>=128 then
     res = res-256
   end
   for _, c in ipairs(ff.read(size-1)) do
     res = res*256
-    res = res+ord(c)
+    res = res+PYLUA.ord(c)
   end
   return res
 end
@@ -58,7 +58,7 @@ TTFMetric = PYLUA.class(FontMetric) {
 
   readFontMetrics = function(self, ff)
     local version = ff.read(4)
-    if map(ord, version)=={0, 1, 0, 0} then
+    if PYLUA.map(ord, version)=={0, 1, 0, 0} then
       self.fonttype = 'TTF'
     elseif version=='OTTO' then
       error(TTFFormatError)
@@ -224,7 +224,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       if subtableOffset == nil then
         error(TTFFormatError)
       elseif self.log then
-        self.log.write(PYLUA.mod('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))
+        self.log.write(string.format('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))
       end
     end
     ff.seek(offset+subtableOffset)
@@ -284,7 +284,7 @@ TTFMetric = PYLUA.class(FontMetric) {
           table.insert(cm.codes, c-61440)
         end
         if  not cm.name then
-          cm.name = PYLUA.mod('u%04X', c)
+          cm.name = string.format('u%04X', c)
         end
       end
     end
@@ -326,7 +326,7 @@ TTFMetric = PYLUA.class(FontMetric) {
 
 
 main = function()
-  if len(sys.argv)==2 then
+  if #sys.argv==2 then
     TTFMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]).dump()
   else
     io.write('Usage: TTF.py <path to TTF file>', '\n')

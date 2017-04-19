@@ -34,15 +34,15 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
   startElement = function(self, name, attributes)
     if name=='config' then
       self.verbose = attributes['verbose']=='true'
-      self.debug = attributes['debug'] or ''.replace(',', ' ').split()
+      self.debug = PYLUA.split(PYLUA.replace(attributes['debug'] or '', ',', ' '))
     elseif name=='defaults' then
-      self.defaults.update(attributes)
+      PYLUA.update(self.defaults, attributes)
     elseif name=='fallback' then
       local familyattr = attributes['family'] or ''
       self.fallbackFamilies = PYLUA.COMPREHENSION()
     elseif name=='family' then
       self.currentFamily = attributes['name'] or ''
-      self.currentFamily = PYLUA.str_maybe('').join(self.currentFamily.lower().split())
+      self.currentFamily = string.gsub(PYLUA.lower(self.currentFamily), '%s+', '')
     elseif name=='font' then
       local weight = attributes['weight'] or 'normal'
       local style = attributes['style'] or 'normal'
@@ -62,17 +62,17 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         metric = TTFMetric(fontpath, sys.stderr)
       else
         sys.stderr.write('Bad record in configuration file: font is neither AFM nor TTF\n')
-        sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+        sys.stderr.write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
         return 
       end
       -- PYLUA.FIXME: EXCEPT FontFormatError err:
-        sys.stderr.write(PYLUA.mod('Invalid or unsupported file format in \'%s\': %s\n', {fontpath, err.message}))
-        sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+        sys.stderr.write(string.format('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
+        sys.stderr.write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
         return 
       -- PYLUA.FIXME: EXCEPT IOError:
         local message = sys.exc_info()[2]
-        sys.stderr.write(PYLUA.mod('I/O error reading font file \'%s\': %s\n', {fontpath, str(message)}))
-        sys.stderr.write(PYLUA.mod('Font entry for \'%s\' ignored\n', fontfullname))
+        sys.stderr.write(string.format('I/O error reading font file \'%s\': %s\n', fontpath, tostring(message)))
+        sys.stderr.write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
         return 
       self.fonts[weight+' '+style+' '+self.currentFamily] = metric
     elseif name=='mathvariant' then
@@ -86,7 +86,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       local opname = attributes['operator']
       if opname then
         local styling = { }
-        styling.update(attributes)
+        PYLUA.update(styling, attributes)
 styling['operator']        self.opstyles[opname] = styling
       else
         sys.stderr.write('Bad record in configuration file: operator-style with no operator attribute\n')
@@ -104,9 +104,9 @@ styling['operator']        self.opstyles[opname] = styling
 
   findfont = function(self, weight, style, family)
     -- Finds a metric for family+weight+style.
-    weight = weight or 'normal'.strip()
-    style = style or 'normal'.strip()
-    family = PYLUA.str_maybe('').join(family or ''.lower().split())
+    weight = PYLUA.strip(weight or 'normal')
+    style = PYLUA.strip(style or 'normal')
+    family = string.gsub(PYLUA.lower(family or ''), '%s+', '')
     for _, w in ipairs({weight, 'normal'}) do
       for _, s in ipairs({style, 'normal'}) do
         local metric = self.fonts[w+' '+s+' '+family]
@@ -122,7 +122,7 @@ styling['operator']        self.opstyles[opname] = styling
 
 
 main = function()
-  if len(sys.argv)==1 then
+  if #sys.argv==1 then
     local config = MathConfig(nil)
   else
     config = MathConfig(sys.argv[2])
