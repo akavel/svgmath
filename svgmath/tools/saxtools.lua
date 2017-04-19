@@ -47,6 +47,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   --     
 
   __init__ = function(self, out, encoding)
+    encoding = encoding or 'iso-8859-1'
     handler.ContentHandler.__init__(self)
     self._encoding = encoding
     self._out = getwriter(encoding)(out, 'xmlcharrefreplace')

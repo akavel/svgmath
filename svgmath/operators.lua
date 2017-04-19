@@ -3,6 +3,7 @@ local sys = require('sys')
 local operatorDictionary = { }
 
 lookup = function(op, form)
+  form = form or 'infix'
   -- Find the entry for an operator in the dictionary
   local res = operatorDictionary[op+form]
   if res ~= nil then
@@ -18,6 +19,19 @@ lookup = function(op, form)
 end
 
 createEntry = function(content, form, fence, separator, accent, largeop, lspace, rspace, stretchy, scaling, minsize, maxsize, movablelimits, symmetric)
+  form = form or 'infix'
+  fence = fence or 'false'
+  separator = separator or 'false'
+  accent = accent or 'false'
+  largeop = largeop or 'false'
+  lspace = lspace or 'thickmathspace'
+  rspace = rspace or 'thickmathspace'
+  stretchy = stretchy or 'false'
+  scaling = scaling or 'uniform'
+  minsize = minsize or '1'
+  maxsize = maxsize or 'infinity'
+  movablelimits = movablelimits or 'false'
+  symmetric = symmetric or 'true'
   if PYLUA.op_in(content+form, PYLUA.keys(operatorDictionary)) then
     sys.stderr.write(string.format('WARNING: duplicate entry in operator dictionary, %s %s\n', form, tostring(content)))
   end
