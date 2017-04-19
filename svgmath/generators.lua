@@ -212,7 +212,7 @@ draw_mfrac = function(node, output)
   end
   if node.ruleWidth then
     local x1, y1, x2, y2
-    if node.getProperty('bevelled')=='true' then
+    if node:getProperty('bevelled')=='true' then
       local eh = node.enumerator.height+node.enumerator.depth
       local dh = node.denominator.height+node.denominator.depth
       local ruleX = (node.width+node.enumerator.width-node.denominator.width)/2.0
@@ -532,7 +532,6 @@ draw_mtable = function(node, output)
       end
     end
     for i = 1,node.columns do
-      -- FIXME(akavel): can c+cell.colspan above exceed node.columns?
       vspans[i] = math.max(0, (vspans[i] or 0)-1)
     end
 
@@ -550,30 +549,34 @@ draw_mtable = function(node, output)
     ::continue::
   end
 
-  local hspans = {0}*len(node.rows)
-  for _, c in ipairs(range(len(node.columns)-1)) do
+  local hspans = {}
+  for c = 1,#node.columns-1 do
     local column = node.columns[c]
     if column.lineAfter == nil then
       goto continue
     end
-    for _, r in ipairs(range(len(node.rows))) do
+
+    for r = 1,#node.rows do
       local row = node.rows[r]
-      if len(row.cells)<=c then
+      if #row.cells<c then
         goto continue
       end
       local cell = row.cells[c]
-      if cell == nil or cell.content == nil then
-        goto continue
+      if cell ~= nil and cell.content ~= nil then
+        for j = r, r+cell.rowspan do
+          hspans[j] = cell.colspan
+        end
       end
-      for _, j in ipairs(range(r, r+cell.rowspan)) do
-        hspans[j] = cell.colspan
-      end
+      ::continue::
     end
-    hspans = PYLUA.COMPREHENSION()
+    for i = 1,#node.rows do
+      hspans[i] = math.max(0, (hspans[i] or 0)-1)
+    end
+
     local lineX = hoffsets[c]
     local startY = y1
     local endY = y1
-    for _, r in ipairs(range(len(node.rows))) do
+    for r = 1,#node.rows do
       if hspans[r]>0 then
         drawBorder(lineX, startY, lineX, endY, column.lineAfter)
         startY = voffsets[r]
@@ -581,20 +584,27 @@ draw_mtable = function(node, output)
       endY = voffsets[r]
     end
     drawBorder(lineX, startY, lineX, endY, column.lineAfter)
+    ::continue::
   end
 end
 
 drawBox = function(node, output, borderWidth, borderColor, borderRadius)
+  borderWidth = borderWidth or 0
+  borderRadius = borderRadius or 0
   local background = getBackground(node)
-  if background=='none' then
-    if borderWidth == nil or borderWidth==0 then
-      return 
-    end
+  if background=='none' and borderWidth==0 then
+    return 
   end
-  if borderColor == nil then
-    borderColor = node.color
-  end
-  local attrs = { fill=background, stroke='none', x=PYLUA.mod('%f', borderWidth/2), y=PYLUA.mod('%f', borderWidth/2-node.height), width=PYLUA.mod('%f', node.width-borderWidth), height=PYLUA.mod('%f', node.height+node.depth-borderWidth), }
+  borderColor = borderColor or node.color
+
+  local attrs = {
+    fill=background,
+    stroke='none',
+    x=PYLUA.mod('%f', borderWidth/2),
+    y=PYLUA.mod('%f', borderWidth/2-node.height),
+    width=PYLUA.mod('%f', node.width-borderWidth),
+    height=PYLUA.mod('%f', node.height+node.depth-borderWidth),
+  }
   if borderWidth~=0 and borderColor ~= nil then
     attrs['stroke'] = borderColor
     attrs['stroke-width'] = PYLUA.mod('%f', borderWidth)
@@ -603,24 +613,38 @@ drawBox = function(node, output, borderWidth, borderColor, borderRadius)
       attrs['ry'] = PYLUA.mod('%f', borderRadius)
     end
   end
+
   startSVGElement(output, 'rect', attrs)
   endSVGElement(output, 'rect')
 end
 
 drawLine = function(output, color, width, x1, y1, x2, y2, strokeattrs)
-  local attrs = { fill='none', stroke=color, ['stroke-width']=PYLUA.mod('%f', width), ['stroke-linecap']='square', ['stroke-dasharray']='none', x1=PYLUA.mod('%f', x1), y1=PYLUA.mod('%f', y1), x2=PYLUA.mod('%f', x2), y2=PYLUA.mod('%f', y2), }
+  local attrs = {
+    fill='none',
+    stroke=color,
+    ['stroke-width']=PYLUA.mod('%f', width),
+    ['stroke-linecap']='square',
+    ['stroke-dasharray']='none',
+    x1=PYLUA.mod('%f', x1),
+    y1=PYLUA.mod('%f', y1),
+    x2=PYLUA.mod('%f', x2),
+    y2=PYLUA.mod('%f', y2),
+  }
   if strokeattrs ~= nil then
-    attrs.update(strokeattrs)
+    update(attrs, strokeattrs)
   end
+
   startSVGElement(output, 'line', attrs)
   endSVGElement(output, 'line')
 end
 
 drawTranslatedNode = function(node, output, dx, dy)
   if dx~=0 or dy~=0 then
-    startSVGElement(output, 'g', { transform=PYLUA.mod('translate(%f, %f)', {dx, dy}), })
+    startSVGElement(output, 'g', {
+      transform=PYLUA.mod('translate(%f, %f)', {dx, dy})
+    })
   end
-  node.draw(output)
+  node:draw(output)
   if dx~=0 or dy~=0 then
     endSVGElement(output, 'g')
   end
@@ -628,11 +652,23 @@ end
 
 drawSVGText = function(node, output)
   drawBox(node, output)
-  local fontfamilies = PYLUA.COMPREHENSION()
-  if len(fontfamilies)==0 then
+  local fontfamilies = {}
+  for _, x in ipairs(node:fontpool()) do
+    if x.used then
+      table.insert(fontfamilies, x.family)
+    end
+  end
+  if #fontfamilies==0 then
     fontfamilies = node.fontfamilies
   end
-  local attrs = { fill=node.color, ['font-family']=PYLUA.str_maybe(', ').join(fontfamilies), ['font-size']=PYLUA.mod('%f', node.fontSize), ['text-anchor']='middle', x=PYLUA.mod('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch), y=PYLUA.mod('%f', -node.textShift), }
+  local attrs = {
+    fill=node.color,
+    ['font-family']=table.concat(fontfamilies, ', '),
+    ['font-size']=PYLUA.mod('%f', node.fontSize),
+    ['text-anchor']='middle',
+    x=PYLUA.mod('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch),
+    y=PYLUA.mod('%f', -node.textShift),
+  }
   if node.fontweight~='normal' then
     attrs['font-weight'] = node.fontweight
   end
@@ -642,48 +678,62 @@ drawSVGText = function(node, output)
   if node.textStretch~=1 then
     attrs['transform'] = PYLUA.mod('scale(%f, 1)', node.textStretch)
   end
+
   for oldchar, newchar in pairs(mathnode.specialChars) do
-    node.text = node.text.replace(oldchar, newchar)
+    node.text = PYLUA.replace(node.text, oldchar, newchar)
   end
+
   startSVGElement(output, 'text', attrs)
-  output.characters(node.text)
+  output:characters(node.text)
   endSVGElement(output, 'text')
 end
 
 getAlign = function(node, attrName)
-  local attrValue = node.getProperty(attrName, 'center')
-  if PYLUA.op_not_in(attrValue, PYLUA.keys(alignKeywords)) then
-    node.error('Bad value %s for %s', attrValue, attrName)
+  local attrValue = node:getProperty(attrName, 'center')
+  if alignKeywords[attrValue] == nil then
+    node:error('Bad value %s for %s', attrValue, attrName)
   end
   return alignKeywords[attrValue] or 0.5
 end
 
 drawBoxEnclosure = function(node, output, roundRadius)
-  drawBox(node, output, node.borderWidth, nil, roundRadius)
+  drawBox(node, output, node.borderWidth, nil, roundRadius or 0)
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
 end
 
 drawCircleEnclosure = function(node, output)
   local background = getBackground(node)
+
   local r = (node.width-node.borderWidth)/2
   local cx = node.width/2
   local cy = (node.depth-node.height)/2
-  local attrs = { fill=background, stroke=node.color, ['stroke-width']=PYLUA.mod('%f', node.borderWidth), cx=PYLUA.mod('%f', cx), cy=PYLUA.mod('%f', cy), r=PYLUA.mod('%f', r), }
+
+  local attrs = {
+    fill=background,
+    stroke=node.color,
+    ['stroke-width']=PYLUA.mod('%f', node.borderWidth),
+    cx=PYLUA.mod('%f', cx),
+    cy=PYLUA.mod('%f', cy),
+    r=PYLUA.mod('%f', r),
+  }
   startSVGElement(output, 'circle', attrs)
   endSVGElement(output, 'circle')
+
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
 end
 
 drawBordersEnclosure = function(node, output)
-
-  drawBorder = function(x1, y1, x2, y2)
+  local drawBorder = function(x1, y1, x2, y2)
     drawLine(output, node.color, node.borderWidth, x1, y1, x2, y2)
   end
+
   drawBox(node, output)
+
   local x1 = node.borderWidth/2
   local y1 = node.borderWidth/2-node.height
   local x2 = node.width-node.borderWidth/2
   local y2 = node.depth-node.borderWidth/2
+
   local left, right, top, bottom = table.unpack(node.decorationData)
   if left then
     drawBorder(x1, y1, x1, y2)
@@ -697,26 +747,28 @@ drawBordersEnclosure = function(node, output)
   if bottom then
     drawBorder(x1, y2, x2, y2)
   end
+
+  local offset = 0
   if left then
-    local offset = node.width-node.base.width
+    offset = node.width-node.base.width
     if right then
       offset = offset/2
     end
-  else
-    offset = 0
   end
   drawTranslatedNode(node.base, output, offset, 0)
 end
 
 drawStrikesEnclosure = function(node, output)
-
-  drawStrike = function(x1, y1, x2, y2)
+  local drawStrike = function(x1, y1, x2, y2)
     drawLine(output, node.color, node.borderWidth, x1, y1, x2, y2)
   end
+
   drawBox(node, output)
-  node.base.draw(output)
+  node.base:draw(output)
+
   local mid_x = node.width/2
   local mid_y = (node.depth-node.height)/2
+
   local horiz, vert, updiag, downdiag = table.unpack(node.decorationData)
   if horiz then
     drawStrike(0, mid_y, node.width, mid_y)
@@ -743,6 +795,5 @@ getBackground = function(node)
       end
     end
   end
-  -- PYLUA.FIXME: else:
-    return 'none'
+  return 'none'
 end
