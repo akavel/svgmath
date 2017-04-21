@@ -54,7 +54,7 @@ main = function()
     glyphList = defaultGlyphList
   end
   for entry, value in pairs(glyphList) do
-    io.write(entry, ' => ', value, '\n')
+    PYLUA.print(entry, ' => ', value, '\n')
   end
 end
 if __name__=='__main__' then

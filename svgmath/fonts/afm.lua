@@ -203,7 +203,7 @@ main = function()
   if #sys.argv==2 then
     AFMMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
   else
-    io.write('Usage: AFM.py <path to AFM file>', '\n')
+    PYLUA.print('Usage: AFM.py <path to AFM file>', '\n')
   end
 end
 if __name__=='__main__' then

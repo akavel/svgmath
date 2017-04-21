@@ -138,27 +138,27 @@ FontMetric = PYLUA.class() {
   ;
 
   dump = function(self)
-    io.write('FontName: ', self.fontname, '\n')
-    io.write('FullName: ', self.fullname, '\n')
-    io.write('FontFamily: ', self.family, '\n')
-    io.write('Weight: ', self.weight, '\n')
-    io.write('FontBBox: ')
+    PYLUA.print('FontName: ', self.fontname, '\n')
+    PYLUA.print('FullName: ', self.fullname, '\n')
+    PYLUA.print('FontFamily: ', self.family, '\n')
+    PYLUA.print('Weight: ', self.weight, '\n')
+    PYLUA.print('FontBBox: ')
     for _, x in ipairs(self.bbox) do
-      io.write(x)
+      PYLUA.print(x)
     end
-    io.write('\n')
-    io.write('CapHeight: ', self.capheight, '\n')
-    io.write('XHeight: ', self.xheight, '\n')
-    io.write('Ascender: ', self.ascender, '\n')
-    io.write('Descender: ', self.descender, '\n')
-    io.write('StdHW: ', self.stdhw, '\n')
-    io.write('StdVW: ', self.stdvw, '\n')
-    io.write('UnderlinePosition: ', self.underlineposition, '\n')
-    io.write('UnderlineThickness: ', self.underlinethickness, '\n')
-    io.write('ItalicAngle: ', self.italicangle, '\n')
-    io.write('CharWidth: ', self.charwidth, '\n')
-    io.write('MathematicalBaseline: ', self.axisposition, '\n')
-    io.write('Character data: ', '\n')
+    PYLUA.print('\n')
+    PYLUA.print('CapHeight: ', self.capheight, '\n')
+    PYLUA.print('XHeight: ', self.xheight, '\n')
+    PYLUA.print('Ascender: ', self.ascender, '\n')
+    PYLUA.print('Descender: ', self.descender, '\n')
+    PYLUA.print('StdHW: ', self.stdhw, '\n')
+    PYLUA.print('StdVW: ', self.stdvw, '\n')
+    PYLUA.print('UnderlinePosition: ', self.underlineposition, '\n')
+    PYLUA.print('UnderlineThickness: ', self.underlinethickness, '\n')
+    PYLUA.print('ItalicAngle: ', self.italicangle, '\n')
+    PYLUA.print('CharWidth: ', self.charwidth, '\n')
+    PYLUA.print('MathematicalBaseline: ', self.axisposition, '\n')
+    PYLUA.print('Character data: ', '\n')
     local chars = PYLUA.items(self.chardata)
     PYLUA.sort(chars, PYLUA.keywords{key=function(c) return c[1] end})
     for _, PYLUA_x in ipairs(chars) do
@@ -166,11 +166,11 @@ FontMetric = PYLUA.class() {
       if cm == nil then
         goto continue
       end
-      io.write('    ', string.format('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
+      PYLUA.print('    ', string.format('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
       for _, x in ipairs(cm.bbox) do
-        io.write(x)
+        PYLUA.print(x)
       end
-      io.write('\n')
+      PYLUA.print('\n')
       ::continue::
     end
   end

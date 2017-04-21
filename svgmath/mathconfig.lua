@@ -26,7 +26,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     parser.setFeature(sax.handler.feature_namespaces, 0)
     parser.parse(configfile)
     -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
-      io.write('Error parsing configuration file ', configfile, ': ', xcpt.getMessage(), '\n')
+      PYLUA.print('Error parsing configuration file ', configfile, ': ', xcpt.getMessage(), '\n')
       sys.exit(1)
   end
   ;
@@ -127,24 +127,24 @@ main = function()
   else
     config = MathConfig(sys.argv[2])
   end
-  io.write('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
-  io.write('Fonts:', '\n')
+  PYLUA.print('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
+  PYLUA.print('Fonts:', '\n')
   for font, metric in pairs(config.fonts) do
-    io.write('    ', font, '-->', metric.fontname, '\n')
+    PYLUA.print('    ', font, '-->', metric.fontname, '\n')
   end
-  io.write('Math variants:', '\n')
+  PYLUA.print('Math variants:', '\n')
   for variant, value in pairs(config.variants) do
-    io.write('    ', variant, '-->', value, '\n')
+    PYLUA.print('    ', variant, '-->', value, '\n')
   end
-  io.write('Defaults:', '\n')
+  PYLUA.print('Defaults:', '\n')
   for attr, value in pairs(config.defaults) do
-    io.write('    ', attr, '=', value, '\n')
+    PYLUA.print('    ', attr, '=', value, '\n')
   end
-  io.write('Operator styling:', '\n')
+  PYLUA.print('Operator styling:', '\n')
   for opname, value in pairs(config.opstyles) do
-    io.write('    ', repr(opname), ':', value, '\n')
+    PYLUA.print('    ', repr(opname), ':', value, '\n')
   end
-  io.write('Fallback font families:', config.fallbackFamilies, '\n')
+  PYLUA.print('Fallback font families:', config.fallbackFamilies, '\n')
 end
 if __name__=='__main__' then
   main()

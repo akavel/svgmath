@@ -330,7 +330,7 @@ main = function()
   if #sys.argv==2 then
     TTFMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
   else
-    io.write('Usage: TTF.py <path to TTF file>', '\n')
+    PYLUA.print('Usage: TTF.py <path to TTF file>', '\n')
   end
 end
 if __name__=='__main__' then
