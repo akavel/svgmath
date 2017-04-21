@@ -214,13 +214,13 @@ TTFMetric = PYLUA.class(FontMetric) {
       local platformID = readUnsigned(ff, 2)
       local encodingID = readUnsigned(ff, 2)
       subtableOffset = readUnsigned(ff, 4)
-      cmapEncodings[{platformID, encodingID}] = subtableOffset
+      cmapEncodings[PYLUA.keytuple{platformID, encodingID}] = subtableOffset
     end
     local encodingScheme = 'Unicode'
-    subtableOffset = cmapEncodings[{3, 1}]
+    subtableOffset = cmapEncodings[PYLUA.keytuple{3, 1}]
     if subtableOffset == nil then
       encodingScheme = 'Symbol'
-      subtableOffset = cmapEncodings[{3, 0}]
+      subtableOffset = cmapEncodings[PYLUA.keytuple{3, 0}]
       if subtableOffset == nil then
         error(TTFFormatError(string.format('Cannot use font \'%s\': no known subtable in \'cmap\' table', self.fullname)))
       elseif self.log then
