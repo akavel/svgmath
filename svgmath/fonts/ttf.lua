@@ -61,9 +61,9 @@ TTFMetric = PYLUA.class(FontMetric) {
     if PYLUA.map(ord, version)=={0, 1, 0, 0} then
       self.fonttype = 'TTF'
     elseif version=='OTTO' then
-      error(TTFFormatError)
+      error(TTFFormatError('OpenType/CFF fonts are unsupported'))
     else
-      error(TTFFormatError)
+      error(TTFFormatError('Not a TrueType file'))
     end
     local numTables = readUnsigned(ff, 2)
     local tables = { }
@@ -78,7 +78,7 @@ TTFMetric = PYLUA.class(FontMetric) {
 
     switchTable = function(tableTag)
       if PYLUA.op_not_in(tableTag, PYLUA.keys(tables)) then
-        error(TTFFormatError)
+        error(TTFFormatError('Required table '+tableTag+' missing in TrueType file'))
       end
       return tables[tableTag]
     end
@@ -86,7 +86,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     ff:seek(offset+12)
     local magic = readUnsigned(ff, 4)
     if magic~=1594834165 then
-      error(TTFFormatError)
+      error(TTFFormatError('Magic number in \'head\' table does not match the spec'))
     end
     skip(ff, 2)
     self.unitsPerEm = readUnsigned(ff, 2)
@@ -222,7 +222,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       encodingScheme = 'Symbol'
       subtableOffset = cmapEncodings[{3, 0}]
       if subtableOffset == nil then
-        error(TTFFormatError)
+        error(TTFFormatError(string.format('Cannot use font \'%s\': no known subtable in \'cmap\' table', self.fullname)))
       elseif self.log then
         self.log:write(string.format('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))
       end
@@ -230,7 +230,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     ff:seek(offset+subtableOffset)
     local tableFormat = readUnsigned(ff, 2)
     if tableFormat~=4 then
-      error(TTFFormatError)
+      error(TTFFormatError(string.format('Unsupported format in \'cmap\' table: %d', tableFormat)))
     end
     local subtableLength = readUnsigned(ff, 2)
     skip(ff, 2)
@@ -302,7 +302,7 @@ TTFMetric = PYLUA.class(FontMetric) {
         table.insert(glyphIndex, readUnsigned(ff, 4))
       end
     else
-      error(TTFFormatError)
+      error(TTFFormatError(string.format('Invalid indexToLocFormat value (%d) in \'head\' table', tostring(self.indexToLocFormat))))
     end
     offset, length = table.unpack(switchTable('glyf'))
     for _, i in ipairs(range(0, self.numGlyphs)) do
