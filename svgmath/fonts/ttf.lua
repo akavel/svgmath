@@ -5,7 +5,7 @@ local FontFormatError = require('metric').FontFormatError
 
 readUnsigned = function(ff, size)
   local res = 0
-  for _, c in ipairs(ff.read(size)) do
+  for _, c in ipairs(ff:read(size)) do
     res = res*256
     res = res+PYLUA.ord(c)
   end
@@ -13,11 +13,11 @@ readUnsigned = function(ff, size)
 end
 
 readSigned = function(ff, size)
-  local res = PYLUA.ord(ff.read(1))
+  local res = PYLUA.ord(ff:read(1))
   if res>=128 then
     res = res-256
   end
-  for _, c in ipairs(ff.read(size-1)) do
+  for _, c in ipairs(ff:read(size-1)) do
     res = res*256
     res = res+PYLUA.ord(c)
   end
@@ -33,7 +33,7 @@ readF2_14 = function(ff)
 end
 
 skip = function(ff, size)
-  ff.read(size)
+  ff:read(size)
 end
 
 TTFFormatError = PYLUA.class(FontFormatError) {
@@ -49,15 +49,15 @@ TTFMetric = PYLUA.class(FontMetric) {
 
   __init__ = function(self, ttfname, log)
     FontMetric.__init__(self, log)
-    local ff = open(ttfname, 'rb')
-    self.readFontMetrics(ff)
-    ff.close()
-    self.postParse()
+    local ff = PYLUA.open(ttfname, 'rb')
+    self:readFontMetrics(ff)
+    ff:close()
+    self:postParse()
   end
   ;
 
   readFontMetrics = function(self, ff)
-    local version = ff.read(4)
+    local version = ff:read(4)
     if PYLUA.map(ord, version)=={0, 1, 0, 0} then
       self.fonttype = 'TTF'
     elseif version=='OTTO' then
@@ -69,7 +69,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     local tables = { }
     skip(ff, 6)
     for _, i in ipairs(range(0, numTables)) do
-      local tag = ff.read(4)
+      local tag = ff:read(4)
       local checksum = readUnsigned(ff, 4)
       local offset = readUnsigned(ff, 4)
       local length = readUnsigned(ff, 4)
@@ -83,7 +83,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       return tables[tableTag]
     end
     local offset, length = table.unpack(switchTable('head'))
-    ff.seek(offset+12)
+    ff:seek(offset+12)
     local magic = readUnsigned(ff, 4)
     if magic~=1594834165 then
       error(TTFFormatError)
@@ -100,10 +100,10 @@ TTFMetric = PYLUA.class(FontMetric) {
     skip(ff, 6)
     self.indexToLocFormat = readSigned(ff, 2)
     offset, length = table.unpack(switchTable('maxp'))
-    ff.seek(offset+4)
+    ff:seek(offset+4)
     self.numGlyphs = readUnsigned(ff, 2)
     offset, length = table.unpack(switchTable('name'))
-    ff.seek(offset+2)
+    ff:seek(offset+2)
     local numRecords = readUnsigned(ff, 2)
     local storageOffset = readUnsigned(ff, 2)+offset
     local uniNames = { }
@@ -130,11 +130,11 @@ TTFMetric = PYLUA.class(FontMetric) {
     getName = function(code)
       if PYLUA.op_in(code, PYLUA.keys(macNames)) then
         local nameOffset, nameLength = table.unpack(macNames[code])
-        ff.seek(storageOffset+nameOffset)
-        return ff.read(nameLength)
+        ff:seek(storageOffset+nameOffset)
+        return ff:read(nameLength)
       elseif PYLUA.op_in(code, PYLUA.keys(uniNames)) then
         nameOffset, nameLength = table.unpack(uniNames[code])
-        ff.seek(storageOffset+nameOffset)
+        ff:seek(storageOffset+nameOffset)
         local result = ''
         for _, i in ipairs(range(0, nameLength/2)) do
           result = result+unichr(readUnsigned(ff, 2))
@@ -146,7 +146,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     self.fullname = getName(4)
     self.fontname = getName(6)
     offset, length = table.unpack(switchTable('OS/2'))
-    ff.seek(offset)
+    ff:seek(offset)
     local tableVersion = readUnsigned(ff, 2)
     local cw = readSigned(ff, 2)
     if cw then
@@ -187,15 +187,15 @@ TTFMetric = PYLUA.class(FontMetric) {
       end
     end
     offset, length = table.unpack(switchTable('post'))
-    ff.seek(offset+4)
+    ff:seek(offset+4)
     self.italicangle = readFixed32(ff)
     self.underlineposition = readSigned(ff, 2)*emScale
     self.underlinethickness = readSigned(ff, 2)*emScale
     offset, length = table.unpack(switchTable('hhea'))
-    ff.seek(offset+34)
+    ff:seek(offset+34)
     local numHmtx = readUnsigned(ff, 2)
     offset, length = table.unpack(switchTable('hmtx'))
-    ff.seek(offset)
+    ff:seek(offset)
     local glyphArray = {}
     local w = 0
     for _, i in ipairs(range(0, self.numGlyphs)) do
@@ -206,7 +206,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       table.insert(glyphArray, CharMetric(PYLUA.keywords{width=w}))
     end
     offset, length = table.unpack(switchTable('cmap'))
-    ff.seek(offset+2)
+    ff:seek(offset+2)
     local subtableOffset = 0
     numTables = readUnsigned(ff, 2)
     local cmapEncodings = { }
@@ -224,10 +224,10 @@ TTFMetric = PYLUA.class(FontMetric) {
       if subtableOffset == nil then
         error(TTFFormatError)
       elseif self.log then
-        self.log.write(string.format('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))
+        self.log:write(string.format('WARNING: font \'%s\' is a symbolic font - Unicode mapping may be unreliable\n', self.fullname))
       end
     end
-    ff.seek(offset+subtableOffset)
+    ff:seek(offset+subtableOffset)
     local tableFormat = readUnsigned(ff, 2)
     if tableFormat~=4 then
       error(TTFFormatError)
@@ -286,10 +286,11 @@ TTFMetric = PYLUA.class(FontMetric) {
         if  not cm.name then
           cm.name = string.format('u%04X', c)
         end
+        ::continue::
       end
     end
     offset, length = table.unpack(switchTable('loca'))
-    ff.seek(offset)
+    ff:seek(offset)
     local glyphIndex = {}
     local scalefactor = self.indexToLocFormat+1
     if self.indexToLocFormat==0 then
@@ -309,7 +310,7 @@ TTFMetric = PYLUA.class(FontMetric) {
       if glyphIndex[i]==glyphIndex[i+1] then
         cm.bbox = {0, 0, 0, 0}
       else
-        ff.seek(offset+glyphIndex[i]+2)
+        ff:seek(offset+glyphIndex[i]+2)
         xMin = readSigned(ff, 2)*emScale
         yMin = readSigned(ff, 2)*emScale
         xMax = readSigned(ff, 2)*emScale
@@ -327,7 +328,7 @@ TTFMetric = PYLUA.class(FontMetric) {
 
 main = function()
   if #sys.argv==2 then
-    TTFMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]).dump()
+    TTFMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
   else
     io.write('Usage: TTF.py <path to TTF file>', '\n')
   end

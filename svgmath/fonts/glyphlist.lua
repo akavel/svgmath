@@ -4,9 +4,9 @@ local os = require('os')
 GlyphList = PYLUA.class(dict) {
 
   __init__ = function(self, f)
-    dict.__init__(self)
+    dict:__init__(self)
     while true do
-      local line = f.readline()
+      local line = f:readline()
       if #line==0 then
         break
       end
@@ -29,6 +29,7 @@ GlyphList = PYLUA.class(dict) {
       else
         self[glyph] = {codepoint}
       end
+      ::continue::
     end
   end
   ;
@@ -43,12 +44,12 @@ GlyphList = PYLUA.class(dict) {
   ;
 }
 
-local glyphListName = PYLUA.join(os.path, os.path.dirname(__file__), 'default.glyphs')
-local defaultGlyphList = GlyphList(open(glyphListName, 'r'))
+local glyphListName = PYLUA.join(os.path, os.path:dirname(__file__), 'default.glyphs')
+local defaultGlyphList = GlyphList(PYLUA.open(glyphListName, 'r'))
 
 main = function()
   if #sys.argv>1 then
-    local glyphList = parseGlyphList(open(sys.argv[2], 'r'))
+    local glyphList = parseGlyphList(PYLUA.open(sys.argv[2], 'r'))
   else
     glyphList = defaultGlyphList
   end

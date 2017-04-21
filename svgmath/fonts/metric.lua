@@ -159,9 +159,10 @@ FontMetric = PYLUA.class() {
     io.write('CharWidth: ', self.charwidth, '\n')
     io.write('MathematicalBaseline: ', self.axisposition, '\n')
     io.write('Character data: ', '\n')
-    local chars = self.chardata.items()
-    chars.sort(PYLUA.keywords{key=cc[1]})
-    for _, {i, cm} in ipairs(chars) do
+    local chars = PYLUA.items(self.chardata)
+    PYLUA.sort(chars, PYLUA.keywords{key=function(c) return c[1] end})
+    for _, PYLUA_x in ipairs(chars) do
+      local i, cm = table.unpack(PYLUA_x)
       if cm == nil then
         goto continue
       end
@@ -170,6 +171,7 @@ FontMetric = PYLUA.class() {
         io.write(x)
       end
       io.write('\n')
+      ::continue::
     end
   end
   ;

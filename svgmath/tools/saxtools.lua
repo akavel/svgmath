@@ -48,7 +48,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
 
   __init__ = function(self, out, encoding)
     encoding = encoding or 'iso-8859-1'
-    handler.ContentHandler.__init__(self)
+    handler.ContentHandler:__init__(self)
     self._encoding = encoding
     self._out = getwriter(encoding)(out, 'xmlcharrefreplace')
     self._ns_contexts = {{ }}
@@ -59,7 +59,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   ;
 
   _write = function(self, text)
-    self._out.write(unicode(text))
+    self._out:write(unicode(text))
   end
   ;
 
@@ -76,20 +76,20 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
 
   _flush_starttag = function(self)
     if self._starttag_pending then
-      self._write('>')
+      self:_write('>')
       self._starttag_pending = false
     end
   end
   ;
 
   startDocument = function(self)
-    self._out.reset()
-    self._write(string.format('<?xml version="1.0" encoding="%s"?>\n', unicode(self._encoding)))
+    self._out:reset()
+    self:_write(string.format('<?xml version="1.0" encoding="%s"?>\n', unicode(self._encoding)))
   end
   ;
 
   endDocument = function(self)
-    self._out.reset()
+    self._out:reset()
   end
   ;
 
@@ -106,10 +106,10 @@ self._ns_contexts[0]  end
   ;
 
   startElement = function(self, name, attrs)
-    self._flush_starttag()
-    self._write(string.format('<%s', unicode(name)))
+    self:_flush_starttag()
+    self:_write(string.format('<%s', unicode(name)))
     for name, value in pairs(attrs) do
-      self._write(string.format(' %s=%s', unicode(name), quoteattr(value)))
+      self:_write(string.format(' %s=%s', unicode(name), quoteattr(value)))
     end
     self._starttag_pending = true
   end
@@ -117,10 +117,10 @@ self._ns_contexts[0]  end
 
   endElement = function(self, name)
     if self._starttag_pending then
-      self._write('/>')
+      self:_write('/>')
       self._starttag_pending = false
     else
-      self._write(string.format('</%s>', unicode(name)))
+      self:_write(string.format('</%s>', unicode(name)))
     end
   end
   ;
@@ -128,9 +128,10 @@ self._ns_contexts[0]  end
   startElementNS = function(self, name, qname, attrs)
     local qattrs = { }
     for attname, attvalue in pairs(attrs) do
-      qattrs[self._qname(attname)] = attvalue
+      qattrs[self:_qname(attname)] = attvalue
     end
-    for _, {prefix, uri} in ipairs(self._undeclared_ns_maps) do
+    for _, PYLUA_x in ipairs(self._undeclared_ns_maps) do
+      local prefix, uri = table.unpack(PYLUA_x)
       if prefix then
         qattrs[string.format('xmlns:%s', unicode(prefix))] = uri
       else
@@ -138,29 +139,29 @@ self._ns_contexts[0]  end
       end
     end
     self._undeclared_ns_maps = {}
-    self.startElement(self._qname(name), qattrs)
+    self:startElement(self:_qname(name), qattrs)
   end
   ;
 
   endElementNS = function(self, name, qname)
-    self.endElement(self._qname(name))
+    self:endElement(self:_qname(name))
   end
   ;
 
   characters = function(self, content)
-    self._flush_starttag()
-    self._write(escape(content))
+    self:_flush_starttag()
+    self:_write(escape(content))
   end
   ;
 
   ignorableWhitespace = function(self, content)
-    self.characters(content)
+    self:characters(content)
   end
   ;
 
   processingInstruction = function(self, target, data)
-    self._flush_starttag()
-    self._write(string.format('<?%s %s?>', unicode(target), unicode(data)))
+    self:_flush_starttag()
+    self:_write(string.format('<?%s %s?>', unicode(target), unicode(data)))
   end
   ;
 }
@@ -172,63 +173,63 @@ ContentFilter = PYLUA.class(handler.ContentHandler) {
   --     Used to implement filtering functionality on the ContentHandler side.
 
   __init__ = function(self, out)
-    handler.ContentHandler.__init__(self)
+    handler.ContentHandler:__init__(self)
     self.output = out
   end
   ;
 
   startDocument = function(self)
-    self.output.startDocument()
+    self.output:startDocument()
   end
   ;
 
   endDocument = function(self)
-    self.output.endDocument()
+    self.output:endDocument()
   end
   ;
 
   startPrefixMapping = function(self, prefix, uri)
-    self.output.startPrefixMapping(prefix, uri)
+    self.output:startPrefixMapping(prefix, uri)
   end
   ;
 
   endPrefixMapping = function(self, prefix)
-    self.output.endPrefixMapping(prefix)
+    self.output:endPrefixMapping(prefix)
   end
   ;
 
   startElement = function(self, elementName, attrs)
-    self.output.startElement(elementName, attrs)
+    self.output:startElement(elementName, attrs)
   end
   ;
 
   endElement = function(self, elementName)
-    self.output.endElement(elementName)
+    self.output:endElement(elementName)
   end
   ;
 
   startElementNS = function(self, elementName, qName, attrs)
-    self.output.startElementNS(elementName, qName, attrs)
+    self.output:startElementNS(elementName, qName, attrs)
   end
   ;
 
   endElementNS = function(self, elementName, qName)
-    self.output.endElementNS(elementName, qName)
+    self.output:endElementNS(elementName, qName)
   end
   ;
 
   characters = function(self, content)
-    self.output.characters(content)
+    self.output:characters(content)
   end
   ;
 
   ignorableWhitespace = function(self, content)
-    self.output.ignorableWhitespace(content)
+    self.output:ignorableWhitespace(content)
   end
   ;
 
   processingInstruction = function(self, target, data)
-    self.output.processingInstruction(target, data)
+    self.output:processingInstruction(target, data)
   end
   ;
 }

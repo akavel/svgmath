@@ -21,25 +21,25 @@ AFMMetric = PYLUA.class(FontMetric) {
 
   __init__ = function(self, afmname, glyphlistname, log)
     FontMetric.__init__(self, log)
-    local afmfile = open(afmname, 'r')
+    local afmfile = PYLUA.open(afmname, 'r')
     if glyphlistname == nil then
       self.glyphList = glyphlist.defaultGlyphList
     else
-      self.glyphList = glyphlist.GlyphList(open(afmname, 'r'))
+      self.glyphList = glyphlist.GlyphList(PYLUA.open(afmname, 'r'))
     end
-    self.readFontMetrics(afmfile)
-    afmfile.close()
-    self.postParse()
+    self:readFontMetrics(afmfile)
+    afmfile:close()
+    self:postParse()
   end
   ;
 
   readFontMetrics = function(self, afmfile)
-    local line = afmfile.readline()
+    local line = afmfile:readline()
     if  not PYLUA.startswith(line, 'StartFontMetrics') then
       error(AFMFormatError)
     end
     while true do
-      line = afmfile.readline()
+      line = afmfile:readline()
       if #line==0 then
         break
       end
@@ -47,11 +47,11 @@ AFMMetric = PYLUA.class(FontMetric) {
         break
       end
       if PYLUA.startswith(line, 'StartCharMetrics') then
-        self.readCharMetrics(afmfile)
+        self:readCharMetrics(afmfile)
       elseif PYLUA.startswith(line, 'StartKernData') then
-        self.readKernData(afmfile)
+        self:readKernData(afmfile)
       elseif PYLUA.startswith(line, 'StartComposites') then
-        self.readComposites(afmfile)
+        self:readComposites(afmfile)
       else
         local tokens = PYLUA.split(line, nil, 1)
         if #tokens<2 then
@@ -89,20 +89,21 @@ AFMMetric = PYLUA.class(FontMetric) {
           self.charwidth = parseLength(PYLUA.split(tokens[2])[1])
         end
       end
+      ::continue::
     end
   end
   ;
 
   readCharMetrics = function(self, afmfile)
     while true do
-      local line = afmfile.readline()
+      local line = afmfile:readline()
       if #line==0 then
         break
       end
       if PYLUA.startswith(line, 'EndCharMetrics') then
         break
       end
-      self.parseCharMetric(line)
+      self:parseCharMetric(line)
     end
   end
   ;
@@ -123,6 +124,7 @@ AFMMetric = PYLUA.class(FontMetric) {
       elseif d[1]=='N' then
         glyphname = d[2]
       end
+      ::continue::
     end
     if glyphname == nil then
       return 
@@ -141,7 +143,7 @@ AFMMetric = PYLUA.class(FontMetric) {
         width = bbox[3]-bbox[1]
       end
     end
-    local codes = self.glyphList.lookup(glyphname)
+    local codes = self.glyphList:lookup(glyphname)
     if codes ~= nil then
       local cm = CharMetric(glyphname, codes, width, bbox)
       for _, c in ipairs(codes) do
@@ -171,7 +173,7 @@ AFMMetric = PYLUA.class(FontMetric) {
 
   readKernData = function(self, afmfile)
     while true do
-      local line = afmfile.readline()
+      local line = afmfile:readline()
       if #line==0 then
         break
       end
@@ -184,7 +186,7 @@ AFMMetric = PYLUA.class(FontMetric) {
 
   readComposites = function(self, afmfile)
     while true do
-      local line = afmfile.readline()
+      local line = afmfile:readline()
       if #line==0 then
         break
       end
@@ -199,7 +201,7 @@ AFMMetric = PYLUA.class(FontMetric) {
 
 main = function()
   if #sys.argv==2 then
-    AFMMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]).dump()
+    AFMMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
   else
     io.write('Usage: AFM.py <path to AFM file>', '\n')
   end
