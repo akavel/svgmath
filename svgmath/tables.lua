@@ -1,14 +1,13 @@
 -- Table-related formatting functions.
 -- 
 -- This module contains functions called from measurers.py to format tables.
-local sys = require('sys')
 local mathnode = require('mathnode')
 
 getByIndexOrLast = function(lst, idx)
-  if idx<#lst then
+  if idx<=#lst then
     return lst[idx]
   else
-    return lst[0]
+    return lst[#lst]
   end
 end
 
@@ -39,7 +38,6 @@ ColumnDescriptor = PYLUA.class() {
   ;
 }
 
-
 RowDescriptor = PYLUA.class() {
   -- Descriptor of a single row in a table; contains cells
 
@@ -49,10 +47,23 @@ RowDescriptor = PYLUA.class() {
     self.depth = 0
     self.spaceAfter = 0
     self.lineAfter = nil
-    self.cells = {}
+
+    -- TODO(akavel): mimicking Python tables behavior for nils below; rewrite
+    -- with usages to simpler idiomatic Lua if possible
+    self.cells = setmetatable({N=0}, {
+      __len = function(self) return self.N end,
+      __ipairs = function(self)
+        local iter = function(self, i)
+          if i<self.N then return i+1, self[i+1] end
+        end
+        return iter, nil, 0
+      end,
+    })
+
     for _, c in ipairs(cells) do
+      -- Find the first free cell
       while #busycells>#self.cells and busycells[#self.cells]>0 do
-        table.insert(self.cells, nil)
+        self.cells.N = self.cells.N+1
       end
       local halign = getByIndexOrLast(columnaligns, #self.cells)
       local valign = rowalign
@@ -61,15 +72,16 @@ RowDescriptor = PYLUA.class() {
       if c.elementName=='mtd' then
         halign = c.attributes['columnalign'] or halign
         valign = c.attributes['rowalign'] or valign
-        colspan = node.parseInt(c.attributes['colspan'] or '1')
-        rowspan = node.parseInt(c.attributes['rowspan'] or '1')
+        colspan = node:parseInt(c.attributes['colspan'] or '1')
+        rowspan = node:parseInt(c.attributes['rowspan'] or '1')
       end
       while #self.cells>=#node.columns do
         table.insert(node.columns, ColumnDescriptor())
       end
-      table.insert(self.cells, CellDescriptor(c, halign, valign, colspan, rowspan))
-      for _, i in ipairs(range(1, colspan)) do
-        table.insert(self.cells, nil)
+      self.cells.N = self.cells.N+1
+      self.cells[self.cells.N] = CellDescriptor(c, halign, valign, colspan, rowspan)
+      for i = 2,#colspan do
+        self.cells.N = self.cells.N+1
       end
       while #self.cells>#node.columns do
         table.insert(node.columns, ColumnDescriptor())
@@ -84,49 +96,59 @@ arrangeCells = function(node)
   node.rows = {}
   node.columns = {}
   local busycells = {}
-  local table_rowaligns = node.getListProperty('rowalign')
-  local table_columnaligns = node.getListProperty('columnalign')
+
+  -- Read table-level alignment properties      
+  local table_rowaligns = node:getListProperty('rowalign')
+  local table_columnaligns = node:getListProperty('columnalign')
+
   for _, ch in ipairs(node.children) do
     local rowalign = getByIndexOrLast(table_rowaligns, #node.rows)
     local row_columnaligns = table_columnaligns
+    local cells = {ch}
     if ch.elementName=='mtr' or ch.elementName=='mlabeledtr' then
-      local cells = ch.children
+      cells = ch.children
       rowalign = ch.attributes['rowalign'] or rowalign
-      if PYLUA.op_in('columnalign', PYLUA.keys(ch.attributes)) then
-        local columnaligns = node.getListProperty('columnalign', ch.attributes['columnalign'])
-      end
-    else
-      cells = {ch}
+      -- TODO(akavel): below block looks unused; should it be: row_columnaligns = ... ?
+      --if PYLUA.op_in('columnalign', PYLUA.keys(ch.attributes)) then
+      --  local columnaligns = node:getListProperty('columnalign', ch.attributes['columnalign'])
+      --end
     end
+
     local row = RowDescriptor(node, cells, rowalign, row_columnaligns, busycells)
     table.insert(node.rows, row)
-    busycells = PYLUA.COMPREHENSION()
+    -- busycells passes information about cells spanning multiple rows 
+    for i,n in ipairs(busycells) do
+      busycells[i] = math.max(0, n-1)
+    end
     while #busycells<#row.cells do
       table.insert(busycells, 0)
     end
-    for _, i in ipairs(range(#row.cells)) do
+    for i = 1,#row.cells do
       local cell = row.cells[i]
-      if cell == nil then
-        goto continue
-      end
-      if cell.rowspan>1 then
-        for _, j in ipairs(range(i, i+cell.colspan)) do
+      if cell ~= nil and cell.rowspan>1 then
+        for j = i, i+cell.colspan do
           busycells[j] = cell.rowspan-1
         end
       end
     end
   end
+
+  -- Pad the table with empty rows until no spanning cell protrudes
   while math.max(busycells)>0 do
     local rowalign = getByIndexOrLast(table_rowaligns, #node.rows)
     table.insert(node.rows, RowDescriptor(node, {}, rowalign, table_columnaligns, busycells))
-    busycells = PYLUA.COMPREHENSION()
+    for i,n in ipairs(busycells) do
+      busycells[i] = math.max(0, n-1)
+    end
   end
 end
 
 arrangeLines = function(node)
-  local spacings = PYLUA.map(node.parseLength, node.getListProperty('rowspacing'))
-  local lines = node.getListProperty('rowlines')
-  for _, i in ipairs(range(#node.rows-1)) do
+  -- Get spacings and line styles; expand to cover the table fully        
+  local spacings = PYLUA.map(node.parseLength, node:getListProperty('rowspacing'))
+  local lines = node:getListProperty('rowlines')
+
+  for i = 1,#node.rows-1 do
     node.rows[i].spaceAfter = getByIndexOrLast(spacings, i)
     local line = getByIndexOrLast(lines, i)
     if line~='none' then
@@ -134,9 +156,11 @@ arrangeLines = function(node)
       node.rows[i].spaceAfter = node.rows[i].spaceAfter+node.lineWidth
     end
   end
-  spacings = PYLUA.map(node.parseSpace, node.getListProperty('columnspacing'))
-  lines = node.getListProperty('columnlines')
-  for _, i in ipairs(range(#node.columns-1)) do
+
+  spacings = PYLUA.map(node.parseSpace, node:getListProperty('columnspacing'))
+  lines = node:getListProperty('columnlines')
+
+  for i = 1,#node.columns-1 do
     node.columns[i].spaceAfter = getByIndexOrLast(spacings, i)
     local line = getByIndexOrLast(lines, i)
     if line~='none' then
@@ -144,11 +168,13 @@ arrangeLines = function(node)
       node.columns[i].spaceAfter = node.columns[i].spaceAfter+node.lineWidth
     end
   end
+
   node.framespacings = {0, 0}
   node.framelines = {nil, nil}
-  spacings = PYLUA.map(node.parseSpace, node.getListProperty('framespacing'))
-  lines = node.getListProperty('frame')
-  for _, i in ipairs(range(2)) do
+
+  spacings = PYLUA.map(node.parseSpace, node:getListProperty('framespacing'))
+  lines = node:getListProperty('frame')
+  for i = 1,2 do
     local line = getByIndexOrLast(lines, i)
     if line~='none' then
       node.framespacings[i] = getByIndexOrLast(spacings, i)
@@ -158,73 +184,99 @@ arrangeLines = function(node)
 end
 
 calculateColumnWidths = function(node)
+  -- Get total width
   local fullwidthattr = node.attributes['width'] or 'auto'
-  if fullwidthattr=='auto' then
-    local fullwidth = nil
-  else
-    fullwidth = node.parseLength(fullwidthattr)
+  local fullwidth = nil
+  if fullwidthattr~='auto' then
+    fullwidth = node:parseLength(fullwidthattr)
     if fullwidth<=0 then
       fullwidth = nil
     end
   end
-  local columnwidths = node.getListProperty('columnwidth')
-  for _, i in ipairs(range(#node.columns)) do
+
+  -- Fill fixed column widths
+  local columnwidths = node:getListProperty('columnwidth')
+  for i = 1,#node.columns do
     local column = node.columns[i]
     local attr = getByIndexOrLast(columnwidths, i)
     if PYLUA.op_in(attr, {'auto', 'fit'}) then
       column.fit = attr=='fit'
     elseif PYLUA.endswith(attr, '%') then
       if fullwidth == nil then
-        node.error(string.format('Percents in column widths supported only in tables with explicit width; width of column %d treated as \'auto\'', i+1))
+        node:error(string.format('Percents in column widths supported only in tables with explicit width; width of column %d treated as \'auto\'', i+1))
       else
-        local value = node.parseFloat(PYLUA.slice(attr, nil, -1))
+        local value = node:parseFloat(PYLUA.slice(attr, nil, -1))
         if value and value>0 then
           column.width = fullwidth*value/100
           column.auto = false
         end
       end
     else
-      column.width = node.parseSpace(attr)
+      column.width = node:parseSpace(attr)
       column.auto = false
     end
   end
+
+  -- Set initial auto widths for cells with colspan == 1
   for _, r in ipairs(node.rows) do
-    for _, i in ipairs(range(#r.cells)) do
+    for i = 1,#r.cells do
       local c = r.cells[i]
-      if c == nil or c.content == nil or c.colspan>1 then
-        goto continue
-      end
-      local column = node.columns[i]
-      if column.auto then
-        column.width = math.max(column.width, c.content.width)
+      if c ~= nil and c.content ~= nil and c.colspan<=1 then
+        local column = node.columns[i]
+        if column.auto then
+          column.width = math.max(column.width, c.content.width)
+        end
       end
     end
   end
+
+  -- Calculate auto widths for cells with colspan > 1
   while true do
     local adjustedColumns = {}
     local adjustedWidth = 0
+
     for _, r in ipairs(node.rows) do
-      for _, i in ipairs(range(#r.cells)) do
+      for i = 1,#r.cells do
         local c = r.cells[i]
         if c == nil or c.content == nil or c.colspan==1 then
           goto continue
         end
+
         local columns = PYLUA.slice(node.columns, i, i+c.colspan)
-        local autoColumns = PYLUA.COMPREHENSION()
+        local autoColumns, fixedColumns = {}, {}
+        for _, c in ipairs(columns) do
+          if c.auto then
+            table.insert(autoColumns, c)
+          else
+            table.insert(fixedColumns, c)
+          end
+        end
         if #autoColumns==0 then
+          -- nothing to adjust
           goto continue
         end
-        local fixedColumns = PYLUA.COMPREHENSION()
-        local fixedWidth = sum(PYLUA.COMPREHENSION())
+
+        local fixedWidth = 0
+        for i = 1,#columns-1 do
+          fixedWidth = fixedWidth + columns[i].spaceAfter
+        end
         if #fixedColumns>0 then
-          fixedWidth = fixedWidth+sum(PYLUA.COMPREHENSION())
+          for _, c in ipairs(fixedColumns) do
+            fixedWidth = fixedWidth + c.width
+          end
         end
-        local autoWidth = sum(PYLUA.COMPREHENSION())
+        local autoWidth = 0
+        for _, c in ipairs(autoColumns) do
+          autoWidth = autoWidth + c.width
+        end
         if c.content.width<=fixedWidth+autoWidth then
+          -- already fits
           goto continue
         end
+
         local requiredWidth = c.content.width-fixedWidth
         local unitWidth = requiredWidth/#autoColumns
+
         while true do
           local oversizedColumns = PYLUA.COMPREHENSION()
           if #oversizedColumns==0 then
@@ -244,6 +296,7 @@ calculateColumnWidths = function(node)
           adjustedWidth = unitWidth
           adjustedColumns = autoColumns
         end
+        ::continue::
       end
     end
     if #adjustedColumns==0 then
