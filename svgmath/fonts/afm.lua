@@ -36,16 +36,19 @@ AFMMetric = PYLUA.class(FontMetric) {
   readFontMetrics = function(self, afmfile)
     local line = afmfile:readline()
     if  not PYLUA.startswith(line, 'StartFontMetrics') then
-      error(AFMFormatError)
+      error(AFMFormatError('File is not an AFM file'))
     end
+    -- TODO(grigoriev): AFM version control    
+
     while true do
       line = afmfile:readline()
       if #line==0 then
-        break
+        break  -- EOF
       end
       if PYLUA.startswith(line, 'EndFontMetrics') then
         break
       end
+
       if PYLUA.startswith(line, 'StartCharMetrics') then
         self:readCharMetrics(afmfile)
       elseif PYLUA.startswith(line, 'StartKernData') then
@@ -126,6 +129,7 @@ AFMMetric = PYLUA.class(FontMetric) {
       end
       ::continue::
     end
+
     if glyphname == nil then
       return 
     end
@@ -143,6 +147,7 @@ AFMMetric = PYLUA.class(FontMetric) {
         width = bbox[3]-bbox[1]
       end
     end
+
     local codes = self.glyphList:lookup(glyphname)
     if codes ~= nil then
       local cm = CharMetric(glyphname, codes, width, bbox)
@@ -151,22 +156,19 @@ AFMMetric = PYLUA.class(FontMetric) {
       end
     elseif PYLUA.startswith(glyphname, 'uni') then
       if #glyphname~=7 then
+        -- no support for composites yet
       end
-      -- PYLUA.FIXME: TRY:
-      local c = int(PYLUA.slice(glyphname, 3, nil), 16)
-      if c>=0 and c<65536 then
+      local c = tonumber(PYLUA.slice(glyphname, 3, nil), 16)
+      if c and c>=0 and c<65536 then
         self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
       end
-      -- PYLUA.FIXME: EXCEPT TypeError:
     elseif PYLUA.startswith(glyphname, 'u') then
       if PYLUA.op_not_in(#glyphname, {5, 6, 7}) then
       end
-      -- PYLUA.FIXME: TRY:
-      c = int(PYLUA.slice(glyphname, 1, nil), 16)
-      if c>=0 and c<65536 then
+      c = tonumber(PYLUA.slice(glyphname, 1, nil), 16)
+      if c and c>=0 and c<65536 then
         self.chardata[c] = CharMetric(glyphname, {c}, width, bbox)
       end
-      -- PYLUA.FIXME: EXCEPT TypeError:
     end
   end
   ;
@@ -175,11 +177,12 @@ AFMMetric = PYLUA.class(FontMetric) {
     while true do
       local line = afmfile:readline()
       if #line==0 then
-        break
+        break  -- EOF
       end
       if PYLUA.startswith(line, 'EndKernData') then
         break
       end
+      -- TODO(grigoriev): parse kerning pairs    
     end
   end
   ;
@@ -188,11 +191,12 @@ AFMMetric = PYLUA.class(FontMetric) {
     while true do
       local line = afmfile:readline()
       if #line==0 then
-        break
+        break  -- EOF
       end
       if PYLUA.startswith(line, 'EndComposites') then
         break
       end
+      -- TODO(grigoriev): parse composites
     end
   end
   ;
