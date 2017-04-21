@@ -55,6 +55,7 @@ FontMetric = PYLUA.class() {
   ;
 
   postParse = function(self)
+    -- Get Ascender from the 'd' glyph
     if self.ascender == nil then
       local cm = self.chardata[PYLUA.ord('d')]
       if cm ~= nil then
@@ -63,6 +64,8 @@ FontMetric = PYLUA.class() {
         self.ascender = 0.7
       end
     end
+
+    -- Get Descender from the 'p' glyph
     if self.descender == nil then
       cm = self.chardata[PYLUA.ord('p')]
       if cm ~= nil then
@@ -71,6 +74,8 @@ FontMetric = PYLUA.class() {
         self.descender = -0.2
       end
     end
+
+    -- Get CapHeight from the 'H' glyph
     if self.capheight == nil then
       cm = self.chardata[PYLUA.ord('H')]
       if cm ~= nil then
@@ -79,6 +84,8 @@ FontMetric = PYLUA.class() {
         self.capheight = self.ascender
       end
     end
+
+    -- Get XHeight from the 'x' glyph
     if self.xheight == nil then
       cm = self.chardata[PYLUA.ord('x')]
       if cm ~= nil then
@@ -87,7 +94,14 @@ FontMetric = PYLUA.class() {
         self.xheight = 0.45
       end
     end
+
+    -- Determine the vertical position of the mathematical axis -
+    -- that is, the quote to which fraction separator lines are raised.
+    -- We try to deduce it from the median of the following characters:
+    -- "equal", "minus", "plus", "less", "greater", "periodcentered")
+    -- Default is CapHeight / 2, or 0.3 if there's no CapHeight.
     if self.axisposition == nil then
+      self.axisposition = self.capheight/2
       for _, ch in ipairs({PYLUA.ord('+'), 8722, PYLUA.ord('='), PYLUA.ord('<'), PYLUA.ord('>'), 183}) do
         cm = self.chardata[ch]
         if cm ~= nil then
@@ -95,12 +109,13 @@ FontMetric = PYLUA.class() {
           break
         end
       end
-      -- PYLUA.FIXME: else:
-        self.axisposition = self.capheight/2
     end
+
+    -- Determine the dominant rule width for math        
     if self.underlinethickness ~= nil then
       self.rulewidth = self.underlinethickness
     else
+      self.rulewidth = 0.05
       for _, ch in ipairs({8211, 8212, 8213, 8722, PYLUA.ord('-')}) do
         cm = self.chardata[ch]
         if cm ~= nil then
@@ -108,12 +123,12 @@ FontMetric = PYLUA.class() {
           break
         end
       end
-      -- PYLUA.FIXME: else:
-        self.rulewidth = 0.05
     end
+
     if self.stdhw == nil then
       self.stdhw = 0.03
     end
+
     if self.stdvw == nil and  not self.italicangle then
       cm = self.chardata[PYLUA.ord('!')]
       if cm ~= nil then
@@ -128,11 +143,15 @@ FontMetric = PYLUA.class() {
         self.stdvw = 0.08
       end
     end
+
+    -- Set rule gap
     if self.underlineposition ~= nil then
       self.vgap = -self.underlineposition
     else
       self.vgap = self.rulewidth*2
     end
+
+    -- Set missing glyph to be a space    
     self.missingGlyph = self.chardata[PYLUA.ord(' ')] or self.chardata[160]
   end
   ;
@@ -166,7 +185,7 @@ FontMetric = PYLUA.class() {
       if cm == nil then
         goto continue
       end
-      PYLUA.print('    ', string.format('U+%04X', i), cm.name+':', '  W', cm.width, '  B')
+      PYLUA.print('    ', string.format('U+%04X', i), cm.name..':', '  W', cm.width, '  B')
       for _, x in ipairs(cm.bbox) do
         PYLUA.print(x)
       end
