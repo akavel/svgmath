@@ -263,8 +263,8 @@ measure_mrow = function(node)
         desiredHeight = desiredHeight-node:axis()
         desiredDepth = desiredDepth+node:axis()
       end
-      desiredHeight = desiredHeight-ch.core.ascender-ch.core.height
-      desiredDepth = desiredDepth-ch.core.descender-ch.core.depth
+      desiredHeight = desiredHeight-(ch.core.ascender-ch.core.height)
+      desiredDepth = desiredDepth-(ch.core.descender-ch.core.depth)
       stretch(PYLUA.keywords{toHeight=desiredHeight, toDepth=desiredDepth, symmetric=node.alignToAxis}, ch)
     end
   end
@@ -274,7 +274,7 @@ measure_mrow = function(node)
   end
   node.leftspace = node.children[1].leftspace
   node.rightspace = node.children[0].rightspace
-  node.width = node.width-node.leftspace+node.rightspace
+  node.width = node.width-(node.leftspace+node.rightspace)
 end
 
 measure_mfrac = function(node)
@@ -799,7 +799,7 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
   end
   if PYLUA.op_is_not(node, node.base) then
     if toWidth ~= nil then
-      toWidth = toWidth-node.width-node.base.width
+      toWidth = toWidth-(node.width-node.base.width)
     end
     stretch(node.base, toWidth, toHeight, toDepth, symmetric)
     node:measureNode()
