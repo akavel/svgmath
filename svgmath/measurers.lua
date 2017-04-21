@@ -5,6 +5,8 @@ local mathnode = require('mathnode')
 local operators = require('operators')
 local tables = require('tables')
 local enclosures = require('enclosures')
+
+-- Handy constant to draw fraction bars
 local defaultSlope = 1.383
 
 default_measure = function(node)
@@ -41,7 +43,7 @@ measure_maction = function(node)
       node:error(string.format('Invalid value \'%d\' for \'selection\' attribute - there are only %d expression descendants in the element', selection, #node.children))
       selection = 1
     end
-    setNodeBase(node, node.children[selection-1])
+    setNodeBase(node, node.children[selection])
     node.width = node.base.width
     node.height = node.base.height
     node.depth = node.base.depth
@@ -66,10 +68,12 @@ measure_mpadded = function(node)
     else
       basevalue = startvalue
     end
+
     if PYLUA.endswith(attr, '%') then
       attr = PYLUA.slice(attr, nil, -1)
       basevalue = basevalue/100.0
     end
+
     if canUseSpaces then
       return node:parseSpace(attr, basevalue)
     else
@@ -91,6 +95,7 @@ measure_mpadded = function(node)
       return parseDimension(attr, startvalue, canUseSpaces)
     end
   end
+
   node.height = getDimension('height', node.base.height, false)
   node.depth = getDimension('depth', node.base.depth, false)
   node.ascender = node.base.ascender
@@ -107,18 +112,22 @@ end
 measure_mfenced = function(node)
   local old_children = node.children
   node.children = {}
+
+  -- Add fences and separators, and process as a mrow
   local openingFence = node:getProperty('open')
   openingFence = string.gsub(openingFence, '%s+', ' ')
   if #openingFence>0 then
-    local opening = mathnode.MathNode('mo', { fence='true', form='prefix', }, nil, node.config, node)
+    local opening = mathnode.MathNode('mo', {fence='true', form='prefix'}, nil, node.config, node)
     opening.text = openingFence
     opening:measure()
   end
+
   local separators = string.gsub(node:getProperty('separators'), '%s+', '')
-  local sepindex = 0
-  local lastsep = #separators-1
+  local sepindex = 1
+  local lastsep = #separators
+
   for _, ch in ipairs(old_children) do
-    if #node.children>1 and lastsep>=0 then
+    if #node.children>1 and lastsep>=1 then
       local sep = mathnode.MathNode('mo', { separator='true', form='infix', }, nil, node.config, node)
       sep.text = separators[sepindex]
       sep:measure()
@@ -126,28 +135,36 @@ measure_mfenced = function(node)
     end
     table.insert(node.children, ch)
   end
+
   local closingFence = node:getProperty('close')
   closingFence = string.gsub(closingFence, '%s+', ' ')
   if #closingFence>0 then
-    local closing = mathnode.MathNode('mo', { fence='true', form='postfix', }, nil, node.config, node)
+    local closing = mathnode.MathNode('mo', {fence='true', form='postfix'}, nil, node.config, node)
     closing.text = closingFence
     closing:measure()
   end
+
   measure_mrow(node)
 end
 
 measure_mo = function(node)
+  -- Normalize operator glyphs
+  -- Use minus instead of hyphen
   if node:hasGlyph(8722) then
     node.text = PYLUA.replace(node.text, '-', '\xe2\x88\x92')
   end
+  -- Use prime instead of apostrophe
   if node:hasGlyph(8242) then
     node.text = PYLUA.replace(node.text, '\'', '\xe2\x80\xb2')
   end
+  -- Invisible operators produce space nodes
   if PYLUA.op_in(node.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
     node.isSpace = true
   else
     node:measureText()
   end
+
+  -- Align the operator along the mathematical axis for the respective font 
   node.alignToAxis = true
   node.textShift = -node:axis()
   node.height = node.height+node.textShift
@@ -173,6 +190,7 @@ end
 
 measure_merror = function(node)
   createImplicitRow(node)
+
   node.borderWidth = node:nominalLineWidth()
   node.width = node.base.width+2*node.borderWidth
   node.height = node.base.height+node.borderWidth
@@ -185,10 +203,10 @@ measure_ms = function(node)
   local lq = node:getProperty('lquote')
   local rq = node:getProperty('rquote')
   if lq then
-    node.text = PYLUA.replace(node.text, lq, '\\'+lq)
+    node.text = PYLUA.replace(node.text, lq, '\\'..lq)
   end
   if rq and rq~=lq then
-    node.text = PYLUA.replace(node.text, rq, '\\'+rq)
+    node.text = PYLUA.replace(node.text, rq, '\\'..rq)
   end
   node.text = lq+node.text+rq
   node:measureText()
@@ -201,6 +219,8 @@ measure_mspace = function(node)
   node.height = node:parseLength(node:getProperty('height'))
   node.depth = node:parseLength(node:getProperty('depth'))
   node.width = node:parseSpace(node:getProperty('width'))
+
+  -- Add ascender/descender values
   node.ascender = node:nominalAscender()
   node.descender = node:nominalDescender()
 end
@@ -209,6 +229,10 @@ measure_mrow = function(node)
   if #node.children==0 then
     return 
   end
+
+  -- Determine alignment type for the row. If there is a non-axis-aligned,
+  -- non-space child in the row, the whole row is non-axis-aligned. The row
+  -- that consists of just spaces is considered a space itself
   node.alignToAxis = true
   node.isSpace = true
   for _, ch in ipairs(node.children) do
@@ -217,7 +241,9 @@ measure_mrow = function(node)
       node.isSpace = false
     end
   end
-  for _, i in ipairs(range(#node.children)) do
+
+  -- Process non-marking operators
+  for i = 1,#node.children do
     local ch = node.children[i]
     if ch.core.elementName~='mo' then
       goto continue
@@ -225,7 +251,7 @@ measure_mrow = function(node)
     if PYLUA.op_in(ch.text, {'\xe2\x81\xa1', '\xe2\x81\xa2', '\xe2\x81\xa3'}) then
       ch.text = ''
 
-      longtext = function(n)
+      local longtext = function(n)
         if n == nil then
           return false
         end
@@ -242,10 +268,10 @@ measure_mrow = function(node)
       end
       local ch_prev = nil
       local ch_next = nil
-      if i>0 then
+      if i>1 then
         ch_prev = node.children[i-1]
       end
-      if i+1<#node.children then
+      if i<#node.children then
         ch_next = node.children[i+1]
       end
       if longtext(ch_prev) or longtext(ch_next) then
@@ -254,7 +280,11 @@ measure_mrow = function(node)
     end
     ::continue::
   end
+
+  -- Calculate extent for vertical stretching
   node.ascender, node.descender = table.unpack(getVerticalStretchExtent(node.children, node.alignToAxis, node:axis()))
+
+  -- Grow sizeable operators 
   for _, ch in ipairs(node.children) do
     if ch.core.stretchy then
       local desiredHeight = node.ascender
@@ -268,12 +298,16 @@ measure_mrow = function(node)
       stretch(PYLUA.keywords{toHeight=desiredHeight, toDepth=desiredDepth, symmetric=node.alignToAxis}, ch)
     end
   end
+
+  -- Recalculate height/depth after growing operators
   node.height, node.depth, node.ascender, node.descender = table.unpack(getRowVerticalExtent(node.children, node.alignToAxis, node:axis()))
+
+  -- Finally, calculate width and spacings
   for _, ch in ipairs(node.children) do
     node.width = node.width+ch.width+ch.leftspace+ch.rightspace
   end
   node.leftspace = node.children[1].leftspace
-  node.rightspace = node.children[0].rightspace
+  node.rightspace = node.children[#node.children].rightspace
   node.width = node.width-(node.leftspace+node.rightspace)
 end
 
@@ -285,23 +319,29 @@ measure_mfrac = function(node)
       return 
     end
   end
+
   node.enumerator, node.denominator = table.unpack(PYLUA.slice(node.children, nil, 2))
   node.alignToAxis = true
-  local ruleWidthKeywords = { medium='1', thin='0.5', thick='2', }
+
+  local ruleWidthKeywords = { medium='1', thin='0.5', thick='2' }
+
   local widthAttr = node:getProperty('linethickness')
   widthAttr = ruleWidthKeywords[widthAttr] or widthAttr
   local unitWidth = node:nominalLineWidth()
   node.ruleWidth = node:parseLength(widthAttr, unitWidth)
+
   node.ruleGap = node:nominalLineGap()
   if node.tightspaces then
-    node.ruleGap = node.ruleGap/1.41
+    node.ruleGap = node.ruleGap/1.41  -- more compact style if in scripts/limits
   end
+
   if node:getProperty('bevelled')=='true' then
     local eh = node.enumerator.height+node.enumerator.depth
     local dh = node.denominator.height+node.denominator.depth
     local vshift = math.min(eh, dh)/2
     node.height = (eh+dh-vshift)/2
     node.depth = node.height
+
     node.slope = defaultSlope
     node.width = node.enumerator.width+node.denominator.width
     node.width = node.width+vshift/node.slope
@@ -315,11 +355,13 @@ measure_mfrac = function(node)
     node.leftspace = node.ruleWidth
     node.rightspace = node.ruleWidth
   end
+
   node.ascender = node.height
   node.descender = node.depth
 end
 
 measure_msqrt = function(node)
+  -- Create an explicit mrow if there's more than one child
   createImplicitRow(node)
   enclosures.addRadicalEnclosure(node)
 end
@@ -328,6 +370,7 @@ measure_mroot = function(node)
   if #node.children~=2 then
     node:error('Invalid content of \'mroot\' element: element should have exactly two children')
   end
+
   if #node.children<2 then
     node.rootindex = nil
     measure_msqrt(node)
@@ -418,10 +461,13 @@ measure_mmultiscripts = function(node)
     measure_mrow(node)
     return 
   end
+
+  -- Sort children into sub- and superscripts
   local subscripts = {}
   local superscripts = {}
   local presubscripts = {}
   local presuperscripts = {}
+
   local isPre = false
   local isSub = true
   for _, ch in ipairs(PYLUA.slice(node.children, 1, nil)) do
@@ -447,15 +493,16 @@ measure_mmultiscripts = function(node)
     isSub =  not isSub
     ::continue::
   end
+
   measureScripts(node, subscripts, superscripts, presubscripts, presuperscripts)
 end
 
 measure_menclose = function(node)
-
-  pushEnclosure = function()
+  local pushEnclosure = function()
     if node.decoration == nil then
-      return 
+      return   -- no need to push
     end
+
     wrapChildren(node, 'menclose')
     setNodeBase(node.children[1], node.base)
     setNodeBase(node, node.children[1])
@@ -468,6 +515,7 @@ measure_menclose = function(node)
     node.base.depth = node.depth
     node.base.borderWidth = node.borderWidth
   end
+
   createImplicitRow(node)
   local signs = PYLUA.split(node:getProperty('notation'))
   node.width = node.base.width
@@ -478,6 +526,8 @@ measure_menclose = function(node)
   node.borderWidth = node:nominalLineWidth()
   node.hdelta = node:nominalLineGap()+node.borderWidth
   node.vdelta = node:nominalLineGap()+node.borderWidth
+
+  -- Radical sign - convert to msqrt for simplicity
   if PYLUA.op_in('radical', signs) then
     wrapChildren(node, 'msqrt')
     setNodeBase(node.children[1], node.base)
@@ -488,28 +538,49 @@ measure_menclose = function(node)
     node.height = node.base.height
     node.depth = node.base.depth
   end
-  local strikes = {PYLUA.op_in('horizontalstrike', signs), PYLUA.op_in('verticalstrike', signs), PYLUA.op_in('updiagonalstrike', signs), PYLUA.op_in('downdiagonalstrike', signs)}
+
+  -- Strikes
+  local strikes = {
+    PYLUA.op_in('horizontalstrike', signs),
+    PYLUA.op_in('verticalstrike', signs),
+    PYLUA.op_in('updiagonalstrike', signs),
+    PYLUA.op_in('downdiagonalstrike', signs)
+  }
   if PYLUA.op_in(true, strikes) then
     pushEnclosure()
     node.decoration = 'strikes'
     node.decorationData = strikes
+    -- no size change - really? 
   end
+
+  -- Rounded box 
   if PYLUA.op_in('roundedbox', signs) then
     pushEnclosure()
     node.decoration = 'roundedbox'
     enclosures.addBoxEnclosure(node)
   end
+
+  -- Square box 
   if PYLUA.op_in('box', signs) then
     pushEnclosure()
     node.decoration = 'box'
     enclosures.addBoxEnclosure(node)
   end
+
+  -- Circle
   if PYLUA.op_in('circle', signs) then
     pushEnclosure()
     node.decoration = 'circle'
     enclosures.addCircleEnclosure(node)
   end
-  local borders = {PYLUA.op_in('left', signs), PYLUA.op_in('right', signs), PYLUA.op_in('top', signs), PYLUA.op_in('bottom', signs)}
+
+  -- Borders    
+  local borders = {
+    PYLUA.op_in('left', signs),
+    PYLUA.op_in('right', signs),
+    PYLUA.op_in('top', signs),
+    PYLUA.op_in('bottom', signs)
+  }
   if PYLUA.op_in(true, borders) then
     pushEnclosure()
     if PYLUA.op_in(false, borders) then
@@ -520,25 +591,34 @@ measure_menclose = function(node)
       enclosures.addBoxEnclosure(node)
     end
   end
+
+  -- Long division    
   if PYLUA.op_in('longdiv', signs) then
     pushEnclosure()
     node.decoration = 'borders'
-    enclosures.addBorderEnclosure(node, {true, false, true, false})
+    enclosures.addBorderEnclosure(node, {true, false, true, false})  -- left top for now
   end
+
+  -- Actuarial
   if PYLUA.op_in('actuarial', signs) then
     pushEnclosure()
     node.decoration = 'borders'
-    enclosures.addBorderEnclosure(node, {false, true, true, false})
+    enclosures.addBorderEnclosure(node, {false, true, true, false})  -- right top
   end
 end
 
 measure_mtable = function(node)
   node.lineWidth = node:nominalLineWidth()
+
+  -- For readability, most layout stuff is split into pieces and moved to tables.py
   tables.arrangeCells(node)
   tables.arrangeLines(node)
+
+  -- Calculate column widths 
   tables.calculateColumnWidths(node)
+  -- Expand stretchy operators horizontally
   for _, r in ipairs(node.rows) do
-    for _, i in ipairs(range(#r.cells)) do
+    for i = 1,#r.cells do
       local c = r.cells[i]
       if c == nil or c.content == nil then
         goto continue
@@ -566,8 +646,11 @@ measure_mtable = function(node)
       ::continue::
     end
   end
+
+  -- Calculate row heights
   tables.calculateRowHeights(node)
-  for _, i in ipairs(range(#node.rows)) do
+  -- Expand stretchy operators vertically in all cells
+  for i = 1,#node.rows do
     local r = node.rows[i]
     for _, c in ipairs(r.cells) do
       if c == nil or c.content == nil then
@@ -596,18 +679,26 @@ measure_mtable = function(node)
       ::continue::
     end
   end
+
+  -- Recalculate widths, to account for stretched cells
   tables.calculateColumnWidths(node)
+
+  -- Calculate total width of the table
   node.width = PYLUA.sum(PYLUA.collect(node.columns, function(x) return x.width+x.spaceAfter end))
   node.width = node.width+2*node.framespacings[1]
+
+  -- Calculate total height of the table
   local vsize = PYLUA.sum(PYLUA.collect(node.rows, function(x) return x.height+x.depth+x.spaceAfter end))
   vsize = vsize+2*node.framespacings[2]
+
+  -- Calculate alignment point
   local alignType, alignRow = table.unpack(tables.getAlign(node))
-  if alignRow == nil then
-    local topLine = 0
-    local bottomLine = vsize
-    local axisLine = vsize/2
-    local baseLine = axisLine+node:axis()
-  else
+
+  local topLine = 0
+  local bottomLine = vsize
+  local axisLine = vsize/2
+  local baseLine = axisLine+node:axis()
+  if alignRow ~= nil then
     local row = node.rows[alignRow-1]
     topLine = node.framespacings[2]
     for _, r in ipairs(PYLUA.slice(node.rows, 0, alignRow)) do
@@ -622,6 +713,7 @@ measure_mtable = function(node)
       axisLine = baseLine-node:axis()
     end
   end
+
   if alignType=='axis' then
     node.alignToAxis = true
     node.height = axisLine
@@ -643,6 +735,7 @@ measure_mtable = function(node)
     node.height = axisLine
   end
   node.depth = vsize-node.height
+
   node.ascender = node.height
   node.descender = node.depth
 end
@@ -651,9 +744,11 @@ measure_mtr = function(node)
   if node.parent == nil or node.parent.elementName~='mtable' then
     node:error(string.format('Misplaced \'%s\' element: should be child of \'mtable\'', node.elementName))
   end
+  -- all processing is done on the table
 end
 
 measure_mlabeledtr = function(node)
+  -- Strip the label and treat as an ordinary 'mtr'
   if #node.children==0 then
     node:error(string.format('Missing label in \'%s\' element', node.elementName))
   else
@@ -675,28 +770,32 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.superscripts = superscripts or {}
   node.presubscripts = presubscripts or {}
   node.presuperscripts = presuperscripts or {}
+
   setNodeBase(node, node.children[1])
   node.width = node.base.width
   node.height = node.base.height
   node.depth = node.base.depth
   node.ascender = node.base.ascender
   node.descender = node.base.descender
+
   local subs = node.subscripts+node.presubscripts
   local supers = node.superscripts+node.presuperscripts
-  node.subscriptAxis = math.max({0}+PYLUA.collect(subs, function(x) return x:axis() end))
-  node.superscriptAxis = math.max({0}+PYLUA.collect(supers, function(x) return x:axis() end))
-  local gap = math.max(PYLUA.collect(subs+supers, function(x) return x:nominalLineGap() end))
+  node.subscriptAxis = math.max(0, table.unpack(PYLUA.collect(subs, function(x) return x:axis() end)))
+  node.superscriptAxis = math.max(0, table.unpack(PYLUA.collect(supers, function(x) return x:axis() end)))
+  local gap = math.max(table.unpack(PYLUA.collect(subs+supers, function(x) return x:nominalLineGap() end)))
   local protrusion = node:parseLength('0.25ex')
   local scriptMedian = node:axis()
+
   local subHeight, subDepth, subAscender, subDescender = table.unpack(getRowVerticalExtent(subs, false, node.subscriptAxis))
   local superHeight, superDepth, superAscender, superDescender = table.unpack(getRowVerticalExtent(supers, false, node.superscriptAxis))
+
   node.subShift = 0
   if #subs>0 then
     local shiftAttr = node:getProperty('subscriptshift')
     if shiftAttr == nil then
       shiftAttr = '0.5ex'
     end
-    node.subShift = node:parseLength(shiftAttr)
+    node.subShift = node:parseLength(shiftAttr)  -- positive shifts down
     node.subShift = math.max(node.subShift, subHeight-scriptMedian+gap)
     if node.alignToAxis then
       node.subShift = node.subShift+node:axis()
@@ -707,13 +806,14 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
     node.ascender = math.max(node.ascender, subAscender-node.subShift)
     node.descender = math.max(node.descender, subDescender+node.subShift)
   end
+
   node.superShift = 0
   if #supers>0 then
     shiftAttr = node:getProperty('superscriptshift')
     if shiftAttr == nil then
       shiftAttr = '1ex'
     end
-    node.superShift = node:parseLength(shiftAttr)
+    node.superShift = node:parseLength(shiftAttr)  -- positive shifts up
     node.superShift = math.max(node.superShift, superDepth+scriptMedian+gap)
     if node.alignToAxis then
       node.superShift = node.superShift-node:axis()
@@ -725,23 +825,24 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
     node.descender = math.max(node.descender, superDepth-node.superShift)
   end
 
-  parallelWidths = function(nodes1, nodes2)
+  local parallelWidths = function(nodes1, nodes2)
     local widths = {}
-    for _, i in ipairs(range(math.max(#nodes1, #nodes2))) do
+    for i = 1,math.max(#nodes1, #nodes2) do
       local w = 0
-      if i<#nodes1 then
+      if i<=#nodes1 then
         w = math.max(w, nodes1[i].width)
       end
-      if i<#nodes2 then
+      if i<=#nodes2 then
         w = math.max(w, nodes2[i].width)
       end
       table.insert(widths, w)
     end
     return widths
   end
+
   node.postwidths = parallelWidths(node.subscripts, node.superscripts)
   node.prewidths = parallelWidths(node.presubscripts, node.presuperscripts)
-  node.width = node.width+PYLUA.sum(node.prewidths+node.postwidths)
+  node.width = node.width+PYLUA.sum(node.prewidths)+PYLUA.sum(node.postwidths)
 end
 
 measureLimits = function(node, underscript, overscript)
@@ -757,9 +858,11 @@ measureLimits = function(node, underscript, overscript)
     measureScripts(node, subs, supers)
     return 
   end
+
   node.underscript = underscript
   node.overscript = overscript
   setNodeBase(node, node.children[1])
+
   node.width = node.base.width
   if overscript ~= nil then
     node.width = math.max(node.width, overscript.width)
@@ -770,7 +873,9 @@ measureLimits = function(node, underscript, overscript)
   stretch(PYLUA.keywords{toWidth=node.width}, node.base)
   stretch(PYLUA.keywords{toWidth=node.width}, overscript)
   stretch(PYLUA.keywords{toWidth=node.width}, underscript)
+
   local gap = node:nominalLineGap()
+
   if overscript ~= nil then
     local overscriptBaselineHeight = node.base.height+gap+overscript.depth
     node.height = overscriptBaselineHeight+overscript.height
@@ -779,6 +884,7 @@ measureLimits = function(node, underscript, overscript)
     node.height = node.base.height
     node.ascender = node.base.ascender
   end
+
   if underscript ~= nil then
     local underscriptBaselineDepth = node.base.depth+gap+underscript.height
     node.depth = underscriptBaselineDepth+underscript.depth
@@ -807,13 +913,14 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
     if node.fontSize==0 then
       return 
     end
+
     local maxsizedefault = node.opdefaults['maxsize']
     local maxsizeattr = node:getProperty('maxsize', maxsizedefault)
-    if maxsizeattr=='infinity' then
-      local maxScale = nil
-    else
+    local maxScale = nil
+    if maxsizeattr~='infinity' then
       maxScale = node:parseSpaceOrPercent(maxsizeattr, node.fontSize, node.fontSize)/node.fontSize
     end
+
     local minsizedefault = node.opdefaults['minsize']
     local minsizeattr = node:getProperty('minsize', minsizedefault)
     local minScale = node:parseSpaceOrPercent(minsizeattr, node.fontSize, node.fontSize)/node.fontSize
@@ -832,29 +939,34 @@ stretchVertically = function(node, toHeight, toDepth, minScale, maxScale, symmet
   if node.scaling=='horizontal' then
     return 
   end
+
   if symmetric and node.symmetric then
     toHeight = (toHeight+toDepth)/2
     toDepth = toHeight
   end
   local scale = (toHeight+toDepth)/(node.ascender+node.descender)
+
   if minScale then
     scale = math.max(scale, minScale)
   end
   if maxScale then
     scale = math.min(scale, maxScale)
   end
+
   node.fontSize = node.fontSize*scale
   node.height = node.height*scale
   node.depth = node.depth*scale
   node.ascender = node.ascender*scale
   node.descender = node.descender*scale
   node.textShift = node.textShift*scale
+
   local extraShift = (toHeight-node.ascender-(toDepth-node.descender))/2
   node.textShift = node.textShift+extraShift
   node.height = node.height+extraShift
   node.ascender = node.ascender+extraShift
   node.depth = node.depth-extraShift
   node.descender = node.descender-extraShift
+
   if node.scaling=='vertical' then
     node.textStretch = node.textStretch/scale
   else
@@ -871,11 +983,13 @@ stretchHorizontally = function(node, toWidth, minScale, maxScale)
   if node.scaling~='horizontal' then
     return 
   end
+
   local scale = toWidth/node.width
   scale = math.max(scale, minScale)
   if maxScale then
     scale = math.min(scale, maxScale)
   end
+
   node.width = node.width*scale
   node.textStretch = node.textStretch*scale
   node.leftBearing = node.leftBearing*scale
@@ -909,9 +1023,10 @@ getVerticalStretchExtent = function(descendants, rowAlignToAxis, axis)
   local ascender = 0
   local descender = 0
   for _, ch in ipairs(descendants) do
+    local asc, desc
     if ch.core.stretchy then
-      local asc = ch.core.ascender
-      local desc = ch.core.descender
+      asc = ch.core.ascender
+      desc = ch.core.descender
     else
       asc = ch.ascender
       desc = ch.descender
