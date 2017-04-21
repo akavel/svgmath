@@ -117,9 +117,7 @@ arrangeCells = function(node)
     local row = RowDescriptor(node, cells, rowalign, row_columnaligns, busycells)
     table.insert(node.rows, row)
     -- busycells passes information about cells spanning multiple rows 
-    for i,n in ipairs(busycells) do
-      busycells[i] = math.max(0, n-1)
-    end
+    busycells = PYLUA.collect(busycells, function(n) return math.max(0, n-1) end)
     while #busycells<#row.cells do
       table.insert(busycells, 0)
     end
@@ -137,9 +135,7 @@ arrangeCells = function(node)
   while math.max(busycells)>0 do
     local rowalign = getByIndexOrLast(table_rowaligns, #node.rows)
     table.insert(node.rows, RowDescriptor(node, {}, rowalign, table_columnaligns, busycells))
-    for i,n in ipairs(busycells) do
-      busycells[i] = math.max(0, n-1)
-    end
+    busycells = PYLUA.collect(busycells, function(n) return math.max(0, n-1) end)
   end
 end
 
@@ -243,32 +239,18 @@ calculateColumnWidths = function(node)
         end
 
         local columns = PYLUA.slice(node.columns, i, i+c.colspan)
-        local autoColumns, fixedColumns = {}, {}
-        for _, c in ipairs(columns) do
-          if c.auto then
-            table.insert(autoColumns, c)
-          else
-            table.insert(fixedColumns, c)
-          end
-        end
+        local autoColumns = PYLUA.collect(columns, function(x) if x.auto then return x end end)
         if #autoColumns==0 then
           -- nothing to adjust
           goto continue
         end
+        local fixedColumns = PYLUA.collect(columns, function(x) if  not x.auto then return x end end)
 
-        local fixedWidth = 0
-        for i = 1,#columns-1 do
-          fixedWidth = fixedWidth + columns[i].spaceAfter
-        end
+        local fixedWidth = PYLUA.sum(PYLUA.collect(PYLUA.slice(columns, nil, -1), function(x) return x.spaceAfter end))
         if #fixedColumns>0 then
-          for _, c in ipairs(fixedColumns) do
-            fixedWidth = fixedWidth + c.width
-          end
+          fixedWidth = fixedWidth+PYLUA.sum(PYLUA.collect(fixedColumns, function(x) return x.width end))
         end
-        local autoWidth = 0
-        for _, c in ipairs(autoColumns) do
-          autoWidth = autoWidth + c.width
-        end
+        local autoWidth = PYLUA.sum(PYLUA.collect(autoColumns, function(x) return x.width end))
         if c.content.width<=fixedWidth+autoWidth then
           -- already fits
           goto continue
@@ -278,20 +260,22 @@ calculateColumnWidths = function(node)
         local unitWidth = requiredWidth/#autoColumns
 
         while true do
-          local oversizedColumns = PYLUA.COMPREHENSION()
+          local oversizedColumns = PYLUA.collect(autoColumns, function(x) if x.width>=unitWidth then return x end end)
           if #oversizedColumns==0 then
             break
           end
-          autoColumns = PYLUA.COMPREHENSION()
+          autoColumns = PYLUA.collect(autoColumns, function(x) if x.width<unitWidth then return x end end)
           if #autoColumns==0 then
-            break
+            break  -- weird rounding effects
           end
-          requiredWidth = requiredWidth-sum(PYLUA.COMPREHENSION())
+          requiredWidth = requiredWidth-PYLUA.sum(PYLUA.collect(oversizedColumns, function(x) return x.width end))
           unitWidth = requiredWidth/#autoColumns
         end
         if #autoColumns==0 then
-          goto continue
+          goto continue  -- protection against arithmetic overflow
         end
+
+        -- Store the maximum unit width
         if unitWidth>adjustedWidth then
           adjustedWidth = unitWidth
           adjustedColumns = autoColumns
@@ -299,6 +283,7 @@ calculateColumnWidths = function(node)
         ::continue::
       end
     end
+
     if #adjustedColumns==0 then
       break
     end
@@ -306,26 +291,28 @@ calculateColumnWidths = function(node)
       col.width = adjustedWidth
     end
   end
-  if node.getProperty('equalcolumns')=='true' then
-    local globalWidth = math.max(PYLUA.COMPREHENSION())
+
+  if node:getProperty('equalcolumns')=='true' then
+    local globalWidth = math.max(PYLUA.collect(node.columns, function(col) if col.auto then return col.width end end))
     for _, col in ipairs(node.columns) do
       if col.auto then
         col.width = globalWidth
       end
     end
   end
+
   if fullwidth ~= nil then
     local delta = fullwidth
-    delta = delta-sum(PYLUA.COMPREHENSION())
-    delta = delta-sum(PYLUA.COMPREHENSION())
+    delta = delta-PYLUA.sum(PYLUA.collect(node.columns, function(x) return x.width end))
+    delta = delta-PYLUA.sum(PYLUA.collect(PYLUA.slice(node.columns, nil, -1), function(x) return x.spaceAfter end))
     delta = delta-2*node.framespacings[1]
     if delta~=0 then
-      local sizableColumns = PYLUA.COMPREHENSION()
+      local sizableColumns = PYLUA.collect(node.columns, function(x) if x.fit then return x end end)
       if #sizableColumns==0 then
-        sizableColumns = PYLUA.COMPREHENSION()
+        sizableColumns = PYLUA.collect(node.columns, function(x) if x.auto then return x end end)
       end
       if #sizableColumns==0 then
-        node.error('Overconstrained table layout: explicit table width specified, but no column has automatic width; table width attribute ignored')
+        node:error('Overconstrained table layout: explicit table width specified, but no column has automatic width; table width attribute ignored')
       else
         delta = delta/#sizableColumns
         for _, col in ipairs(sizableColumns) do
@@ -337,7 +324,8 @@ calculateColumnWidths = function(node)
 end
 
 calculateRowHeights = function(node)
-  local commonAxis = node.axis()
+  -- Set initial row heights for cells with rowspan == 1
+  local commonAxis = node:axis()
   for _, r in ipairs(node.rows) do
     r.height = 0
     r.depth = 0
@@ -345,8 +333,9 @@ calculateRowHeights = function(node)
       if c == nil or c.content == nil or c.rowspan~=1 then
         goto continue
       end
-      local cellAxis = c.content.axis()
+      local cellAxis = c.content:axis()
       c.vshift = 0
+
       if c.valign=='baseline' then
         if r.alignToAxis then
           cell.vshift = cell.vshift-commonAxis
@@ -354,6 +343,7 @@ calculateRowHeights = function(node)
         if c.content.alignToAxis then
           c.vshift = c.vshift+cellAxis
         end
+
       elseif c.valign=='axis' then
         if  not r.alignToAxis then
           c.vshift = c.vshift+commonAxis
@@ -361,51 +351,62 @@ calculateRowHeights = function(node)
         if  not c.content.alignToAxis then
           c.vshift = c.vshift-cellAxis
         end
+
       else
         c.vshift = (r.height-r.depth-c.content.height+c.content.depth)/2
       end
+
       r.height = math.max(r.height, c.content.height+c.vshift)
       r.depth = math.max(r.depth, c.content.depth-c.vshift)
+      ::continue::
     end
   end
+
+  -- Calculate heights for cells with rowspan > 1
   while true do
     local adjustedRows = {}
     local adjustedSize = 0
-    for _, i in ipairs(range(#node.rows)) do
+    for i = 1,#node.rows do
       local r = node.rows[i]
       for _, c in ipairs(r.cells) do
         if c == nil or c.content == nil or c.rowspan==1 then
           goto continue
         end
         local rows = PYLUA.slice(node.rows, i, i+c.rowspan)
+
         local requiredSize = c.content.height+c.content.depth
-        requiredSize = requiredSize-sum(PYLUA.COMPREHENSION())
-        local fullSize = sum(PYLUA.COMPREHENSION())
+        requiredSize = requiredSize-PYLUA.sum(PYLUA.collect(PYLUA.slice(rows, nil, -1), function(x) return x.spaceAfter end))
+        local fullSize = PYLUA.sum(PYLUA.collect(rows, function(x) return x.height+x.depth end))
         if fullSize>=requiredSize then
           goto continue
         end
+
         local unitSize = requiredSize/#rows
         while true do
-          local oversizedRows = PYLUA.COMPREHENSION()
+          local oversizedRows = PYLUA.collect(rows, function(x) if x.height+x.depth>=unitSize then return x end end)
           if #oversizedRows==0 then
             break
           end
-          rows = PYLUA.COMPREHENSION()
+
+          rows = PYLUA.collect(rows, function(x) if x.height+x.depth<unitSize then return x end end)
           if #rows==0 then
-            break
+            break  -- weird rounding effects
           end
-          requiredSize = requiredSize-sum(PYLUA.COMPREHENSION())
+          requiredSize = requiredSize-PYLUA.sum(PYLUA.collect(oversizedRows, function(x) return x.height+x.depth end))
           unitSize = requiredSize/#rows
         end
         if #rows==0 then
-          goto continue
+          goto continue  -- protection against arithmetic overflow
         end
+
         if unitSize>adjustedSize then
           adjustedSize = unitSize
           adjustedRows = rows
         end
+        ::continue::
       end
     end
+
     if #adjustedRows==0 then
       break
     end
@@ -415,8 +416,9 @@ calculateRowHeights = function(node)
       r.depth = r.depth+delta
     end
   end
-  if node.getProperty('equalrows')=='true' then
-    local maxvsize = math.max(PYLUA.COMPREHENSION())
+
+  if node:getProperty('equalrows')=='true' then
+    local maxvsize = math.max(PYLUA.collect(node.rows, function(r) return r.height+r.depth end))
     for _, r in ipairs(node.rows) do
       local delta = (maxvsize-r.height-r.depth)/2
       r.height = r.height+delta
@@ -426,25 +428,26 @@ calculateRowHeights = function(node)
 end
 
 getAlign = function(node)
-  local alignattr = PYLUA.strip(node.getProperty('align'))
+  local alignattr = PYLUA.strip(node:getProperty('align'))
   if #alignattr==0 then
     alignattr = mathnode.globalDefaults['align']
   end
+
   local splitalign = PYLUA.split(alignattr)
   local alignType = splitalign[1]
-  if #splitalign==1 then
-    local alignRow = nil
-  else
-    alignRow = node.parseInt(splitalign[2])
+
+  local alignRow = nil
+  if #splitalign~=1 then
+    alignRow = node:parseInt(splitalign[2])
     if alignrownumber==0 then
-      node.error('Alignment row number cannot be zero')
+      node:error('Alignment row number cannot be zero')
       alignrownumber = nil
     elseif alignrownumber>#node.rows then
-      node.error('Alignment row number cannot exceed row count')
-      alignrownumber = #node.rows
+      node:error('Alignment row number cannot exceed row count')
+      alignrownumber = #node.rows  -- TODO(akavel): +1 ?
     elseif alignrownumber<-#node.rows then
-      node.error('Negative alignment row number cannot exceed row count')
-      alignrownumber = 1
+      node:error('Negative alignment row number cannot exceed row count')
+      alignrownumber = 1  -- TODO(akavel): +1 ?
     elseif alignrownumber<0 then
       alignrownumber = #node.rows-alignrownumber+1
     end
