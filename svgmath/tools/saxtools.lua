@@ -7,6 +7,8 @@ escape = function(data)
   --     
   --     Unicode version of the same-named function in xml.sax.saxutils,
   --     with entity replacement stripped off (not needed for generation).
+
+  -- must do ampersand first
   data = unicode(data)
   data = PYLUA.replace(data, '&', '&amp;')
   data = PYLUA.replace(data, '>', '&gt;')
@@ -52,7 +54,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
     self._encoding = encoding
     self._out = getwriter(encoding)(out, 'xmlcharrefreplace')
     self._ns_contexts = {{ }}
-    self._current_context = self._ns_contexts[0]
+    self._current_context = self._ns_contexts[#self._ns_contexts]
     self._undeclared_ns_maps = {}
     self._starttag_pending = false
   end
@@ -67,7 +69,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
     if name[1] then
       local prefix = self._current_context[name[1]]
       if prefix then
-        return unicode(prefix)+':'+unicode(name[2])
+        return unicode(prefix)..':'..unicode(name[2])
       end
     end
     return unicode(name[2])
@@ -82,6 +84,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   end
   ;
 
+  -- ContentHandler methods
   startDocument = function(self)
     self._out:reset()
     self:_write(string.format('<?xml version="1.0" encoding="%s"?>\n', unicode(self._encoding)))
@@ -101,8 +104,9 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   ;
 
   endPrefixMapping = function(self, prefix)
-    self._current_context = self._ns_contexts[0]
-self._ns_contexts[0]  end
+    self._current_context = self._ns_contexts[#self._ns_contexts]
+    self._ns_contexts[#self._ns_contexts] = nil
+  end
   ;
 
   startElement = function(self, name, attrs)
@@ -178,6 +182,7 @@ ContentFilter = PYLUA.class(handler.ContentHandler) {
   end
   ;
 
+  -- ContentHandler methods
   startDocument = function(self)
     self.output:startDocument()
   end
