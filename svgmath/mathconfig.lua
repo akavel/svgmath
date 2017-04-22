@@ -20,6 +20,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     self.defaults = { }
     self.opstyles = { }
     self.fallbackFamilies = {}
+
     -- PYLUA.FIXME: TRY:
     local parser = sax.make_parser()
     parser:setContentHandler(self)
@@ -35,14 +36,18 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     if name=='config' then
       self.verbose = attributes['verbose']=='true'
       self.debug = PYLUA.split(PYLUA.replace(attributes['debug'] or '', ',', ' '))
+
     elseif name=='defaults' then
       PYLUA.update(self.defaults, attributes)
+
     elseif name=='fallback' then
       local familyattr = attributes['family'] or ''
       self.fallbackFamilies = PYLUA.collect(PYLUA.split(familyattr, ','), function(x) return string.gsub(x, '%s+', ' ') end)
+
     elseif name=='family' then
       self.currentFamily = attributes['name'] or ''
       self.currentFamily = string.gsub(PYLUA.lower(self.currentFamily), '%s+', '')
+
     elseif name=='font' then
       local weight = attributes['weight'] or 'normal'
       local style = attributes['style'] or 'normal'
@@ -54,11 +59,12 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         fontfullname = fontfullname+' '+style
       end
       -- PYLUA.FIXME: TRY:
-      if PYLUA.op_in('afm', PYLUA.keys(attributes)) then
+      local metric
+      if attributes['afm'] then
         local fontpath = attributes['afm']
-        local metric = AFMMetric(fontpath, attributes['glyph-list'], sys.stderr)
-      elseif PYLUA.op_in('ttf', PYLUA.keys(attributes)) then
-        fontpath = attributes['ttf']
+        metric = AFMMetric(fontpath, attributes['glyph-list'], sys.stderr)
+      elseif attributes['ttf'] then
+        local fontpath = attributes['ttf']
         metric = TTFMetric(fontpath, sys.stderr)
       else
         sys.stderr:write('Bad record in configuration file: font is neither AFM nor TTF\n')
@@ -74,20 +80,23 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         sys.stderr:write(string.format('I/O error reading font file \'%s\': %s\n', fontpath, tostring(message)))
         sys.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
         return 
-      self.fonts[weight+' '+style+' '+self.currentFamily] = metric
+      self.fonts[weight..' '..style..' '..self.currentFamily] = metric
+
     elseif name=='mathvariant' then
       local variantattr = attributes['name']
-      familyattr = attributes['family'] or ''
+      local familyattr = attributes['family'] or ''
       local splitFamily = PYLUA.collect(PYLUA.split(familyattr, ','), function(x) return string.gsub(x, '%s+', ' ') end)
       local weightattr = attributes['weight'] or 'normal'
       local styleattr = attributes['style'] or 'normal'
       self.variants[variantattr] = {weightattr, styleattr, splitFamily}
+
     elseif name=='operator-style' then
       local opname = attributes['operator']
       if opname then
         local styling = { }
         PYLUA.update(styling, attributes)
-styling['operator']        self.opstyles[opname] = styling
+        styling['operator'] = nil
+        self.opstyles[opname] = styling
       else
         sys.stderr:write('Bad record in configuration file: operator-style with no operator attribute\n')
       end
@@ -107,9 +116,10 @@ styling['operator']        self.opstyles[opname] = styling
     weight = PYLUA.strip(weight or 'normal')
     style = PYLUA.strip(style or 'normal')
     family = string.gsub(PYLUA.lower(family or ''), '%s+', '')
+
     for _, w in ipairs({weight, 'normal'}) do
       for _, s in ipairs({style, 'normal'}) do
-        local metric = self.fonts[w+' '+s+' '+family]
+        local metric = self.fonts[w..' '..s..' '..family]
         if metric then
           return metric
         end
@@ -127,6 +137,7 @@ main = function()
   else
     config = MathConfig(sys.argv[2])
   end
+
   PYLUA.print('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
   PYLUA.print('Fonts:', '\n')
   for font, metric in pairs(config.fonts) do
@@ -146,6 +157,7 @@ main = function()
   end
   PYLUA.print('Fallback font families:', config.fallbackFamilies, '\n')
 end
+
 if __name__=='__main__' then
   main()
 end
