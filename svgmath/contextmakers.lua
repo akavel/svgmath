@@ -25,10 +25,10 @@ default_context = function(node)
     node.defaults = node.parent.defaults
     node.parent:makeChildContext(node)
   else
-    node.mathsize = node.parseLength(node.defaults['mathsize'])
+    node.mathsize = node:parseLength(node.defaults['mathsize'])
     node.fontSize = node.mathsize
     node.metriclist = nil
-    node.scriptlevel = node.parseInt(node.defaults['scriptlevel'])
+    node.scriptlevel = node:parseInt(node.defaults['scriptlevel'])
     node.tightspaces = false
     node.displaystyle = node.defaults['displaystyle']=='true'
     node.color = node.defaults['mathcolor']
@@ -84,8 +84,8 @@ context_mstyle = function(node)
     node.attributes['mathsize'] = nil
   end
   if node.attributes then
-    node.defaults = copy(node.defaults)
-    update(node.defaults, node.attributes)
+    node.defaults = PYLUA.copy(node.defaults)
+    PYLUA.update(node.defaults, node.attributes)
   end
 end
 
@@ -98,9 +98,9 @@ end
 context_mi = function(node)
   -- If the identifier is a single character, make it italic by default.
   -- Don't forget surrogate pairs here!
-  if len(node.text)==1 or
-      len(node.text)==2 and mathnode:isHighSurrogate(node.text[1]) and mathnode:isLowSurrogate(node.text[2]) then
-    setdefault(node.attributes, 'fontstyle', 'italic')
+  if #node.text==1 or
+      #node.text==2 and mathnode.isHighSurrogate(node.text[1]) and mathnode.isLowSurrogate(node.text[2]) then
+    PYLUA.setdefault(node.attributes, 'fontstyle', 'italic')
   end
   default_context(node)
 end
@@ -110,7 +110,7 @@ context_mo = function(node)
   local extra_style = node.config.opstyles[node.text]
   if extra_style then
     for prop, value in pairs(extra_style) do
-      setdefault(node.attributes, prop, value)
+      PYLUA.setdefault(node.attributes, prop, value)
     end
   end
 
@@ -130,17 +130,17 @@ context_mo = function(node)
     local nextSiblings = PYLUA.slice(node.parent.children, node.nodeIndex+1, nil)
     nextSiblings = filter(isNonSpaceNode, nextSiblings)
 
-    if len(prevSiblings)==0 and len(nextSiblings)>0 then
+    if #prevSiblings==0 and #nextSiblings>0 then
       form = 'prefix'
     end
-    if len(nextSiblings)==0 and len(prevSiblings)>0 then
+    if #nextSiblings==0 and #prevSiblings>0 then
       form = 'postfix'
     end
   end
 
   form = node.attributes['form'] or form
 
-  node.opdefaults = operators:lookup(node.text, form)
+  node.opdefaults = operators.lookup(node.text, form)
   default_context(node)
   local stretchyattr = node:getProperty('stretchy', node.opdefaults['stretchy'])
   node.stretchy = stretchyattr=='true'
@@ -172,15 +172,15 @@ processFontAttributes = function(node)
   end
   local scriptlevelattr = node.attributes['scriptlevel']
   if scriptlevelattr ~= nil then
-    scriptlevelattr = strip(scriptlevelattr)
-    if startswith(scriptlevelattr, '+') then
+    scriptlevelattr = PYLUA.strip(scriptlevelattr)
+    if PYLUA.startswith(scriptlevelattr, '+') then
       node.scriptlevel = node.scriptlevel+node:parseInt(PYLUA.slice(scriptlevelattr, 1, nil))
-    elseif startswith(scriptlevelattr, '-') then
+    elseif PYLUA.startswith(scriptlevelattr, '-') then
       node.scriptlevel = node.scriptlevel-node:parseInt(PYLUA.slice(scriptlevelattr, 1, nil))
     else
       node.scriptlevel = node:parseInt(scriptlevelattr)
     end
-    node.scriptlevel = max(node.scriptlevel, 0)
+    node.scriptlevel = math.max(node.scriptlevel, 0)
   end
 
   node.color = node.attributes['mathcolor'] or node.attributes['color'] or node.color
@@ -199,10 +199,7 @@ processFontAttributes = function(node)
     node.fontstyle = node.attributes['fontstyle'] or node.fontstyle
     local familyattr = node.attributes['fontfamily']
     if familyattr ~= nil then
-      node.fontfamilies = {}
-      for x in string.gmatch(familyattr, '[^,]*') do
-        table.insert(node.fontfamilies, string.gsub(x, '%s+', ' '))
-      end
+      node.fontfamilies = PYLUA.collect(PYLUA.split(familyattr, ','), function(x) return string.gsub(x, '%s+', ' ') end)
     end
   end
 
@@ -241,11 +238,11 @@ processFontAttributes = function(node)
       node.mathsize = node.mathsize*fontSizeOverride/node.fontSize
       node.fontSize = fontSizeOverride
     else
-      node:error('Value of attribute \'fontsize\' ignored - not a positive length: '+str(fontsizeattr))
+      node:error('Value of attribute \'fontsize\' ignored - not a positive length: '..tostring(fontsizeattr))
     end
   end
   local scriptminsize = node:parseLength(node.defaults['scriptminsize'])
-  node.fontSize = max(node.fontSize, scriptminsize)
+  node.fontSize = math.max(node.fontSize, scriptminsize)
   node.originalFontSize = node.fontSize  -- save a copy - font size may change in scaling
 end
 
@@ -318,7 +315,7 @@ makeLimitContext = function(node, child, accentProperty)
     local getAccentValue = function(ch)
       if ch.elementName=='mo' then
         return ch.opdefaults['accent']
-      elseif PYLUA.op_in(ch.elementName, embellishments) and len(ch.children)>0 then
+      elseif PYLUA.op_in(ch.elementName, embellishments) and #ch.children>0 then
         return getAccentValue(ch.children[1])
       else
         return 'false'
