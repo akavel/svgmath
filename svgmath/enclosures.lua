@@ -4,14 +4,14 @@ local math = require('math')
 local mathnode = require('mathnode')
 
 addRadicalEnclosure = function(node)
-  node.lineWidth = node.nominalThinStrokeWidth()
-  node.thickLineWidth = node.nominalThickStrokeWidth()
-  node.gap = node.nominalLineGap()
+  node.lineWidth = node:nominalThinStrokeWidth()
+  node.thickLineWidth = node:nominalThickStrokeWidth()
+  node.gap = node:nominalLineGap()
   if  not node.displaystyle then
     node.gap = node.gap/2
   end
   node.rootHeight = math.max(node.base.height, node.base.ascender)
-  node.rootHeight = math.max(node.rootHeight, node.nominalAscender())
+  node.rootHeight = math.max(node.rootHeight, node:nominalAscender())
   node.rootHeight = node.rootHeight+node.gap+node.lineWidth
   node.height = node.rootHeight
   node.alignToAxis = node.base.alignToAxis
