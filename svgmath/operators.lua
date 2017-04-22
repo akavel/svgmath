@@ -1,5 +1,10 @@
 -- MathML operator dictionary and related functions
 
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local operatorDictionary = { }
 
 lookup = function(op, form)
@@ -404,3 +409,5 @@ createEntry{content='\xcc\xb2', form='postfix', accent='true', stretchy='true', 
 createEntry{content='\xef\xb8\xb8', form='postfix', accent='true', stretchy='true', scaling='horizontal', lspace='0em', rspace='0em'} -- UnderBrace
 createEntry{content='\xe2\x8e\xb5', form='postfix', accent='true', stretchy='true', scaling='horizontal', lspace='0em', rspace='0em'} -- UnderBracket
 createEntry{content='\xef\xb8\xb6', form='postfix', accent='true', stretchy='true', scaling='horizontal', lspace='0em', rspace='0em'} -- UnderParenthesis
+
+return _ENV

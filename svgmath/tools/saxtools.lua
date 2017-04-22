@@ -1,4 +1,10 @@
 -- Miscellaneous SAX-related utilities used in SVGMath
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local handler = require('xml.sax').handler
 local getwriter = require('codecs').getwriter
 
@@ -239,3 +245,4 @@ ContentFilter = PYLUA.class(handler.ContentHandler) {
   ;
 }
 
+return _ENV

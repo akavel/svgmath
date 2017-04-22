@@ -1,3 +1,9 @@
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
 local os = require('os')
 
@@ -58,3 +64,5 @@ end
 if __name__=='__main__' then
   main()
 end
+
+return _ENV

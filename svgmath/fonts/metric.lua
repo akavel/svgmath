@@ -1,4 +1,10 @@
 
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
+
 CharMetric = PYLUA.class() {
 
   __init__ = function(self, glyphname, codes, width, bbox)
@@ -196,3 +202,4 @@ FontMetric = PYLUA.class() {
   ;
 }
 
+return _ENV

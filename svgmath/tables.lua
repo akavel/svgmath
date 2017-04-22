@@ -1,6 +1,12 @@
 -- Table-related formatting functions.
 -- 
 -- This module contains functions called from measurers.py to format tables.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local mathnode = require('mathnode')
 
 getByIndexOrLast = function(lst, idx)
@@ -454,3 +460,5 @@ getAlign = function(node)
   end
   return {alignType, alignRow}
 end
+
+return _ENV

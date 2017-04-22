@@ -3,6 +3,12 @@
 -- The module contains two kinds of methods to set up context:
 --    - context creators process the context of the current node;
 --    - child context setters alter the context of a child.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 --[[
 local sys = require('sys')
 --]]
@@ -328,3 +334,5 @@ makeLimitContext = function(node, child, accentProperty)
     child.scriptlevel = child.scriptlevel+1
   end
 end
+
+return _ENV

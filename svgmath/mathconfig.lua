@@ -1,4 +1,10 @@
 -- Configuration for MathML-to-SVG formatter.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local os = require('os')
 local sys = require('sys')
 local sax = require('xml').sax
@@ -161,3 +167,5 @@ end
 if __name__=='__main__' then
   main()
 end
+
+return _ENV

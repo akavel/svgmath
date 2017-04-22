@@ -1,4 +1,10 @@
 -- Node locator for MathML parser.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
 
 NodeLocator = PYLUA.class() {
@@ -48,3 +54,4 @@ NodeLocator = PYLUA.class() {
   ;
 }
 
+return _ENV

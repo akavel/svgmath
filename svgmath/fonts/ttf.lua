@@ -1,3 +1,9 @@
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
 local FontMetric = require('metric').FontMetric
 local CharMetric = require('metric').CharMetric
@@ -374,3 +380,5 @@ end
 if __name__=='__main__' then
   main()
 end
+
+return _ENV

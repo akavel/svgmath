@@ -1,6 +1,11 @@
 -- Functions to determine size and position of MathML elements
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
-local math = require('math')
 local mathnode = require('mathnode')
 local operators = require('operators')
 local tables = require('tables')
@@ -1074,3 +1079,5 @@ getRowVerticalExtent = function(descendants, rowAlignToAxis, axis)
   end
   return {height, depth, ascender, descender}
 end
+
+return _ENV

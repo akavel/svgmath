@@ -1,8 +1,13 @@
 -- Drawing methods for MathML elements
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 --[[
 local sys = require('sys')
 --]]
-local math = require('math')
 local mathnode = require('mathnode')
 local sax = require('xml').sax
 local xmlreader = require('xml.sax').xmlreader
@@ -788,3 +793,5 @@ getBackground = function(node)
   end
   return 'none'
 end
+
+return _ENV

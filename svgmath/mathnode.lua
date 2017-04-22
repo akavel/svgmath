@@ -1,4 +1,10 @@
 -- Main structure class for MathML formatting.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
 local contextmakers = require('contextmakers')
 local measurers = require('measurers')
@@ -527,3 +533,4 @@ MathNode = PYLUA.class() {
   ;
 }
 
+return _ENV

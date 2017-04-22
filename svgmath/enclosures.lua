@@ -1,6 +1,11 @@
 -- Functions to format enclosures around MathML elements.
+
+local math, string, table = math, string, table
+local pairs, ipairs = pairs, ipairs
+local _ENV = {}
+local PYLUA = require('PYLUA')
+
 local sys = require('sys')
-local math = require('math')
 local mathnode = require('mathnode')
 
 addRadicalEnclosure = function(node)
@@ -78,3 +83,5 @@ addBorderEnclosure = function(node, borders)
   node.ascender = node.base.ascender
   node.descender = node.base.descender
 end
+
+return _ENV
