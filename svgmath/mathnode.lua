@@ -10,19 +10,19 @@ local NodeLocator = require('nodelocator').NodeLocator
 
 isHighSurrogate = function(ch)
   -- Tests whether a Unicode character is from the high surrogates range
-  local code = ord(ch)
+  local code = PYLUA.ord(ch)
   return (0xD800 <= code and code <= 0xDBFF)
 end
 
 isLowSurrogate = function(ch)
   -- Tests whether a Unicode character is from the low surrogates range
-  local code = ord(ch)
+  local code = PYLUA.ord(ch)
   return (0xDC00 <= code and code < 0xDFFF)
 end
 
 decodeSurrogatePair = function(hi, lo)
   -- Returns a scalar value  that corresponds to a surrogate pair
-  return ((ord(hi) - 0xD800) * 0x400) + (ord(lo) - 0xDC00) + 0x10000
+  return ((PYLUA.ord(hi) - 0xD800) * 0x400) + (PYLUA.ord(lo) - 0xDC00) + 0x10000
 end
 
 local globalDefaults = {
@@ -127,12 +127,12 @@ MathNode = PYLUA.class() {
     self.metriclist = nil
     self.nominalMetric = nil
     if parent ~= nil then
-      self.nodeIndex = len(parent.children)
+      self.nodeIndex = #parent.children
       self.defaults = parent.defaults
       table.insert(parent.children, self)
     else
-      self.defaults = table_copy(globalDefaults)
-      table_update(self.defaults, config.defaults)
+      self.defaults = PYLUA.copy(globalDefaults)
+      PYLUA.update(self.defaults, config.defaults)
       self.nodeIndex = 0
     end
   end
@@ -160,7 +160,7 @@ MathNode = PYLUA.class() {
   measureNode = function(self)
     local measureMethod = (measurers['measure_'..self.elementName] or measurers.default_measure)
     if self.config.verbose and measureMethod == measurers.default_measure then
-      self:warning(PYLUA.mod('MathML element \'%s\' is unsupported', self.elementName))
+      self:warning(string.format('MathML element \'%s\' is unsupported', self.elementName))
     end
     measureMethod(self)
   end
@@ -176,7 +176,7 @@ MathNode = PYLUA.class() {
       self:warning('Root element in MathML document must be \'math\'')
     end
     self:measure()
-    generators:drawImage(self, output)
+    generators.drawImage(self, output)
   end
   ;
 
@@ -199,8 +199,8 @@ MathNode = PYLUA.class() {
 
   --[[
   debug = function(self, event, msg)
-    if PYLUA.op_in(event.strip(), self.config.debug) then
-      self.locator.message(msg, 'DEBUG')
+    if PYLUA.op_in(PYLUA.strip(event), self.config.debug) then
+      self.locator:message(msg, 'DEBUG')
     end
   end
   ;
@@ -209,7 +209,7 @@ MathNode = PYLUA.class() {
   parseInt = function(self, x)
     local n = tonumber(x, 10)
     if not n then
-      self:error(PYLUA.mod('Cannot parse string \'%s\' as an integer', x))
+      self:error(string.format('Cannot parse string \'%s\' as an integer', x))
       return 0
     end
     return n
@@ -219,12 +219,12 @@ MathNode = PYLUA.class() {
   parseFloat = function(self, x)
     local value = tonumber(x)
     if not value then
-      self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', x))
+      self.error(string.format('Cannot parse string \'%s\' as a float', x))
       return 0.0
     end
-    local text = string.lower(tostring(value))
+    local text = PYLUA.lower(tostring(value))
     if text=='nan' or text=='inf' then -- FIXME(akavel): is this possible in Lua?
-      self.error(PYLUA.mod('Cannot parse string \'%s\' as a float', x))
+      self:error(string.format('Cannot parse string \'%s\' as a float', x))
       return 0.0
     end
     return value
@@ -232,23 +232,24 @@ MathNode = PYLUA.class() {
   ;
 
   parseLength = function(self, lenattr, unitlessScale)
-    lenattr = strip(lenattr)
-    if endswith(lenattr, 'pt') then
+    unitlessScale = unitlessScale or 0.75
+    lenattr = PYLUA.strip(lenattr)
+    if PYLUA.endswith(lenattr, 'pt') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))
-    elseif endswith(lenattr, 'mm') then
+    elseif PYLUA.endswith(lenattr, 'mm') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*72.0/25.4
-    elseif endswith(lenattr, 'cm') then
+    elseif PYLUA.endswith(lenattr, 'cm') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*72.0/2.54
-    elseif endswith(lenattr, 'in') then
+    elseif PYLUA.endswith(lenattr, 'in') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*72.0
-    elseif endswith(lenattr, 'pc') then
+    elseif PYLUA.endswith(lenattr, 'pc') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*12.0
-    elseif endswith(lenattr, 'px') then
+    elseif PYLUA.endswith(lenattr, 'px') then
       -- pixels are calculated for 96 dpi
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*72.0/96.0
-    elseif endswith(lenattr, 'em') then
+    elseif PYLUA.endswith(lenattr, 'em') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*self.fontSize
-    elseif endswith(lenattr, 'ex') then
+    elseif PYLUA.endswith(lenattr, 'ex') then
       return self:parseFloat(PYLUA.slice(lenattr, nil, -2))*self.fontSize*self:metric().xheight
     else
       -- unitless lengths are treated as if  expressed in pixels
@@ -258,16 +259,17 @@ MathNode = PYLUA.class() {
   ;
 
   parseSpace = function(self, spaceattr, unitlessScale)
+    unitlessScale = unitlessScale or 0.75
     local sign = 1.0
-    spaceattr = strip(spaceattr)
-    if endswith(spaceattr, 'mathspace') then
-      if startswith(spaceattr, 'negative') then
+    spaceattr = PYLUA.strip(spaceattr)
+    if PYLUA.endswith(spaceattr, 'mathspace') then
+      if PYLUA.startswith(spaceattr, 'negative') then
         sign = -1.0
         spaceattr = PYLUA.slice(spaceattr, 8, nil)
       end
       local realspaceattr = self.defaults[spaceattr]
       if realspaceattr == nil then
-        self:error(PYLUA.mod('Bad space token: \'%s\'', spaceattr))
+        self:error(string.format('Bad space token: \'%s\'', spaceattr))
         realspaceattr = '0em'
       end
       return self:parseLength(realspaceattr, unitlessScale)
@@ -288,7 +290,8 @@ MathNode = PYLUA.class() {
   ;
 
   parseLengthOrPercent = function(self, lenattr, percentBase, unitlessScale)
-    if endswith(lenattr, '%') then
+    unitlessScale = unitlessScale or 0.75
+    if PYLUA.endswith(lenattr, '%') then
       return self:parsePercent(lenattr, percentBase)
     else
       return self:parseLength(lenattr, unitlessScale)
@@ -297,7 +300,8 @@ MathNode = PYLUA.class() {
   ;
 
   parseSpaceOrPercent = function(self, lenattr, percentBase, unitlessScale)
-    if endswith(lenattr, '%') then
+    unitlessScale = unitlessScale or 0.75
+    if PYLUA.endswith(lenattr, '%') then
       return self:parsePercent(lenattr, percentBase)
     else
       return self:parseSpace(lenattr, unitlessScale)
@@ -314,12 +318,12 @@ MathNode = PYLUA.class() {
     if value == nil then
       value = self:getProperty(attr)
     end
-    local splitvalue = split(value)
-    if len(splitvalue)>0 then
+    local splitvalue = PYLUA.split(value)
+    if #splitvalue>0 then
       return splitvalue
     end
-    self:error(PYLUA.mod('Bad value for \'%s\' attribute: empty list', attr))
-    return split(self.defaults[attr])
+    self:error(string.format('Bad value for \'%s\' attribute: empty list', attr))
+    return PYLUA.split(self.defaults[attr])
   end
   ;
 
@@ -327,19 +331,19 @@ MathNode = PYLUA.class() {
     local codes = {}
     local hisurr = nil
     for _, ch in ipairs(self.text) do
-      local chcode = ord(ch)
+      local chcode = PYLUA.ord(ch)
 
       -- Processing surrogate pairs
       if isLowSurrogate(ch) then
         if hisurr == nil then
-          self:error(PYLUA.mod('Invalid Unicode sequence - low surrogate character (U+%X) not preceded by a high surrogate', ord(ch)))
+          self:error(string.format('Invalid Unicode sequence - low surrogate character (U+%X) not preceded by a high surrogate', PYLUA.ord(ch)))
         else
           chcode = decodeSurrogatePair(hisurr, ch)
           hisurr = nil
         end
       end
       if hisurr ~= nil then
-        self:error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
+        self:error(string.format('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', PYLUA.ord(hisurr)))
         hisurr = nil
       end
       if isHighSurrogate(ch) then
@@ -349,7 +353,7 @@ MathNode = PYLUA.class() {
       end
     end
     if hisurr ~= nil then
-      self:error(PYLUA.mod('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', ord(hisurr)))
+      self:error(string.format('Invalid Unicode sequence - high surrogate character (U+%X) not followed by a low surrogate', PYLUA.ord(hisurr)))
     end
     return codes
   end
@@ -366,8 +370,8 @@ MathNode = PYLUA.class() {
             table.insert(metriclist, FontMetricRecord(family, metric))
           end
         end
-        if len(metriclist)==0 then
-          self:warning('Cannot find any font metric for family '+PYLUA.str_maybe(', ').join(familylist))
+        if #metriclist==0 then
+          self:warning('Cannot find any font metric for family '..table.concat(familylist, ', '))
           return nil
         else
           return metriclist
@@ -442,7 +446,7 @@ MathNode = PYLUA.class() {
   ;
 
   hasGlyph = function(self, ch)
-    for _, fdesc in ipairs(self;fontpool()) do
+    for _, fdesc in ipairs(self:fontpool()) do
       if fdesc.metric.chardata[ch] ~= nil then
         return true
       end
@@ -458,17 +462,17 @@ MathNode = PYLUA.class() {
         return {cm, fd}
       end
     end
-    if 0<ch and ch<0xFFFF and PYLUA.op_in(unichr(ch), PYLUA.keys(specialChars)) then
-      return self:findChar(ord(specialChars[unichr(ch)]))
+    if 0<ch and ch<0xFFFF and specialChars[unichr(ch)) then
+      return self:findChar(PYLUA.ord(specialChars[unichr(ch)]))
     end
-    self:warning(PYLUA.mod('Glyph U+%X not found', ch))
+    self:warning(string.format('Glyph U+%X not found', ch))
     return nil
   end
   ;
 
   measureText = function(self)
     -- Measures text contents of a node
-    if len(self.text)==0 then
+    if #self.text==0 then
       self.isSpace = true
       return 
     end
@@ -493,8 +497,8 @@ MathNode = PYLUA.class() {
           self.height = cm.bbox[4]
           self.depth = -cm.bbox[2]
         elseif cm.bbox[4]~=cm.bbox[2] then -- exclude space  
-          self.height = max(self.height, cm.bbox[4])
-          self.depth = max(self.depth, -cm.bbox[2])
+          self.height = math.max(self.height, cm.bbox[4])
+          self.depth = math.max(self.depth, -cm.bbox[2])
         end
       end
     end
@@ -510,10 +514,10 @@ MathNode = PYLUA.class() {
 
     -- Shape correction  
     if cm0 ~= nil then
-      self.leftBearing = max(0, -cm0.bbox[1])*self.fontSize
+      self.leftBearing = math.max(0, -cm0.bbox[1])*self.fontSize
     end
     if cm1 ~= nil then
-      self.rightBearing = max(0, cm1.bbox[3]-cm.width)*self.fontSize
+      self.rightBearing = math.max(0, cm1.bbox[3]-cm.width)*self.fontSize
     end
     self.width = self.width+self.leftBearing+self.rightBearing
 
