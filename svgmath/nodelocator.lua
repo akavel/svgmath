@@ -9,9 +9,9 @@ NodeLocator = PYLUA.class() {
 
   __init__ = function(self, locator)
     if locator then
-      self.line = locator.getLineNumber()
-      self.column = locator.getColumnNumber()
-      self.filename = locator.getSystemId()
+      self.line = locator:getLineNumber()
+      self.column = locator:getColumnNumber()
+      self.filename = locator:getSystemId()
     else
       self.line = nil
       self.column = nil
@@ -24,26 +24,26 @@ NodeLocator = PYLUA.class() {
     local coordinate = ''
     local separator = ''
     if self.filename ~= nil then
-      coordinate = coordinate+PYLUA.mod('file %s', self.filename)
+      coordinate = coordinate+string.format('file %s', self.filename)
       separator = ', '
     end
     if self.line ~= nil then
-      coordinate = coordinate+separator+PYLUA.mod('line %d', self.line)
+      coordinate = coordinate+separator+string.format('line %d', self.line)
       separator = ', '
     end
     if self.column ~= nil then
-      coordinate = coordinate+separator+PYLUA.mod('column %d', self.column)
+      coordinate = coordinate+separator+string.format('column %d', self.column)
     end
     if label then
-      sys.stderr.write(PYLUA.mod('[%s] ', label))
+      sys.stderr:write(string.format('[%s] ', label))
     end
     if coordinate then
-      sys.stderr.write(coordinate+': ')
+      sys.stderr:write(coordinate+': ')
     end
     if msg then
-      sys.stderr.write(msg)
+      sys.stderr:write(msg)
     end
-    sys.stderr.write('\n')
+    sys.stderr:write('\n')
   end
   ;
 }
