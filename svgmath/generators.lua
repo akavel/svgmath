@@ -29,7 +29,7 @@ startElement = function(output, localname, namespace, prefix, attrs)
   if useNamespaces then
     local nsAttrs = { }
     for att, value in pairs(attrs) do
-      nsAttrs[{nil, att}] = value
+      nsAttrs[PYLUA.keytuple{nil, att}] = value
     end
     local qnames = PYLUA.keys(attrs)
     output:startElementNS({namespace, localname},
@@ -69,14 +69,14 @@ drawImage = function(node, output)
     baseline = node:axis()
   end
 
-  local height = max(node.height, node.ascender)
-  local depth = max(node.depth, node.descender)
+  local height = math.max(node.height, node.ascender)
+  local depth = math.max(node.depth, node.descender)
   local vsize = height+depth
 
   local attrs = {
-    width=PYLUA.mod('%fpt', node.width),
-    height=PYLUA.mod('%fpt', vsize),
-    viewBox=PYLUA.mod('0 %f %f %f', {-(height+baseline), node.width, vsize}),
+    width=string.format('%fpt', node.width),
+    height=string.format('%fpt', vsize),
+    viewBox=string.format('0 %f %f %f', -(height+baseline), node.width, vsize),
   }
   if useNamespaces then
     output:startPrefixMapping('svg', SVGNS)
@@ -119,7 +119,7 @@ end
 
 draw_mrow = function(node, output)
   drawBox(node, output)
-  if len(node.children)==0 then
+  if #node.children==0 then
     return 
   end
 
@@ -185,7 +185,7 @@ draw_menclose = function(node, output)
   elseif node.decoration=='circle' then
     drawCircleEnclosure(node, output)
   else
-    node:error('Internal error: unhandled decoration %s', str(node.decoration))
+    node:error('Internal error: unhandled decoration %s', tostring(node.decoration))
     node.base:draw(output)
   end
 end
@@ -222,10 +222,10 @@ draw_mfrac = function(node, output)
       else
         ruleY = node.depth-0.75*dh
       end
-      x1 = max(0, ruleX - (node.depth-ruleY)/node.slope)
-      x2 = min(node.width, ruleX + (ruleY+node.height)/node.slope)
-      y1 = min(node.depth, ruleY + ruleX*node.slope)
-      y2 = max(-node.height, ruleY - (node.width-ruleX)*node.slope)
+      x1 = math.max(0, ruleX - (node.depth-ruleY)/node.slope)
+      x2 = math.min(node.width, ruleX + (ruleY+node.height)/node.slope)
+      y1 = math.min(node.depth, ruleY + ruleX*node.slope)
+      y2 = math.max(-node.height, ruleY - (node.width-ruleX)*node.slope)
     else
       x1 = 0
       y1 = 0
@@ -296,12 +296,12 @@ draw_msqrt = function(node, output)
   local attrs = {
     stroke=node.color,
     fill='none',
-    ['stroke-width']=PYLUA.mod('%f', node.lineWidth),
+    ['stroke-width']=string.format('%f', node.lineWidth),
     ['stroke-linecap']='butt',
     ['stroke-linejoin']='miter',
     ['stroke-miterlimit']='10',
-    d=PYLUA.mod('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f',
-      {x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5}),
+    d=string.format('M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f',
+      x1, y1, x2a, y2a, x3a, y3a, x3b, y3b, x2b, y2b, x2c, y2c, x3, y3, x4, y4, x5, y5),
   }
   startSVGElement(output, 'path', attrs)
   endSVGElement(output, 'path')
@@ -310,7 +310,7 @@ end
 draw_mroot = function(node, output)
   draw_msqrt(node, output)
   if node.rootindex ~= nil then
-    local w = max(0, node.cornerWidth-node.rootindex.width)/2
+    local w = math.max(0, node.cornerWidth-node.rootindex.width)/2
     local h = -node.rootindex.depth-node.rootHeight+node.cornerHeight
     drawTranslatedNode(node.rootindex, output, w, h)
   end
@@ -322,7 +322,7 @@ draw_msubsup = function(node, output) drawScripts(node, output) end
 draw_mmultiscripts = function(node, output) drawScripts(node, output) end
 
 drawScripts = function(node, output)
-  if len(node.children)<2 then
+  if #node.children<2 then
     draw_mrow(node)
     return 
   end
@@ -340,14 +340,14 @@ drawScripts = function(node, output)
 
   drawBox(node, output)
   local offset = 0
-  for i = 1,len(node.prewidths) do
+  for i = 1,#node.prewidths do
     offset = offset+node.prewidths[i]
-    if i<=len(node.presubscripts) then
+    if i<=#node.presubscripts then
       local presubscript = node.presubscripts[i]
       drawTranslatedNode(presubscript, output,
         offset-presubscript.width, subY-adjustment(presubscript))
     end
-    if i<=len(node.presuperscripts) then
+    if i<=#node.presuperscripts then
       local presuperscript = node.presuperscripts[i]
       drawTranslatedNode(presuperscript, output,
         offset-presuperscript.width, superY-adjustment(presuperscript))
@@ -357,13 +357,13 @@ drawScripts = function(node, output)
   drawTranslatedNode(node.base, output, offset, 0)
   offset = offset+node.base.width
 
-  for i = 1,len(node.postwidths) do
-    if i<=len(node.subscripts) then
+  for i = 1,#node.postwidths do
+    if i<=#node.subscripts then
       local subscript = node.subscripts[i]
       drawTranslatedNode(subscript, output,
         offset, subY-adjustment(subscript))
     end
-    if i<=len(node.superscripts) then
+    if i<=#node.superscripts then
       local superscript = node.superscripts[i]
       drawTranslatedNode(superscript, output,
         offset, superY-adjustment(superscript))
@@ -377,7 +377,7 @@ draw_mover = function(node, output) drawLimits(node, output) end
 draw_munderover = function(node, output) drawLimits(node, output) end
 
 drawLimits = function(node, output)
-  if len(node.children)<2 then
+  if #node.children<2 then
     draw_mrow(node)
     return 
   end
@@ -416,21 +416,19 @@ draw_mtable = function(node, output)
 
   -- Draw cells
   local vshift = -node.height+node.framespacings[2]
-  for r = 1,len(node.rows) do
+  for r = 1,#node.rows do
     local row = node.rows[r]
     vshift = vshift+row.height
     local hshift = node.framespacings[1]
-    for c = 1,len(row.cells) do
+    for c = 1,#row.cells do
       local column = node.columns[c]
       local cell = row.cells[c]
       if cell ~= nil and cell.content ~= nil then
         -- Calculate horizontal alignment
         local cellWidth
         if cell.colspan>1 then
-          for i = c, c+cell.colspan-1 do
-            cellWidth = cellWidth + node.columns[i].width + node.columns[i].spaceAfter
-          end
-          cellWidth = cellWidth - node.columns[c+cell.colspan-1].spaceAfter
+          cellWidth = PYLUA.sum(PYLUA.collect(PYLUA.slice(node.columns, c, c+cell.colspan), function(x) return x.width end))
+          cellWidth = cellWidth+PYLUA.sum(PYLUA.collect(PYLUA.slice(node.columns, c, c+cell.colspan-1), function(x) return x.spaceAfter end))
         else
           cellWidth = column.width
         end
@@ -439,11 +437,8 @@ draw_mtable = function(node, output)
         -- Calculate vertical alignment.
         local cellHeight
         if cell.rowspan>1 then
-          for i = r, r+cell.rowspan-1 do
-            local x = node.rows[i]
-            cellHeight = cellHeight + x.height + x.depth + x.spaceAfter
-          end
-          cellHeight = cellHeight - node.rows[r+cell.rowspan-1].spaceAfter
+          cellHeight = PYLUA.sum(PYLUA.collect(PYLUA.slice(node.rows, r, r+cell.rowspan), function(x) return x.height+x.depth end))
+          cellHeight = cellHeight+PYLUA.sum(PYLUA.collect(PYLUA.slice(node.rows, r, r+cell.rowspan-1), function(x) return x.spaceAfter end))
         else
           cellHeight = row.height+row.depth
         end
@@ -477,8 +472,8 @@ draw_mtable = function(node, output)
       local linelength = math.sqrt(math.pow(x1-x2, 2)+math.pow(y1-y2, 2))
       local dashoffset = 5-PYLUA.mod(linelength/node.lineWidth+3, 10)/2
       extrastyle = {
-        ['stroke-dasharray']=PYLUA.mod('%f,%f', {node.lineWidth*7, node.lineWidth*3}),
-        ['stroke-dashoffset']=PYLUA.mod('%f', node.lineWidth*dashoffset),
+        ['stroke-dasharray']=string.format('%f,%f', {node.lineWidth*7, node.lineWidth*3}),
+        ['stroke-dashoffset']=string.format('%f', node.lineWidth*dashoffset),
       }
     end
     drawLine(output, node.color, node.lineWidth, x1, y1, x2, y2, extrastyle)
@@ -600,17 +595,17 @@ drawBox = function(node, output, borderWidth, borderColor, borderRadius)
   local attrs = {
     fill=background,
     stroke='none',
-    x=PYLUA.mod('%f', borderWidth/2),
-    y=PYLUA.mod('%f', borderWidth/2-node.height),
-    width=PYLUA.mod('%f', node.width-borderWidth),
-    height=PYLUA.mod('%f', node.height+node.depth-borderWidth),
+    x=string.format('%f', borderWidth/2),
+    y=string.format('%f', borderWidth/2-node.height),
+    width=string.format('%f', node.width-borderWidth),
+    height=string.format('%f', node.height+node.depth-borderWidth),
   }
   if borderWidth~=0 and borderColor ~= nil then
     attrs['stroke'] = borderColor
-    attrs['stroke-width'] = PYLUA.mod('%f', borderWidth)
+    attrs['stroke-width'] = string.format('%f', borderWidth)
     if borderRadius~=0 then
-      attrs['rx'] = PYLUA.mod('%f', borderRadius)
-      attrs['ry'] = PYLUA.mod('%f', borderRadius)
+      attrs['rx'] = string.format('%f', borderRadius)
+      attrs['ry'] = string.format('%f', borderRadius)
     end
   end
 
@@ -622,16 +617,16 @@ drawLine = function(output, color, width, x1, y1, x2, y2, strokeattrs)
   local attrs = {
     fill='none',
     stroke=color,
-    ['stroke-width']=PYLUA.mod('%f', width),
+    ['stroke-width']=string.format('%f', width),
     ['stroke-linecap']='square',
     ['stroke-dasharray']='none',
-    x1=PYLUA.mod('%f', x1),
-    y1=PYLUA.mod('%f', y1),
-    x2=PYLUA.mod('%f', x2),
-    y2=PYLUA.mod('%f', y2),
+    x1=string.format('%f', x1),
+    y1=string.format('%f', y1),
+    x2=string.format('%f', x2),
+    y2=string.format('%f', y2),
   }
   if strokeattrs ~= nil then
-    update(attrs, strokeattrs)
+    PYLUA.update(attrs, strokeattrs)
   end
 
   startSVGElement(output, 'line', attrs)
@@ -641,7 +636,7 @@ end
 drawTranslatedNode = function(node, output, dx, dy)
   if dx~=0 or dy~=0 then
     startSVGElement(output, 'g', {
-      transform=PYLUA.mod('translate(%f, %f)', {dx, dy})
+      transform=string.format('translate(%f, %f)', dx, dy)
     })
   end
   node:draw(output)
@@ -652,22 +647,17 @@ end
 
 drawSVGText = function(node, output)
   drawBox(node, output)
-  local fontfamilies = {}
-  for _, x in ipairs(node:fontpool()) do
-    if x.used then
-      table.insert(fontfamilies, x.family)
-    end
-  end
+  local fontfamilies = PYLUA.collect(node:fontpool(), function(x) if x.used then return x.family end end)
   if #fontfamilies==0 then
     fontfamilies = node.fontfamilies
   end
   local attrs = {
     fill=node.color,
     ['font-family']=table.concat(fontfamilies, ', '),
-    ['font-size']=PYLUA.mod('%f', node.fontSize),
+    ['font-size']=string.format('%f', node.fontSize),
     ['text-anchor']='middle',
-    x=PYLUA.mod('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch),
-    y=PYLUA.mod('%f', -node.textShift),
+    x=string.format('%f', (node.width+node.leftBearing-node.rightBearing)/2/node.textStretch),
+    y=string.format('%f', -node.textShift),
   }
   if node.fontweight~='normal' then
     attrs['font-weight'] = node.fontweight
@@ -676,7 +666,7 @@ drawSVGText = function(node, output)
     attrs['font-style'] = node.fontstyle
   end
   if node.textStretch~=1 then
-    attrs['transform'] = PYLUA.mod('scale(%f, 1)', node.textStretch)
+    attrs['transform'] = string.format('scale(%f, 1)', node.textStretch)
   end
 
   for oldchar, newchar in pairs(mathnode.specialChars) do
@@ -697,7 +687,8 @@ getAlign = function(node, attrName)
 end
 
 drawBoxEnclosure = function(node, output, roundRadius)
-  drawBox(node, output, node.borderWidth, nil, roundRadius or 0)
+  roundRadius = roundRadius or 0
+  drawBox(node, output, node.borderWidth, nil, roundRadius)
   drawTranslatedNode(node.base, output, (node.width-node.base.width)/2, 0)
 end
 
@@ -711,10 +702,10 @@ drawCircleEnclosure = function(node, output)
   local attrs = {
     fill=background,
     stroke=node.color,
-    ['stroke-width']=PYLUA.mod('%f', node.borderWidth),
-    cx=PYLUA.mod('%f', cx),
-    cy=PYLUA.mod('%f', cy),
-    r=PYLUA.mod('%f', r),
+    ['stroke-width']=string.format('%f', node.borderWidth),
+    cx=string.format('%f', cx),
+    cy=string.format('%f', cy),
+    r=string.format('%f', r),
   }
   startSVGElement(output, 'circle', attrs)
   endSVGElement(output, 'circle')
