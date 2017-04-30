@@ -1,6 +1,11 @@
 -- Command-line tool to replace MathML with SVG throughout a document.
 -- 
 -- Replaces all instances of MathML throughout the document
+
+for _, subdir in ipairs{'.', 'tools', 'fonts'} do
+  package.path = package.path .. ';./svgmath/'..subdir..'/?.lua'
+end
+
 local sax = require('xml').sax
 local XMLGenerator = require('svgmath.tools.saxtools').XMLGenerator
 local ContentFilter = require('svgmath.tools.saxtools').ContentFilter

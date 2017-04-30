@@ -4,7 +4,6 @@ local pairs, ipairs = pairs, ipairs
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local sys = require('sys')
 local glyphlist = require('glyphlist')
 local FontMetric = require('metric').FontMetric
 local CharMetric = require('metric').CharMetric
@@ -210,13 +209,13 @@ AFMMetric = PYLUA.class(FontMetric) {
 
 
 main = function()
-  if #sys.argv==2 then
-    AFMMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
+  if #arg==1 then
+    AFMMetric(PYLUA.keywords{log=io.stderr}, arg[1]):dump()
   else
     PYLUA.print('Usage: AFM.py <path to AFM file>', '\n')
   end
 end
-if __name__=='__main__' then
+if arg then
   main()
 end
 

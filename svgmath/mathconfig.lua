@@ -1,12 +1,11 @@
 -- Configuration for MathML-to-SVG formatter.
 
-local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local math, string, table, arg = math, string, table, arg
+local pairs, ipairs, require = pairs, ipairs, require
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
 local os = require('os')
-local sys = require('sys')
 local sax = require('xml').sax
 local AFMMetric = require('fonts.afm').AFMMetric
 local TTFMetric = require('fonts.ttf').TTFMetric
@@ -34,7 +33,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     parser:parse(configfile)
     -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
       PYLUA.print('Error parsing configuration file ', configfile, ': ', xcpt:getMessage(), '\n')
-      sys.exit(1)
+      os.exit(1)
   end
   ;
 
@@ -65,27 +64,39 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         fontfullname = fontfullname+' '+style
       end
       -- PYLUA.FIXME: TRY:
-      local metric
-      if attributes['afm'] then
-        local fontpath = attributes['afm']
-        metric = AFMMetric(fontpath, attributes['glyph-list'], sys.stderr)
-      elseif attributes['ttf'] then
-        local fontpath = attributes['ttf']
-        metric = TTFMetric(fontpath, sys.stderr)
-      else
-        sys.stderr:write('Bad record in configuration file: font is neither AFM nor TTF\n')
-        sys.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
-        return 
+      local ok, ret = pcall(function()
+        local metric
+        if attributes['afm'] then
+          local fontpath = attributes['afm']
+          metric = AFMMetric(fontpath, attributes['glyph-list'], io.stderr)
+        elseif attributes['ttf'] then
+          local fontpath = attributes['ttf']
+          metric = TTFMetric(fontpath, io.stderr)
+        else
+          io.stderr:write('Bad record in configuration file: font is neither AFM nor TTF\n')
+          io.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
+          return 
+        end
+      end)
+      if ok and not ret then
+        return
       end
-      -- PYLUA.FIXME: EXCEPT FontFormatError err:
-        sys.stderr:write(string.format('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
-        sys.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
-        return 
-      -- PYLUA.FIXME: EXCEPT IOError:
-        local message = sys.exc_info()[2]
-        sys.stderr:write(string.format('I/O error reading font file \'%s\': %s\n', fontpath, tostring(message)))
-        sys.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
-        return 
+      if not ok then
+        local err = ret
+        if PYLUA.is_a(err, FontFormatError) then
+          io.stderr:write(string.format('Invalid or unsupported file format in \'%s\': %s\n', fontpath, err.message))
+          io.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
+          return 
+        elseif PYLUA.is_a(err, IOError) then
+          local message = sys.exc_info()[2]
+          io.stderr:write(string.format('I/O error reading font file \'%s\': %s\n', fontpath, tostring(message)))
+          io.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
+          return 
+        else
+          error(err)
+        end
+      end
+      local metric = ret
       self.fonts[weight..' '..style..' '..self.currentFamily] = metric
 
     elseif name=='mathvariant' then
@@ -104,7 +115,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
         styling['operator'] = nil
         self.opstyles[opname] = styling
       else
-        sys.stderr:write('Bad record in configuration file: operator-style with no operator attribute\n')
+        io.stderr:write('Bad record in configuration file: operator-style with no operator attribute\n')
       end
     end
   end
@@ -138,10 +149,10 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
 
 
 main = function()
-  if #sys.argv==1 then
+  if #arg==0 then
     local config = MathConfig(nil)
   else
-    config = MathConfig(sys.argv[2])
+    config = MathConfig(arg[1])
   end
 
   PYLUA.print('Options:  verbose =', config.verbose, ' debug =', config.debug, '\n')
@@ -164,7 +175,7 @@ main = function()
   PYLUA.print('Fallback font families:', config.fallbackFamilies, '\n')
 end
 
-if __name__=='__main__' then
+if arg then
   main()
 end
 

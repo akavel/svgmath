@@ -1,6 +1,6 @@
 
-local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local math, string, table, arg = math, string, table, arg
+local pairs, ipairs, require = pairs, ipairs, require
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -377,7 +377,7 @@ main = function()
   end
 end
 
-if __name__=='__main__' then
+if arg then
   main()
 end
 

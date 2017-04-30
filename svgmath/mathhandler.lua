@@ -5,8 +5,6 @@ local pairs, ipairs = pairs, ipairs
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local os = require('os')
-local sys = require('sys')
 local sax = require('xml').sax
 local MathNode = require('mathnode').MathNode
 local MathConfig = require('mathconfig').MathConfig
@@ -107,7 +105,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   ;
 }
 
-
+--[[
 MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
 
   __init__ = function(self)
@@ -122,5 +120,6 @@ MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
   end
   ;
 }
+--]]
 
 return _ENV

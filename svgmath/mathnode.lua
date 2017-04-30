@@ -5,7 +5,9 @@ local pairs, ipairs = pairs, ipairs
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local sys = require('sys')
+-- avoid circular require with contextmakers, see https://stackoverflow.com/a/13981857/98528
+package.loaded[...] = _ENV
+
 local contextmakers = require('contextmakers')
 local measurers = require('measurers')
 local generators = require('generators')
@@ -468,7 +470,7 @@ MathNode = PYLUA.class() {
         return {cm, fd}
       end
     end
-    if 0<ch and ch<0xFFFF and specialChars[unichr(ch)) then
+    if 0<ch and ch<0xFFFF and specialChars[unichr(ch)] then
       return self:findChar(PYLUA.ord(specialChars[unichr(ch)]))
     end
     self:warning(string.format('Glyph U+%X not found', ch))

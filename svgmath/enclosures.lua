@@ -5,7 +5,6 @@ local pairs, ipairs = pairs, ipairs
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local sys = require('sys')
 local mathnode = require('mathnode')
 
 addRadicalEnclosure = function(node)

@@ -12,4 +12,8 @@ function PYLUA.class(_)
   end
 end
 
+function PYLUA.open()
+  -- FIXME
+end
+
 return PYLUA

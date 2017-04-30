@@ -1,10 +1,9 @@
 
-local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local math, string, table, arg = math, string, table, arg
+local pairs, ipairs, require = pairs, ipairs, require
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local sys = require('sys')
 local os = require('os')
 
 GlyphList = PYLUA.class(dict) {
@@ -46,12 +45,12 @@ GlyphList = PYLUA.class(dict) {
   ;
 }
 
-local glyphListName = os.path.join(os.path.dirname(__file__), 'default.glyphs')
-local defaultGlyphList = GlyphList(PYLUA.open(glyphListName, 'r'))
+local glyphListName = string.gsub(arg[0], '[^\\/]*$', 'svgmath/fonts/default.glyphs')
+defaultGlyphList = GlyphList(PYLUA.open(glyphListName, 'r'))
 
 main = function()
-  if #sys.argv>1 then
-    local glyphList = parseGlyphList(PYLUA.open(sys.argv[2], 'r'))
+  if #arg>0 then
+    local glyphList = parseGlyphList(PYLUA.open(arg[1], 'r'))
   else
     glyphList = defaultGlyphList
   end
@@ -61,7 +60,7 @@ main = function()
   end
 end
 
-if __name__=='__main__' then
+if arg then
   main()
 end
 

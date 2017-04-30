@@ -1,11 +1,9 @@
 -- Node locator for MathML parser.
 
-local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local math, string, table, io = math, string, table, io
+local pairs, ipairs, require = pairs, ipairs, require
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
-
-local sys = require('sys')
 
 NodeLocator = PYLUA.class() {
   -- Node locator for MathML parser.
@@ -41,15 +39,15 @@ NodeLocator = PYLUA.class() {
       coordinate = coordinate+separator+string.format('column %d', self.column)
     end
     if label then
-      sys.stderr:write(string.format('[%s] ', label))
+      io.stderr:write(string.format('[%s] ', label))
     end
     if coordinate then
-      sys.stderr:write(coordinate+': ')
+      io.stderr:write(coordinate+': ')
     end
     if msg then
-      sys.stderr:write(msg)
+      io.stderr:write(msg)
     end
-    sys.stderr:write('\n')
+    io.stderr:write('\n')
   end
   ;
 }
