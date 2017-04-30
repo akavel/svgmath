@@ -6,6 +6,7 @@ for _, subdir in ipairs{'.', 'tools', 'fonts'} do
   package.path = package.path .. ';./svgmath/'..subdir..'/?.lua'
 end
 
+local PYLUA = require('PYLUA')
 local sax = require('xml').sax
 local XMLGenerator = require('svgmath.tools.saxtools').XMLGenerator
 local ContentFilter = require('svgmath.tools.saxtools').ContentFilter
@@ -93,7 +94,7 @@ main = function(...)
   local encoding = 'utf-8'
   local standalone = false
 
-  for _, a in ipairs(...) do
+  for _, a in ipairs{...} do
     if a=='-h' or a=='--help' then
       usage()
       os.exit(2)
@@ -122,8 +123,7 @@ main = function(...)
 
   -- Determine config file location
   if not configfile then
-    local dirname = string.gsub(arg[0], '[^\\/]*$', '')
-    configfile = dirname .. '/svgmath.xml'
+    configfile = PYLUA.dirname(arg[0]) .. 'svgmath.xml'
   end
   local config = open_or_die(configfile, 'rb', 'configuration')
 

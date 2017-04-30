@@ -4,7 +4,6 @@ local pairs, ipairs, require = pairs, ipairs, require
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
-local sys = require('sys')
 local FontMetric = require('metric').FontMetric
 local CharMetric = require('metric').CharMetric
 local FontFormatError = require('metric').FontFormatError
@@ -370,14 +369,14 @@ TTFMetric = PYLUA.class(FontMetric) {
 
 
 main = function()
-  if #sys.argv==2 then
-    TTFMetric(PYLUA.keywords{log=sys.stderr}, sys.argv[2]):dump()
+  if #arg==1 then
+    TTFMetric(PYLUA.keywords{log=io.stderr}, arg[1]):dump()
   else
     PYLUA.print('Usage: TTF.py <path to TTF file>', '\n')
   end
 end
 
-if arg then
+if arg and arg[1]==... then
   main()
 end
 

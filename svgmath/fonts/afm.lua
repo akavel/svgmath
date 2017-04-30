@@ -215,7 +215,7 @@ main = function()
     PYLUA.print('Usage: AFM.py <path to AFM file>', '\n')
   end
 end
-if arg then
+if arg and arg[1]==... then
   main()
 end
 

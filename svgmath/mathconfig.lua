@@ -175,7 +175,7 @@ main = function()
   PYLUA.print('Fallback font families:', config.fallbackFamilies, '\n')
 end
 
-if arg then
+if arg and arg[1]==... then
   main()
 end
 
