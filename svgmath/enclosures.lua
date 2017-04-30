@@ -2,7 +2,7 @@
 
 local math, string, table, require = math, string, table, require
 local pairs, ipairs = pairs, ipairs
-local _ENV = {}
+local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
 local sys = require('sys')
