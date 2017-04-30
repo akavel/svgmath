@@ -1,6 +1,6 @@
 -- SAX filter for MathML-to-SVG conversion.
 
-local math, string, table = math, string, table
+local math, string, table, require = math, string, table, require
 local pairs, ipairs = pairs, ipairs
 local _ENV = {}
 local PYLUA = require('PYLUA')

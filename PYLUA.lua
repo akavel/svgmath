@@ -1,4 +1,5 @@
 -- helpers for scripts generated using pylua Python->Lua translator
+local PYLUA = {}
 
 function PYLUA.class(_)
   -- TODO: LATER: add support for base classes (inheritance)
@@ -11,3 +12,4 @@ function PYLUA.class(_)
   end
 end
 
+return PYLUA

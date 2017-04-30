@@ -1,7 +1,6 @@
 -- Command-line tool to replace MathML with SVG throughout a document.
 -- 
 -- Replaces all instances of MathML throughout the document
-local os.path = require('os.path')
 local sax = require('xml').sax
 local XMLGenerator = require('svgmath.tools.saxtools').XMLGenerator
 local ContentFilter = require('svgmath.tools.saxtools').ContentFilter
@@ -118,8 +117,8 @@ main = function(...)
 
   -- Determine config file location
   if not configfile then
-    -- FIXME
-    configfile = PYLUA.str_maybe(os.path).join(os.path.dirname(__file__), 'svgmath.xml')
+    local dirname = string.gsub(arg[0], '[^\\/]*$', '')
+    configfile = dirname .. '/svgmath.xml'
   end
   local config = open_or_die(configfile, 'rb', 'configuration')
 

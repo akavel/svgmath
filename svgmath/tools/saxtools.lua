@@ -1,12 +1,11 @@
 -- Miscellaneous SAX-related utilities used in SVGMath
 
-local math, string, table = math, string, table
+local math, string, table, require = math, string, table, require
 local pairs, ipairs = pairs, ipairs
 local _ENV = {}
 local PYLUA = require('PYLUA')
 
 local handler = require('xml.sax').handler
-local getwriter = require('codecs').getwriter
 
 escape = function(data)
   -- Escape &, <, and > in a string of data.
@@ -58,7 +57,7 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
     encoding = encoding or 'iso-8859-1'
     handler.ContentHandler:__init__(self)
     self._encoding = encoding
-    self._out = getwriter(encoding)(out, 'xmlcharrefreplace')
+    self._out = out
     self._ns_contexts = {{ }}
     self._current_context = self._ns_contexts[#self._ns_contexts]
     self._undeclared_ns_maps = {}

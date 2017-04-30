@@ -1,5 +1,7 @@
+local xml = { sax = {} }
+
 -- Expat to SAX adapter
-local sax = {}
+local sax = xml.sax
 
 local function split_ns(full_name, default_ns)
   local split_start, _, name = string.find(full_name, ' ?([^%s+])$')
@@ -34,5 +36,5 @@ function sax.AdaptToLxp(saxHandler)
   }
 end
 
-return sax
+return xml
 

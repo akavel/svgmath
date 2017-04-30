@@ -1,6 +1,6 @@
 -- Functions to format enclosures around MathML elements.
 
-local math, string, table = math, string, table
+local math, string, table, require = math, string, table, require
 local pairs, ipairs = pairs, ipairs
 local _ENV = {}
 local PYLUA = require('PYLUA')
