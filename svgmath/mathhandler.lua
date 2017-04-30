@@ -35,12 +35,12 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
   ;
 
   startDocument = function(self)
-    self.output.startDocument()
+    self.output:startDocument()
   end
   ;
 
   endDocument = function(self)
-    self.output.endDocument()
+    self.output:endDocument()
   end
   ;
 
@@ -53,7 +53,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     local namespace, localName = table.unpack(elementName)
     if namespace and namespace~=MathNS then
       if self.config.verbose then
-        locator.message(PYLUA.mod('Skipped element \'%s\' from an unknown namespace \'%s\'', {localName, namespace}), 'INFO')
+        locator:message(string.format('Skipped element \'%s\' from an unknown namespace \'%s\'', localName, namespace), 'INFO')
       end
       self.skip = 1
       return 
@@ -63,11 +63,12 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       local attNamespace, attLocalName = table.unpack(attName)
       if attNamespace and attNamespace~=MathNS then
         if self.config.verbose then
-          locator.message(PYLUA.mod('Ignored attribute \'%s\' from an unknown namespace \'%s\'', {attLocalName, attNamespace}), 'INFO')
+          locator:message(string.format('Ignored attribute \'%s\' from an unknown namespace \'%s\'', attLocalName, attNamespace), 'INFO')
         end
         goto continue
       end
       properties[attLocalName] = value
+      ::continue::
     end
     self.currentNode = MathNode(localName, properties, locator, self.config, self.currentNode)
   end
@@ -87,9 +88,9 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
     if self.currentNode == nil then
       error(sax.SAXParseException('SAX parser error: unmatched closing tag', nil, self.locator))
     end
-    self.currentNode.text = PYLUA.str_maybe(' ').join(self.currentNode.text.split())
+    self.currentNode.text = string.gsub(self.currentNode.text, '%s+', ' ')
     if self.currentNode.parent == nil then
-      self.currentNode.makeImage(self.output)
+      self.currentNode:makeImage(self.output)
     end
     self.currentNode = self.currentNode.parent
   end
@@ -115,7 +116,7 @@ MathEntityResolver = PYLUA.class(sax.handler.EntityResolver) {
 
   resolveEntity = function(self, publicId, systemId)
     if systemId=='http://www.w3.org/TR/MathML2/dtd/mathml2.dtd' then
-      return os.path.abspath(PYLUA.str_maybe(os.path).join(os.path.dirname(sys.argv[1]), 'mathml2.dtd'))
+      return os.path:abspath(PYLUA.join(os.path, os.path:dirname(sys.argv[1]), 'mathml2.dtd'))
     end
     return systemId
   end
