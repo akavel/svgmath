@@ -7,6 +7,10 @@ local PYLUA = require('PYLUA')
 
 local handler = require('xml.sax').handler
 
+local function unicode(s)
+  return s
+end
+
 escape = function(data)
   -- Escape &, <, and > in a string of data.
   --     

@@ -137,15 +137,22 @@ main = function(...)
 
   -- Parse input file
   local exitcode = 0
-  -- PYLUA.FIXME: TRY:
+  local ok, ret = pcall(function()
     parser = sax.make_parser()
-    parser.setFeature(sax.handler.feature_namespaces, 1)
-    parser.setEntityResolver(MathEntityResolver())
-    parser.setContentHandler(handler)
-    parser.parse(source)
-  -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
-    print(string.format('Error parsing input file %s: %s', args[1], xcpt.getMessage()))
-    exitcode = 1
+    parser:setFeature(sax.handler.feature_namespaces, 1)
+    --parser.setEntityResolver(MathEntityResolver())
+    parser:setContentHandler(handler)
+    parser:parse(source)
+  end)
+  if not ok then
+    local xcpt = ret
+    if PYLUA.is_a(ret, sax.SAXException) then
+      print(string.format('Error parsing input file %s: %s', arg[1], xcpt:getMessage()))
+      exitcode = 1
+    else
+      error(ret)
+    end
+  end
   source:close()
   if PYLUA.op_is_not(outputfile, nil) then
     output:close()

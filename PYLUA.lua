@@ -114,5 +114,32 @@ function PYLUA.print(...)
   end
 end
 
+-- below is based on http://stackoverflow.com/a/20778724/98528
+local special_chars = '%^$().[]*+-?'
+local quote_pattern = '([' .. string.gsub(special_chars, '(.)', '%%%1') .. '])'
+function PYLUA.quote(s)
+  return string.gsub(s, quote_pattern, '%%%1')
+end
+
+function PYLUA.replace(s, from, to, n)
+  to = string.gsub(to, '%%', '%%%%')
+  return string.gsub(s, PYLUA.quote(from), to, n)
+end
+
+function PYLUA.op_in(x, list)
+  if type(list)=='table' then
+    for _, v in ipairs(list) do
+      if x==v then
+        return true
+      end
+    end
+    return false
+  elseif type(list)=='string' then
+    return string.find(list, x, 1, true) ~= nil
+  else
+    error(debug.traceback('unexpected type in op_in: '..type(list)))
+  end
+end
+
 
 return PYLUA

@@ -15,6 +15,9 @@ sax.SAXException = PYLUA.class() {
   __str__ = function(self)
     return self.msg
   end,
+  getMessage = function(self)
+    return self.msg
+  end,
 }
 
 local function split_ns(full_name, default_ns)
