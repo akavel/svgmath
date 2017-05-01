@@ -45,17 +45,19 @@ MathFilter = PYLUA.class(ContentFilter) {
     self.plainOutput = out
     self.mathOutput = mathout
     self.depth = 0
-  end;
+  end
+  ;
 
   -- ContentHandler methods
   setDocumentLocator = function(self, locator)
-    self.plainOutput.setDocumentLocator(locator)
-    self.mathOutput.setDocumentLocator(locator)
-  end;
+    self.plainOutput:setDocumentLocator(locator)
+    self.mathOutput:setDocumentLocator(locator)
+  end
+  ;
 
   startElementNS = function(self, elementName, qName, attrs)
     if self.depth==0 then
-      namespace, localName = elementName
+      local namespace, localName = table.unpack(elementName)
       if namespace==MathNS then
         self.output = self.mathOutput
         self.depth = 1
@@ -64,7 +66,8 @@ MathFilter = PYLUA.class(ContentFilter) {
       self.depth = self.depth+1
     end
     ContentFilter.startElementNS(self, elementName, qName, attrs)
-  end;
+  end
+  ;
 
   endElementNS = function(self, elementName, qName)
     ContentFilter.endElementNS(self, elementName, qName)
@@ -74,7 +77,8 @@ MathFilter = PYLUA.class(ContentFilter) {
         self.output = self.plainOutput
       end
     end
-  end;
+  end
+  ;
 }
 
 local function flag_get(old, s, ...)
@@ -140,25 +144,27 @@ main = function(...)
   local ok, ret = pcall(function()
     parser = sax.make_parser()
     parser:setFeature(sax.handler.feature_namespaces, 1)
-    --parser.setEntityResolver(MathEntityResolver())
+    --parser:setEntityResolver(MathEntityResolver())
     parser:setContentHandler(handler)
     parser:parse(source)
   end)
   if not ok then
     local xcpt = ret
     if PYLUA.is_a(ret, sax.SAXException) then
-      print(string.format('Error parsing input file %s: %s', arg[1], xcpt:getMessage()))
+      PYLUA.print(string.format('Error parsing input file %s: %s', arg[1], xcpt:getMessage()), '\n')
       exitcode = 1
     else
       error(ret)
     end
   end
   source:close()
-  if PYLUA.op_is_not(outputfile, nil) then
+  if outputfile ~= nil then
     output:close()
   end
   os.exit(exitcode)
 end
 
--- TODO: detect somehow if we're require()d or run from command-line
-main(...)
+if arg and arg[1]==... then
+  main(...)
+end
+
