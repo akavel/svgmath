@@ -19,6 +19,17 @@ function PYLUA.class(_)
   end
 end
 
+function PYLUA.is_a(typ, class)
+  local methods = getmetatable(class).__index
+  while type(typ)=='table' do
+    local meta = getmetatable(typ)
+    if meta and meta.__index==methods then
+      return true
+    end
+    typ = meta.__index
+  end
+end
+
 function PYLUA.dirname(s)
   return (string.gsub(s, '[^\\/]+$', ''))
 end

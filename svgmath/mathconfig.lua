@@ -1,7 +1,7 @@
 -- Configuration for MathML-to-SVG formatter.
 
 local math, string, table, arg = math, string, table, arg
-local pairs, ipairs, require = pairs, ipairs, require
+local pairs, ipairs, require, pcall, error = pairs, ipairs, require, pcall, error
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -26,14 +26,21 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     self.opstyles = { }
     self.fallbackFamilies = {}
 
-    -- PYLUA.FIXME: TRY:
-    local parser = sax.make_parser()
-    parser:setContentHandler(self)
-    parser:setFeature(sax.handler.feature_namespaces, 0)
-    parser:parse(configfile)
-    -- PYLUA.FIXME: EXCEPT sax.SAXException xcpt:
-      PYLUA.print('Error parsing configuration file ', configfile, ': ', xcpt:getMessage(), '\n')
-      os.exit(1)
+    local ok, ret = pcall(function()
+      local parser = sax.make_parser()
+      parser:setContentHandler(self)
+      parser:setFeature(sax.handler.feature_namespaces, 0)
+      parser:parse(configfile)
+    end)
+    if not ok then
+      local xcpt = ret
+      if PYLUA.is_a(ret, sax.SAXException) then
+        PYLUA.print('Error parsing configuration file ', configfile, ': ', xcpt:getMessage(), '\n')
+        os.exit(1)
+      else
+        error(ret)
+      end
+    end
   end
   ;
 
@@ -63,7 +70,6 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       if style~='normal' then
         fontfullname = fontfullname+' '+style
       end
-      -- PYLUA.FIXME: TRY:
       local ok, ret = pcall(function()
         local metric
         if attributes['afm'] then

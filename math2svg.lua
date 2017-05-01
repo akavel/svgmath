@@ -20,6 +20,7 @@ open_or_die = function(fname, fmode, role)
     print(string.format("Cannot open %s file '%s': %s", role, fname, err))
     os.exit(1)
   end
+  return f
 end
 
 usage = function()
