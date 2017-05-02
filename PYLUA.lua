@@ -23,7 +23,9 @@ function PYLUA.is_a(typ, class)
   local methods = getmetatable(class).__index
   while type(typ)=='table' do
     local meta = getmetatable(typ)
-    if meta and meta.__index==methods then
+    if not meta then
+      return false
+    elseif meta.__index==methods then
       return true
     end
     typ = meta.__index
@@ -50,6 +52,22 @@ local wrappedFile = PYLUA.class() {
 
   readline = function(self)
     return self.f:read '*L' or ''
+  end,
+  
+  read = function(self, n)
+    if n and n>=0 then
+      return self.f:read(n) or ''
+    else
+      return self.f:read('*a') or ''
+    end
+  end,
+
+  seek = function(self, offset)
+    -- TODO: also support 'whence' argument
+    local prev, err = self.f:seek('set', offset)
+    if not prev then
+      error(PYLUA.IOError(err))
+    end
   end,
 }
 
@@ -141,5 +159,51 @@ function PYLUA.op_in(x, list)
   end
 end
 
+function PYLUA.collect(tab, filter)
+  local out = {}
+  for _, v in ipairs(tab) do
+    local result = filter(v)
+    if result then
+      out[#out+1] = result
+    end
+  end
+  return out
+end
+
+function PYLUA.update(target, overwrites)
+  for k,v in pairs(overwrites) do
+    target[k] = v
+  end
+end
+
+function PYLUA.lower(s) return string.lower(s) end
+
+function PYLUA.traceback(msg)
+  if type(msg) == 'string' then
+    return debug.traceback(msg, 2)
+  else
+    return msg
+  end
+end
+
+local function string_iter(s, i)
+  if i<#s then
+    local c = string.sub(s, i+1, i+1)
+    return i+1, c
+  end
+end
+
+function PYLUA.ipairs(t)
+  if type(t)=='string' then
+    return string_iter, t, 0
+  else
+    return ipairs(t)
+  end
+end
+
+function PYLUA.ord(s)
+  -- TODO: handle unicode correctly
+  return string.byte(s)
+end
 
 return PYLUA

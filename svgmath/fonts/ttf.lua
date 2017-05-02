@@ -10,7 +10,7 @@ local FontFormatError = require('metric').FontFormatError
 
 readUnsigned = function(ff, size)
   local res = 0
-  for _, c in ipairs(ff:read(size)) do
+  for _, c in PYLUA.ipairs(ff:read(size)) do
     res = res*256
     res = res+PYLUA.ord(c)
   end
@@ -22,7 +22,7 @@ readSigned = function(ff, size)
   if res>=128 then
     res = res-256
   end
-  for _, c in ipairs(ff:read(size-1)) do
+  for _, c in PYLUA.ipairs(ff:read(size-1)) do
     res = res*256
     res = res+PYLUA.ord(c)
   end
@@ -76,7 +76,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     local numTables = readUnsigned(ff, 2)
     local tables = { }
     skip(ff, 6)
-    for i = 1,#numTables do
+    for i = 1,numTables do
       local tag = ff:read(4)
       local checksum = readUnsigned(ff, 4)
       local offset = readUnsigned(ff, 4)
@@ -123,7 +123,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     local macNames = { }
     local englishCodes = {1033, 2057, 3081, 4105, 5129, 6153}
 
-    for i = 1,#numRecords do
+    for i = 1,numRecords do
       local platformID = readUnsigned(ff, 2)
       local encodingID = readUnsigned(ff, 2)
       local languageID = readUnsigned(ff, 2)

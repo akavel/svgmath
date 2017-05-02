@@ -1,7 +1,7 @@
 -- Configuration for MathML-to-SVG formatter.
 
-local math, string, table, arg = math, string, table, arg
-local pairs, ipairs, require, pcall, error = pairs, ipairs, require, pcall, error
+local math, string, table, io, arg = math, string, table, io, arg
+local pairs, ipairs, require, pcall, xpcall, error = pairs, ipairs, require, pcall, xpcall, error
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -10,6 +10,7 @@ local sax = require('xml').sax
 local AFMMetric = require('fonts.afm').AFMMetric
 local TTFMetric = require('fonts.ttf').TTFMetric
 local FontFormatError = require('fonts.metric').FontFormatError
+local IOError = PYLUA.IOError
 
 MathConfig = PYLUA.class(sax.ContentHandler) {
   -- Configuration for MathML-to-SVG formatter.
@@ -26,12 +27,12 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
     self.opstyles = { }
     self.fallbackFamilies = {}
 
-    local ok, ret = pcall(function()
+    local ok, ret = xpcall(function()
       local parser = sax.make_parser()
       parser:setContentHandler(self)
       parser:setFeature(sax.handler.feature_namespaces, 0)
       parser:parse(configfile)
-    end)
+    end, PYLUA.traceback)
     if not ok then
       local xcpt = ret
       if PYLUA.is_a(ret, sax.SAXException) then
@@ -70,7 +71,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       if style~='normal' then
         fontfullname = fontfullname+' '+style
       end
-      local ok, ret = pcall(function()
+      local ok, ret = xpcall(function()
         local metric
         if attributes['afm'] then
           local fontpath = attributes['afm']
@@ -83,7 +84,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
           io.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
           return 
         end
-      end)
+      end, PYLUA.traceback)
       if ok and not ret then
         return
       end
