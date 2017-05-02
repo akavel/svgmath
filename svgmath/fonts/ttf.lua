@@ -1,6 +1,6 @@
 
 local math, string, table, arg = math, string, table, arg
-local pairs, ipairs, require = pairs, ipairs, require
+local pairs, ipairs, require, error = pairs, ipairs, require, error
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -52,7 +52,12 @@ TTFFormatError = PYLUA.class(FontFormatError) {
 
 TTFMetric = PYLUA.class(FontMetric) {
 
-  __init__ = function(self, ttfname, log)
+  __init__ = function(self, ttfname, log, _kw_extra)
+    if PYLUA.is_a(ttfname, PYLUA.keywords) then
+      local kw = ttfname
+      ttfname = log or kw.ttfname
+      log = _kw_extra or kw.log
+    end
     FontMetric.__init__(self, log)
     local ff = PYLUA.open(ttfname, 'rb')
     self:readFontMetrics(ff)

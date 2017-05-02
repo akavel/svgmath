@@ -3,7 +3,7 @@
 -- This module contains functions called from measurers.py to format tables.
 
 local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, setmetatable = pairs, ipairs, setmetatable
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -62,13 +62,13 @@ RowDescriptor = PYLUA.class() {
         local iter = function(self, i)
           if i<self.N then return i+1, self[i+1] end
         end
-        return iter, nil, 0
+        return iter, self, 0
       end,
     })
 
     for _, c in ipairs(cells) do
       -- Find the first free cell
-      while #busycells>#self.cells and busycells[#self.cells]>0 do
+      while #busycells>#self.cells and (busycells[#self.cells] or 0)>0 do
         self.cells.N = self.cells.N+1
       end
       local halign = getByIndexOrLast(columnaligns, #self.cells)
@@ -86,7 +86,7 @@ RowDescriptor = PYLUA.class() {
       end
       self.cells.N = self.cells.N+1
       self.cells[self.cells.N] = CellDescriptor(c, halign, valign, colspan, rowspan)
-      for i = 2,#colspan do
+      for i = 2,colspan do
         self.cells.N = self.cells.N+1
       end
       while #self.cells>#node.columns do
@@ -138,7 +138,7 @@ arrangeCells = function(node)
   end
 
   -- Pad the table with empty rows until no spanning cell protrudes
-  while math.max(busycells)>0 do
+  while PYLUA.max(busycells)>0 do
     local rowalign = getByIndexOrLast(table_rowaligns, #node.rows)
     table.insert(node.rows, RowDescriptor(node, {}, rowalign, table_columnaligns, busycells))
     busycells = PYLUA.collect(busycells, function(n) return math.max(0, n-1) end)
@@ -147,7 +147,8 @@ end
 
 arrangeLines = function(node)
   -- Get spacings and line styles; expand to cover the table fully        
-  local spacings = PYLUA.map(node.parseLength, node:getListProperty('rowspacing'))
+  local _f = function(...) return node:parseLength(...) end
+  local spacings = PYLUA.map(_f, node:getListProperty('rowspacing'))
   local lines = node:getListProperty('rowlines')
 
   for i = 1,#node.rows-1 do
@@ -159,7 +160,8 @@ arrangeLines = function(node)
     end
   end
 
-  spacings = PYLUA.map(node.parseSpace, node:getListProperty('columnspacing'))
+  local _f = function(...) return node:parseSpace(...) end
+  spacings = PYLUA.map(_f, node:getListProperty('columnspacing'))
   lines = node:getListProperty('columnlines')
 
   for i = 1,#node.columns-1 do
@@ -174,7 +176,8 @@ arrangeLines = function(node)
   node.framespacings = {0, 0}
   node.framelines = {nil, nil}
 
-  spacings = PYLUA.map(node.parseSpace, node:getListProperty('framespacing'))
+  local _f = function(...) return node:parseSpace(...) end
+  spacings = PYLUA.map(_f, node:getListProperty('framespacing'))
   lines = node:getListProperty('frame')
   for i = 1,2 do
     local line = getByIndexOrLast(lines, i)

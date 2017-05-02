@@ -87,6 +87,7 @@ function PYLUA.open(filename, mode)
 end
 
 function PYLUA.strip(s)
+  if not s then error(debug.traceback('nil argument to PYLUA.strip')) end
   s = string.gsub(s, '%s*$', '')
   s = string.gsub(s, '^%s*', '')
   return s
@@ -170,6 +171,10 @@ function PYLUA.op_in(x, list)
   end
 end
 
+function PYLUA.op_not_in(x, list)
+  return not PYLUA.op_in(x, list)
+end
+
 function PYLUA.collect(tab, filter)
   local out = {}
   for _, v in ipairs(tab) do
@@ -179,6 +184,24 @@ function PYLUA.collect(tab, filter)
     end
   end
   return out
+end
+
+function PYLUA.filter(func, t)
+  local res = {}
+  for _, v in ipairs(t) do
+    if func(v) then
+      res[#res+1] = v
+    end
+  end
+  return res
+end
+
+function PYLUA.map(func, t)
+  local res = {}
+  for _, v in ipairs(t) do
+    res[#res+1] = func(v)
+  end
+  return res
 end
 
 function PYLUA.update(target, overwrites)
@@ -229,7 +252,25 @@ function PYLUA.ipairs(t)
   end
 end
 
+function PYLUA.ipairs_unicode(t)
+  if type(t)=='string' then
+    local finder = string.gmatch(t, '[%z\1-\127\194-\244][\128-\191]*')
+    local iter = function(finder, i)
+      local c = finder()
+      if c then
+        return i+1, c
+      end
+    end
+    return iter, finder, 0
+  elseif type(t)=='nil' then
+    error(debug.traceback('nil in ipairs_unicode'))
+  else
+    return ipairs(t)
+  end
+end
+
 function PYLUA.ord(s)
+  if not s then error(debug.traceback('nil s in ord')) end
   -- TODO: handle unicode correctly
   return string.byte(s)
 end
@@ -297,6 +338,16 @@ function PYLUA.keys(t)
     res[#res+1] = k
   end
   return res
+end
+
+function PYLUA.max(t)
+  local max
+  for _,v in pairs(t) do
+    if not max or v>max then
+      max=v
+    end
+  end
+  return max
 end
 
 return PYLUA

@@ -900,7 +900,15 @@ measureLimits = function(node, underscript, overscript)
   end
 end
 
-stretch = function(node, toWidth, toHeight, toDepth, symmetric)
+stretch = function(node, toWidth, toHeight, toDepth, symmetric, _kw_extra)
+  if PYLUA.is_a(node, PYLUA.keywords) then
+    local kw = node
+    node = toWidth or kw.node
+    toWidth = toHeight or kw.toWidth
+    toHeight = toDepth or kw.toHeight
+    toDepth = symmetric or kw.toDepth
+    symmetric = _kw_extra or kw.symmetric
+  end
   symmetric = symmetric or false
   if node == nil then
     return 
@@ -908,7 +916,8 @@ stretch = function(node, toWidth, toHeight, toDepth, symmetric)
   if  not node.core.stretchy then
     return 
   end
-  if PYLUA.op_is_not(node, node.base) then
+  -- TODO: if PYLUA.op_is_not(node, node.base) then
+  if node ~= node.base then
     if toWidth ~= nil then
       toWidth = toWidth-(node.width-node.base.width)
     end

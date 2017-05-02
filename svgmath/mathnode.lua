@@ -336,7 +336,7 @@ MathNode = PYLUA.class() {
   getUCSText = function(self)
     local codes = {}
     local hisurr = nil
-    for _, ch in PYLUA.ipairs(self.text) do
+    for _, ch in PYLUA.ipairs_unicode(self.text) do
       local chcode = PYLUA.ord(ch)
 
       -- Processing surrogate pairs

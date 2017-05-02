@@ -24,7 +24,13 @@ AFMFormatError = PYLUA.class(FontFormatError) {
 
 AFMMetric = PYLUA.class(FontMetric) {
 
-  __init__ = function(self, afmname, glyphlistname, log)
+  __init__ = function(self, afmname, glyphlistname, log, _kw_extra)
+    if PYLUA.is_a(afmname, PYLUA.keywords) then
+      local kw = afmname
+      afmname = glyphlistname or kw.afmname
+      glyphlistname = log or kw.glyphlistname
+      log = _kw_extra or kw.log
+    end
     FontMetric.__init__(self, log)
     local afmfile = PYLUA.open(afmname, 'r')
     if glyphlistname == nil then

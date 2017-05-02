@@ -105,7 +105,7 @@ context_mi = function(node)
   -- If the identifier is a single character, make it italic by default.
   -- Don't forget surrogate pairs here!
   if #node.text==1 or
-      #node.text==2 and mathnode.isHighSurrogate(node.text[1]) and mathnode.isLowSurrogate(node.text[2]) then
+      #node.text==2 and mathnode.isHighSurrogate(node.text:sub(1)) and mathnode.isLowSurrogate(node.text:sub(2)) then
     PYLUA.setdefault(node.attributes, 'fontstyle', 'italic')
   end
   default_context(node)
@@ -131,10 +131,10 @@ context_mo = function(node)
     end
 
     local prevSiblings = PYLUA.slice(node.parent.children, nil, node.nodeIndex)
-    prevSiblings = filter(isNonSpaceNode, prevSiblings)
+    prevSiblings = PYLUA.filter(isNonSpaceNode, prevSiblings)
 
     local nextSiblings = PYLUA.slice(node.parent.children, node.nodeIndex+1, nil)
-    nextSiblings = filter(isNonSpaceNode, nextSiblings)
+    nextSiblings = PYLUA.filter(isNonSpaceNode, nextSiblings)
 
     if #prevSiblings==0 and #nextSiblings>0 then
       form = 'prefix'
@@ -318,7 +318,7 @@ makeLimitContext = function(node, child, accentProperty)
     local embellishments = {'msub', 'msup', 'msubsup',
       'munder', 'mover', 'munderover', 'mmultiscripts'}
 
-    local getAccentValue = function(ch)
+    local function getAccentValue(ch)
       if ch.elementName=='mo' then
         return ch.opdefaults['accent']
       elseif PYLUA.op_in(ch.elementName, embellishments) and #ch.children>0 then
