@@ -106,7 +106,7 @@ context_mi = function(node)
   -- (Also includes a single UTF-8 encoded character.)
   -- TODO: Don't forget surrogate pairs here!
   if #node.text==1 or
-      string.match(node.text, '[%z\1-\127\194-\244][\128-\191]*') then
+      string.match(node.text, '^[%z\1-\127\194-\244][\128-\191]*$') then
     PYLUA.setdefault(node.attributes, 'fontstyle', 'italic')
   end
   default_context(node)
