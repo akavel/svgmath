@@ -84,6 +84,7 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
           io.stderr:write(string.format('Font entry for \'%s\' ignored\n', fontfullname))
           return 
         end
+        return metric
       end, PYLUA.traceback)
       if ok and not ret then
         return

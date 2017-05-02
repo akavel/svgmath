@@ -782,11 +782,12 @@ measureScripts = function(node, subscripts, superscripts, presubscripts, presupe
   node.ascender = node.base.ascender
   node.descender = node.base.descender
 
-  local subs = node.subscripts+node.presubscripts
-  local supers = node.superscripts+node.presuperscripts
+  local subs = PYLUA.update(PYLUA.copy(node.subscripts), node.presubscripts)
+  local supers = PYLUA.update(PYLUA.copy(node.superscripts), node.presuperscripts)
   node.subscriptAxis = math.max(0, table.unpack(PYLUA.collect(subs, function(x) return x:axis() end)))
   node.superscriptAxis = math.max(0, table.unpack(PYLUA.collect(supers, function(x) return x:axis() end)))
-  local gap = math.max(table.unpack(PYLUA.collect(subs+supers, function(x) return x:nominalLineGap() end)))
+  local _subs_supers = PYLUA.update(PYLUA.copy(subs), supers)
+  local gap = math.max(table.unpack(PYLUA.collect(_subs_supers, function(x) return x:nominalLineGap() end)))
   local protrusion = node:parseLength('0.25ex')
   local scriptMedian = node:axis()
 

@@ -31,7 +31,7 @@ decodeSurrogatePair = function(hi, lo)
   return ((PYLUA.ord(hi) - 0xD800) * 0x400) + (PYLUA.ord(lo) - 0xDC00) + 0x10000
 end
 
-local globalDefaults = {
+globalDefaults = {
   -- Font and color properties
   mathvariant='normal',
   mathsize='12pt',
@@ -83,7 +83,7 @@ local globalDefaults = {
   frame='none',
 }
 
-local specialChars = {
+specialChars = {
   ['\xe2\x85\x85']='D',
   ['\xe2\x85\x86']='d',
   ['\xe2\x85\x87']='e',
@@ -368,7 +368,7 @@ MathNode = PYLUA.class() {
   fontpool = function(self)
     if self.metriclist == nil then
 
-      fillMetricList = function(familylist)
+      local fillMetricList = function(familylist)
         local metriclist = {}
         for _, family in ipairs(familylist) do
           local metric = self.config:findfont(self.fontweight, self.fontstyle, family)
@@ -468,8 +468,8 @@ MathNode = PYLUA.class() {
         return {cm, fd}
       end
     end
-    if 0<ch and ch<0xFFFF and specialChars[unichr(ch)] then
-      return self:findChar(PYLUA.ord(specialChars[unichr(ch)]))
+    if 0<ch and ch<0xFFFF and specialChars[PYLUA.unichr(ch)] then
+      return self:findChar(PYLUA.ord(specialChars[PYLUA.unichr(ch)]))
     end
     self:warning(string.format('Glyph U+%X not found', ch))
     return nil
@@ -484,13 +484,14 @@ MathNode = PYLUA.class() {
     end
     local cm0 = nil
     local cm1 = nil
+    local cm, fd
     local ucstext = self:getUCSText()
     for _, chcode in ipairs(ucstext) do
       local chardesc = self:findChar(chcode)
       if chardesc == nil then
         self.width = self.width+self:metric().missingGlyph.width
       else
-        local cm, fd = table.unpack(chardesc)
+        cm, fd = table.unpack(chardesc)
         fd.used = true
         if chcode==ucstext[1] then
           cm0 = cm

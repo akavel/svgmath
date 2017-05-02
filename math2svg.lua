@@ -141,13 +141,13 @@ main = function(...)
 
   -- Parse input file
   local exitcode = 0
-  local ok, ret = pcall(function()
+  local ok, ret = xpcall(function()
     parser = sax.make_parser()
     parser:setFeature(sax.handler.feature_namespaces, 1)
     --parser:setEntityResolver(MathEntityResolver())
     parser:setContentHandler(handler)
     parser:parse(source)
-  end)
+  end, PYLUA.traceback)
   if not ok then
     local xcpt = ret
     if PYLUA.is_a(ret, sax.SAXException) then

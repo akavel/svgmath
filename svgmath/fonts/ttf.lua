@@ -153,7 +153,7 @@ TTFMetric = PYLUA.class(FontMetric) {
         ff:seek(storageOffset+nameOffset)
         local result = ''
         for i = 1,nameLength/2 do
-          result = result+unichr(readUnsigned(ff, 2))
+          result = result..PYLUA.unichr(readUnsigned(ff, 2))
         end
         return result
       end

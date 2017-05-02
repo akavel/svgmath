@@ -1,10 +1,24 @@
 local PYLUA = require 'PYLUA'
 local lxp = require 'lxp'
 
-local sax = { handler = {} }
+local sax = {}
+sax.handler = {}
+sax.xmlreader = {}
 
 sax.handler.ContentHandler = PYLUA.class() {
   __init__ = function(self)
+  end,
+}
+
+sax.xmlreader.AttributesImpl = PYLUA.class() {
+  __init__ = function(self, attrs)
+    PYLUA.update(self, attrs)
+  end,
+}
+
+sax.xmlreader.AttributesNSImpl = PYLUA.class() {
+  __init__ = function(self, attrs, qnames)
+    PYLUA.update(self, attrs)
   end,
 }
 

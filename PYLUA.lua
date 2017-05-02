@@ -185,6 +185,7 @@ function PYLUA.update(target, overwrites)
   for k,v in pairs(overwrites) do
     target[k] = v
   end
+  return target
 end
 
 function PYLUA.copy(t)
@@ -233,6 +234,28 @@ function PYLUA.ord(s)
   return string.byte(s)
 end
 
+local function unichr_6lsb(n)
+  -- return 6 least significant bits + marker bit 0x80, and remaining most significant bits
+  return 0x80 + n % 0x3f, math.floor(n/0x40)
+end
+
+function PYLUA.unichr(n)
+  if n<=0x007f then
+    return n
+  elseif n<=0x07ff then
+    local b0, n = unichr_6lsb(n)
+    local b1 = 0xc0 + n
+    return string.char(b1, b0)
+  elseif n<=0xffff then
+    local b0, n = unichr_6lsb(n)
+    local b1, n = unichr_6lsb(n)
+    local b2 = 0xe0 + n
+    return string.char(b2, b1, b0)
+  else
+    error("unichr not yet implemented for n>0xffff: "..tostring(n))
+  end
+end
+
 PYLUA.keywords = PYLUA.class() {
   __init__ = function(self, kw)
     PYLUA.update(self, kw)
@@ -258,6 +281,22 @@ function PYLUA.slice(seq, i, j)
   else
     error('unsupported type for PYLUA.slice: '..type(seq))
   end
+end
+
+function PYLUA.sum(t)
+  local res = 0
+  for _, v in ipairs(t) do
+    res = res + v
+  end
+  return res
+end
+
+function PYLUA.keys(t)
+  local res = {}
+  for k in pairs(t) do
+    res[#res+1] = k
+  end
+  return res
 end
 
 return PYLUA
