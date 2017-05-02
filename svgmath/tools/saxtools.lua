@@ -121,8 +121,13 @@ XMLGenerator = PYLUA.class(handler.ContentHandler) {
   startElement = function(self, name, attrs)
     self:_flush_starttag()
     self:_write(string.format('<%s', unicode(name)))
+    local sorted = {}
     for name, value in pairs(attrs) do
-      self:_write(string.format(' %s=%s', unicode(name), quoteattr(value)))
+      table.insert(sorted, {n=name, v=value})
+    end
+    table.sort(sorted, function(a, b) return a.n < b.n end)
+    for _, attr in ipairs(sorted) do
+      self:_write(string.format(' %s=%s', unicode(attr.n), quoteattr(attr.v)))
     end
     self._starttag_pending = true
   end
