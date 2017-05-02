@@ -151,7 +151,7 @@ main = function(...)
   if not ok then
     local xcpt = ret
     if PYLUA.is_a(ret, sax.SAXException) then
-      PYLUA.print(string.format('Error parsing input file %s: %s', arg[1], xcpt:getMessage()), '\n')
+      PYLUA.print(string.format('Error parsing input file: %s', xcpt:getMessage()), '\n')
       exitcode = 1
     else
       error(ret)

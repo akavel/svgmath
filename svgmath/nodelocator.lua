@@ -42,7 +42,7 @@ NodeLocator = PYLUA.class() {
       io.stderr:write(string.format('[%s] ', label))
     end
     if coordinate then
-      io.stderr:write(coordinate+': ')
+      io.stderr:write(coordinate..': ')
     end
     if msg then
       io.stderr:write(msg)

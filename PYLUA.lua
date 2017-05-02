@@ -195,6 +195,14 @@ function PYLUA.copy(t)
   return copy
 end
 
+function PYLUA.setdefault(target, k, default)
+  if not target[k] then
+    target[k] = default
+  end
+  return target[k]
+end
+
+
 function PYLUA.lower(s) return string.lower(s) end
 
 function PYLUA.traceback(msg)
@@ -230,5 +238,26 @@ PYLUA.keywords = PYLUA.class() {
     PYLUA.update(self, kw)
   end,
 }
+
+function PYLUA.slice(seq, i, j)
+  i = i or 0
+  j = j or #seq
+  if i < 0 then i = i + #seq end
+  if j < 0 then j = j + #seq end
+  -- TODO: what if i or j still < 0 after above adjustment?
+  i = i + 1
+  if j > #seq then j = #seq end
+  if type(seq)=='table' then
+    local ret = {}
+    for n = i,j do
+      ret[#ret+1] = seq[n]
+    end
+    return ret
+  elseif type(seq)=='string' then
+    return string.sub(seq, i, j)
+  else
+    error('unsupported type for PYLUA.slice: '..type(seq))
+  end
+end
 
 return PYLUA

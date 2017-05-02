@@ -1,7 +1,7 @@
 -- Main structure class for MathML formatting.
 
 local math, string, table, require = math, string, table, require
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, tonumber, tostring, error = pairs, ipairs, tonumber, tostring, error
 local _ENV = {package=package}
 local PYLUA = require('PYLUA')
 
@@ -11,9 +11,7 @@ package.loaded[...] = _ENV
 local contextmakers = require('contextmakers')
 local measurers = require('measurers')
 local generators = require('generators')
---[[
 local sax = require('xml').sax
---]]
 local NodeLocator = require('nodelocator').NodeLocator
 
 isHighSurrogate = function(ch)
@@ -338,7 +336,7 @@ MathNode = PYLUA.class() {
   getUCSText = function(self)
     local codes = {}
     local hisurr = nil
-    for _, ch in ipairs(self.text) do
+    for _, ch in PYLUA.ipairs(self.text) do
       local chcode = PYLUA.ord(ch)
 
       -- Processing surrogate pairs
