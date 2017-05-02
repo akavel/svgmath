@@ -1,9 +1,12 @@
 -- helpers for scripts generated using pylua Python->Lua translator
 local PYLUA = {}
 
-function PYLUA.class(_)
-  -- TODO: LATER: add support for base classes (inheritance)
+function PYLUA.class(parent)
   return function(methods)
+    if parent then
+      parent = getmetatable(parent)
+      setmetatable(methods, {__index=parent.__index})
+    end
     local meta = {
       __index=methods,
       __tostring=methods.__str__,
@@ -93,6 +96,10 @@ function PYLUA.startswith(s, prefix)
   return #s>=#prefix and string.sub(s,1,#prefix)==prefix
 end
 
+function PYLUA.endswith(s, suffix)
+  return #s>=#suffix and (#suffix==0 or string.sub(s,-#suffix)==suffix)
+end
+
 function PYLUA.split(s, sep, maxsplit)
   if maxsplit == -1 then
     maxsplit = nil
@@ -178,6 +185,14 @@ function PYLUA.update(target, overwrites)
   for k,v in pairs(overwrites) do
     target[k] = v
   end
+end
+
+function PYLUA.copy(t)
+  local copy = {}
+  for k,v in pairs(t) do
+    copy[k] = v
+  end
+  return copy
 end
 
 function PYLUA.lower(s) return string.lower(s) end

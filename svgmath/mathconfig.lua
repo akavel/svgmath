@@ -66,10 +66,10 @@ MathConfig = PYLUA.class(sax.ContentHandler) {
       local style = attributes['style'] or 'normal'
       local fontfullname = self.currentFamily
       if weight~='normal' then
-        fontfullname = fontfullname+' '+weight
+        fontfullname = fontfullname..' '..weight
       end
       if style~='normal' then
-        fontfullname = fontfullname+' '+style
+        fontfullname = fontfullname..' '..style
       end
       local ok, ret = xpcall(function()
         local metric

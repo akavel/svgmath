@@ -99,7 +99,7 @@ MathHandler = PYLUA.class(sax.ContentHandler) {
       return 
     end
     if self.currentNode then
-      self.currentNode.text = self.currentNode.text+content
+      self.currentNode.text = self.currentNode.text..content
     end
   end
   ;
