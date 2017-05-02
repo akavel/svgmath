@@ -34,7 +34,7 @@ startElement = function(output, localname, namespace, prefix, attrs)
   if useNamespaces then
     local nsAttrs = { }
     for att, value in pairs(attrs) do
-      nsAttrs[PYLUA.keytuple{nil, att}] = value
+      nsAttrs[{nil, att}] = value
     end
     local qnames = PYLUA.keys(attrs)
     output:startElementNS({namespace, localname},

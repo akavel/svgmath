@@ -7,7 +7,14 @@ local PYLUA = require('PYLUA')
 
 CharMetric = PYLUA.class() {
 
-  __init__ = function(self, glyphname, codes, width, bbox)
+  __init__ = function(self, glyphname, codes, width, bbox, _kw_extra)
+    if PYLUA.is_a(glyphname, PYLUA.keywords) then
+      local kw = glyphname
+      glyphname = codes or kw.glyphname
+      codes = width or kw.codes
+      width = bbox or kw.width
+      bbox = _kw_extra or kw.bbox
+    end
     self.name = glyphname
     if codes then
       self.codes = codes

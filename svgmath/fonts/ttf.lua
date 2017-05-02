@@ -240,14 +240,14 @@ TTFMetric = PYLUA.class(FontMetric) {
       local platformID = readUnsigned(ff, 2)
       local encodingID = readUnsigned(ff, 2)
       subtableOffset = readUnsigned(ff, 4)
-      cmapEncodings[PYLUA.keytuple{platformID, encodingID}] = subtableOffset
+      cmapEncodings[string.format('%d %d', platformID, encodingID)] = subtableOffset
     end
 
     local encodingScheme = 'Unicode'
-    subtableOffset = cmapEncodings[PYLUA.keytuple{3, 1}]
+    subtableOffset = cmapEncodings['3 1']
     if subtableOffset == nil then
       encodingScheme = 'Symbol'
-      subtableOffset = cmapEncodings[PYLUA.keytuple{3, 0}]
+      subtableOffset = cmapEncodings['3 0']
       if subtableOffset == nil then
         error(TTFFormatError(string.format('Cannot use font \'%s\': no known subtable in \'cmap\' table', self.fullname)))
       elseif self.log then
@@ -268,7 +268,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     skip(ff, 6)
 
     local endCounts = {}
-    for _, i in ipairs(range(0, segCount)) do
+    for i = 1,segCount do
       table.insert(endCounts, readUnsigned(ff, 2))
     end
 
@@ -284,7 +284,7 @@ TTFMetric = PYLUA.class(FontMetric) {
     end
 
     local rangeOffsets = {}
-    for _, i in ipairs(range(0, segCount)) do
+    for i = 1,segCount do
       table.insert(rangeOffsets, readUnsigned(ff, 2))
     end
 
@@ -299,12 +299,12 @@ TTFMetric = PYLUA.class(FontMetric) {
     end
 
     for i = 1,segCount do
-      for _, c in ipairs(range(startCounts[i], endCounts[i]+1)) do
+      for c = startCounts[i], endCounts[i]+1 do
         if c==0xFFFF then
           goto continue
         end
         local gid = 0
-        if rangeOffsets[i] then
+        if (rangeOffsets[i] or 0) ~= 0 then
           local idx = c-startCounts[i]+rangeOffsets[i]/2-(segCount-i)
           gid = glyphIdArray[idx]
         else
@@ -316,7 +316,7 @@ TTFMetric = PYLUA.class(FontMetric) {
           gid = gid+65536
         end
 
-        local cm = glyphArray[gid]
+        local cm = glyphArray[gid+1]
         table.insert(cm.codes, c)
         -- Dirty hack: map the lower half of the private-use area to ASCII
         if encodingScheme=='Symbol' and PYLUA.op_in(c, range(61472, 61567)) then

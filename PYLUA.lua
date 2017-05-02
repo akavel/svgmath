@@ -69,6 +69,10 @@ local wrappedFile = PYLUA.class() {
       error(PYLUA.IOError(err))
     end
   end,
+
+  close = function(self)
+    self.f:close()
+  end,
 }
 
 function PYLUA.open(filename, mode)
@@ -205,5 +209,11 @@ function PYLUA.ord(s)
   -- TODO: handle unicode correctly
   return string.byte(s)
 end
+
+PYLUA.keywords = PYLUA.class() {
+  __init__ = function(self, kw)
+    PYLUA.update(self, kw)
+  end,
+}
 
 return PYLUA
